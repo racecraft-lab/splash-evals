@@ -1738,9 +1738,11 @@ def _qualification_aggregate(aggregate: Any) -> dict[str, Any]:
 def _add_coding_sandbox_public_evidence(
     payload: dict[str, Any], manifest: dict[str, Any], publication_purpose: str | None
 ) -> None:
-    if publication_purpose != _CAPABILITY_PUBLICATION or "coding" not in manifest.get(
-        "task_families", []
-    ):
+    task_families = manifest.get("task_families")
+    includes_coding = isinstance(task_families, list) and any(
+        isinstance(item, str) and item.casefold() == "coding" for item in task_families
+    )
+    if publication_purpose != _CAPABILITY_PUBLICATION or not includes_coding:
         return
     coding_sandbox, failures = _validated_coding_sandbox_evidence(manifest)
     if not failures and coding_sandbox is not None:

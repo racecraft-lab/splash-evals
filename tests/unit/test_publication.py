@@ -726,6 +726,24 @@ def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
         assert forbidden not in serialized
 
 
+def test_coding_sandbox_export_uses_case_insensitive_family_contract(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = _capability_manifest()
+    manifest["task_families"] = ["Reasoning", "Coding"]
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_ready_for_human_review"
+    assert "coding_sandbox" in result["preview"]
+
+
 def test_complete_core_manifest_is_capability_publication_eligible(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
