@@ -50,14 +50,25 @@ test.describe('Splash Evals documentation routes', () => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto(routeUrl('/'));
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    const hero = page.locator('.hero');
+    const darkHeroImage = hero.locator('img[class~="light:sl-hidden"]');
+    const lightHeroImage = hero.locator('img[class~="dark:sl-hidden"]');
+    await expect(hero).toHaveCSS('background-color', 'rgb(244, 243, 240)');
+    await expect(lightHeroImage).toBeVisible();
+    await expect(darkHeroImage).toBeHidden();
     const themeSelect = page.locator('starlight-theme-select select');
     if (!(await themeSelect.isVisible())) {
       await page.getByRole('button', { name: 'Menu' }).click();
     }
     await themeSelect.selectOption('dark');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(hero).toHaveCSS('background-color', 'rgb(10, 22, 40)');
+    await expect(hero.getByRole('heading', { level: 1 })).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expect(darkHeroImage).toBeVisible();
+    await expect(lightHeroImage).toBeHidden();
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(hero).toHaveCSS('background-color', 'rgb(10, 22, 40)');
   });
 
   test('homepage loads without browser console errors', async ({ page }) => {

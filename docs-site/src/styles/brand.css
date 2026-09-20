@@ -152,19 +152,19 @@ h6 {
   color: #111827;
 }
 
-:root[data-theme='dark'] [data-has-hero] .hero {
+:root[data-theme='dark'][data-has-hero] .hero {
   background-color: #0a1628;
   background-image: none;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme='dark'] [data-has-hero] .hero h1,
-:root[data-theme='dark'] [data-has-hero] .hero .actions .sl-link-button.secondary,
-:root[data-theme='dark'] [data-has-hero] .hero .actions .sl-link-button.minimal {
+:root[data-theme='dark'][data-has-hero] .hero h1,
+:root[data-theme='dark'][data-has-hero] .hero .actions .sl-link-button.secondary,
+:root[data-theme='dark'][data-has-hero] .hero .actions .sl-link-button.minimal {
   color: #ffffff;
 }
 
-:root[data-theme='dark'] [data-has-hero] .hero .tagline {
+:root[data-theme='dark'][data-has-hero] .hero .tagline {
   color: #d1d5db;
 }
 
