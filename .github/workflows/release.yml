@@ -79,7 +79,8 @@ jobs:
           uv run python scripts/inspect_release.py dist
           gitleaks dir dist --redact --no-banner --no-color
       - name: Create checksums
-        run: sha256sum dist/*.whl dist/*.tar.gz dist/sbom.cdx.json > dist/SHA256SUMS
+        working-directory: dist
+        run: sha256sum *.whl *.tar.gz sbom.cdx.json > SHA256SUMS
       - name: Upload sanitized release candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 source: github.com/actions/upload-artifact
         with:
