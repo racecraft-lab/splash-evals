@@ -1,4 +1,13 @@
-# Historical frontier verification ledger
+# Were the source numbers copied correctly?
+
+The recorded numbers were checked against their cited sources in a second transcription pass. **That check is about copying accuracy, not fair comparability or independent reproduction of a provider's result.**
+
+The local run is not eligible for a direct comparison with these records. [Why the comparison is not available](../../docs/historical-frontier-comparison.md).
+
+<section class="reader-section cool" aria-label="Source transcription checks">
+
+<details>
+<summary>Inspect all source-number checks and record identifiers</summary>
 
 This public ledger records the second-pass numerical transcription check for the dated
 reference catalog. It contains no private identity, credentials, benchmark questions, model
@@ -34,3 +43,7 @@ The ledger verifies transcription only. It does not verify undocumented benchmar
 fields, establish an exact benchmark version or dataset revision, or authorize remote
 inference. Those limitations remain represented as `null` in the catalog and as blocked or
 partially matched in the comparison report.
+
+</details>
+
+</section>

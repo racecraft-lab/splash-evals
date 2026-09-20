@@ -1,4 +1,8 @@
-# Dated historical frontier references
+# Guide to the historical catalog
+
+A catalog record is one reported number for a specific model, test, and condition. Multiple records can describe the same model. Missing information means “unknown,” never a score of zero.
+
+These records do not establish how Splash compares. [Read the comparison explanation](../../docs/historical-frontier-comparison.md) or [browse the source list](../../docs/sources.md).
 
 Each YAML file is a factual record for one model, benchmark, metric, and condition. These
 records are read-only historical evidence; they are not provider configurations and do not
@@ -9,7 +13,9 @@ Null means unknown, never zero. Comparability is stated against the planned boun
 pilot and must be recomputed for a concrete run. Full Aider results remain incompatible
 with a small pilot until the 225 tasks, edit format, attempts, scaffold, and sandbox align.
 
-Coverage:
+<section class="reader-section cool" aria-label="Catalog coverage">
+
+## Which models are represented?
 
 - OpenAI GPT-4.1, GPT-4o (2024-11-20), and o1 (high): GPQA Diamond and IFEval publisher
   appendix records, with material answer-extraction limitations.
@@ -17,6 +23,8 @@ Coverage:
 - Claude 3.5 Sonnet (2024-10-22), Claude 3.7 Sonnet (2025-02-19), and Gemini 2.5 Pro
   Preview 03-25: Aider's 225-case polyglot records, preserving first-attempt and
   after-second-attempt semantics.
+
+</section>
 
 Do not merge Claude 3.5's June and October versions, Claude 3.7 thinking modes, or Gemini
 March experimental and later preview/stable variants.

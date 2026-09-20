@@ -1,0 +1,39 @@
+---
+import DefaultTitle from '@astrojs/starlight/components/PageTitle.astro';
+import { LinkButton } from '@astrojs/starlight/components';
+import { pageIntros } from './page-intros';
+import qualification from '../../../docs/qualification-summary.json';
+
+const { id, entry } = Astro.locals.starlightRoute;
+const intro = pageIntros[id];
+const home = id === '';
+const actions = entry.data.hero?.actions ?? [];
+---
+{intro ? (
+  <section class:list={['page-intro', { 'home-intro': home, hero: home }]} aria-labelledby="_top">
+    <div class="intro-copy">
+      <DefaultTitle><slot /></DefaultTitle>
+      <p class="intro-summary">{intro.summary}</p>
+      {actions.length > 0 && <div class="intro-actions">
+        {actions.map(({ link, text, variant }) => <LinkButton href={link} variant={variant}>{text}</LinkButton>)}
+      </div>}
+    </div>
+    <figure class:list={['intro-visual', `intro-${intro.variant ?? 'flow'}`]}>
+      {intro.variant === 'results' ? (
+        <>
+          <div class="intro-count"><strong>{qualification.accepted}</strong><span>of {qualification.planned}<br />reused cases accepted</span></div>
+          <div class="intro-tally" aria-hidden="true">{Array.from({ length: qualification.planned }, (_, i) => <span class:list={{ accepted: i < qualification.accepted }} />)}</div>
+        </>
+      ) : intro.variant === 'comparison' ? (
+        <div class="comparison-pair">
+          <div><strong>Historical reports</strong><span>Published benchmark results</span></div>
+          <span class="comparison-gap" aria-hidden="true">≠</span>
+          <div><strong>Local run</strong><span>A reused setup-check set</span></div>
+        </div>
+      ) : (
+        <ol class="intro-steps">{intro.steps?.map(([title, detail]) => <li><strong>{title}</strong><span>{detail}</span></li>)}</ol>
+      )}
+      <figcaption>{intro.caption}</figcaption>
+    </figure>
+  </section>
+) : <DefaultTitle><slot /></DefaultTitle>}

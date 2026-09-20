@@ -1,11 +1,15 @@
-# Benchmark task guide
+# The tasks we plan to test
 
 This page describes what the evaluation is designed to test. It does not reproduce restricted
 benchmark items or the real pilot prompts.
 
-## Task families
+**Planned, not completed coverage.** The published setup check used reused cases and has no public task-family breakdown. None of the ceilings below is a count of tests actually run.
 
-| Family | Capability under test | Pilot ceiling | Public evidence boundary |
+<section class="reader-section cool" aria-label="Planned task coverage">
+
+## Planned task families
+
+| Family | What it asks the model to do | Planned maximum | What can be shared |
 | --- | --- | ---: | --- |
 | GPQA | Difficult graduate-level multiple-choice reasoning | 12 | Public benchmark/source identity and protocol only; no restricted items. |
 | IFEval | Verifiable instruction following | 16 | Public task family and scoring protocol only; no held-out prompts. |
@@ -15,8 +19,12 @@ benchmark items or the real pilot prompts.
 | Coding | Practical code generation or repair after sandbox qualification | 10 | Public task descriptions and aggregate outcomes only. |
 
 These are ceilings for a diagnostic pilot, not a promise that every family was run or that the
-result is a full benchmark estimate. The verified ten-task local pilot is practical/diagnostic
-evidence and is not reported as GPQA, IFEval, MMLU-Pro, or Aider evidence.
+result is a full benchmark estimate. The published setup check is runtime/scorer qualification,
+not a capability result and not GPQA, IFEval, MMLU-Pro, or Aider evidence.
+
+[See what actually ran](local-pilot-results.md) · [How the tests work](methodology.md)
+
+</section>
 
 ## Prompt availability
 
@@ -27,6 +35,8 @@ evidence and is not reported as GPQA, IFEval, MMLU-Pro, or Aider evidence.
 - Synthetic examples are allowed only when labeled `mock` and must never be presented as measured
   capability evidence.
 
+<section class="reader-section warm" aria-label="Illustrative mock example">
+
 ## Mock structured-output example
 
 > **Mock fixture — not a pilot prompt or capability result**
@@ -36,3 +46,5 @@ evidence and is not reported as GPQA, IFEval, MMLU-Pro, or Aider evidence.
 
 This example illustrates the shape of a deterministic schema-adherence check without revealing a
 held-out or restricted evaluation item.
+
+</section>

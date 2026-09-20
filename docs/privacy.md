@@ -1,5 +1,16 @@
 # Privacy and publication
 
+This site publishes methods, source references, synthetic examples, and reviewed result summaries. It does **not** publish real test prompts, model responses, reasoning traces, credentials, or private runtime records.
+
+Public automation builds and tests the repository on GitHub-hosted machines. It has no connection to the local test computer or LM Studio. The dashboard is a static page, not a model endpoint.
+
+That privacy boundary limits independent review: readers can inspect the method and public aggregates, but cannot regrade the private run from this site.
+
+<section class="reader-section cool" aria-label="Detailed publication policy">
+
+<details>
+<summary>Maintainer policy: storage, publication checks, and result exports</summary>
+
 ## Two zones
 
 The Git checkout is the public-source zone. It accepts source, synthetic fixtures,
@@ -104,3 +115,7 @@ human review requirement apply to both export purposes.
 An incident blocks further publication. Revoke exposed credentials, assess Git history,
 Actions artifacts/caches, Pages, releases, forks and mirrors, then use GitHub's removal
 process. A later deletion does not erase earlier public copies.
+
+</details>
+
+</section>

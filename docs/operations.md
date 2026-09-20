@@ -1,4 +1,23 @@
-# Operations
+# Run it yourself
+
+This is a local research workbench, not a hosted model service. Running the site does not run an evaluation.
+
+<section class="reader-section cool" aria-label="Local prerequisites">
+
+## Before you start
+
+- Follow the [repository setup instructions](https://github.com/racecraft-lab/splash-evals#readme) to install the project.
+- Use an authorized local model in LM Studio and keep the evidence/state directory outside the Git checkout.
+- Check available memory, model identity, and local execution before sending test requests.
+- Choose and freeze the task set and budget. A setup check is not a held-out capability study.
+
+Start with `doctor`, discovery, and a settings snapshot. The sequence below is an operator reference, **not a script to paste and execute all at once**. Replace uppercase placeholders with reviewed local values; stop when a gate fails.
+
+If you only want to understand the findings, [read the setup-check report](local-pilot-results.md).
+
+[See how the local system works](architecture.md) · [Review the privacy boundary](privacy.md)
+
+</section>
 
 ## Normal local sequence
 
@@ -21,6 +40,8 @@ Execute restoration only after its dry-run confirms the current settings still e
 project-written values. Stop only project-owned UI/workers/instances. Never unload all
 models or stop an existing user server.
 
+<section class="reader-section warm" aria-label="Catalog and publication steps">
+
 ## Historical catalog and publication
 
 ```bash
@@ -42,6 +63,10 @@ benchmark versions or dataset revisions keep that stricter gate closed.
 Expanded core, long-context, precision, concurrency, and agentic runs require a separate
 budget and `--allow-expanded`. Model or dataset downloads require separate authorization.
 
+</section>
+
+<section class="reader-section cool" aria-label="Public automation boundary">
+
 ## Public automation boundary
 
 CI uses standard GitHub-hosted Ubuntu runners, locked dependencies, and mock/synthetic data.
@@ -59,3 +84,5 @@ deployment.
 
 Never register a public-repository self-hosted runner, open a tunnel, use remote desktop,
 install a workflow-polling launch agent, or dispatch a repository event to this workstation.
+
+</section>

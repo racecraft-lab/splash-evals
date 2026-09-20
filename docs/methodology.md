@@ -1,4 +1,33 @@
-# Methodology
+# How we test
+
+We want to know which practical tasks this local setup can handle reliably. To answer that fairly, we must separate **checking the testing setup** from **measuring ability on unfamiliar tasks**.
+
+The published run did the first of these. It did not complete the capability study described below. [Read what actually ran](local-pilot-results.md).
+
+<section class="reader-section cool" aria-label="The testing sequence">
+
+## The method in plain English
+
+1. **Choose the question and tasks first.** Define what counts as success before seeing answers.
+2. **Check the setup.** Confirm the model runs locally and the answer checker behaves correctly.
+3. **Keep a separate test set.** Do not use the final test cases to tune the setup.
+4. **Run and count everything.** Keep failed requests in the overall result, not just successful answers.
+5. **Explain the limits.** Describe the conditions, uncertainty, and any comparisons that are not justified.
+
+</section>
+
+<section class="reader-section warm" aria-label="Fair comparison">
+
+## What makes a fair comparison?
+
+Two exam scores are not comparable if the exams contain different questions or allow different numbers of attempts. The same applies here: we need aligned tasks, instructions, tools, answer checks, and counting rules. A shared benchmark name alone is not enough.
+
+[Planned task families](benchmark-tasks.md) · [Historical comparison limits](historical-frontier-comparison.md) · [Glossary](glossary.md)
+
+</section>
+
+<details>
+<summary>Technical research protocol and comparison requirements</summary>
 
 ## Research question
 
@@ -68,3 +97,5 @@ denominator and interval; dated historical reference; evidence class; comparabil
 limitations; and supported work. The primary-objective status is exactly one of
 `not_started`, `blocked`, `pilot_only`, `partially_answered`, or
 `answered_with_stated_scope`.
+
+</details>

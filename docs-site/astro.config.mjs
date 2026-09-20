@@ -16,7 +16,7 @@ export default defineConfig({
       description:
         'Privacy-first local Splash evaluation through LM Studio with dated frontier evidence.',
       plugins: [starlightLinksValidator()],
-      customCss: ['./src/styles/brand.css'],
+      customCss: ['./src/styles/brand.css', './src/styles/editorial.css'],
       logo: {
         light: './src/assets/logo.svg',
         dark: './src/assets/logo-light.svg',
@@ -25,6 +25,10 @@ export default defineConfig({
       },
       favicon: '/favicon.svg',
       components: {
+        Header: './src/components/Header.astro',
+        Footer: './src/components/Footer.astro',
+        Hero: './src/components/PageIntro.astro',
+        PageTitle: './src/components/PageIntro.astro',
         ThemeProvider: './src/components/ThemeProvider.astro',
         ThemeSelect: './src/components/ThemeSelect.astro',
       },
