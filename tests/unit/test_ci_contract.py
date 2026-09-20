@@ -36,6 +36,24 @@ def test_model_capable_workflows_are_explicitly_mock_only() -> None:
     assert "local-evals privacy audit --scope publication" in ci
     assert 'git checkout --detach "$PR_HEAD_SHA"' in ci
     assert "local-evals privacy audit --scope publication" in release
+    assert "pull-requests: read" in release
+    assert "checks: read" in release
+    release_permissions = release.split("concurrency:", maxsplit=1)[0]
+    assert "contents: read" in release_permissions
+    assert "contents: write" not in release_permissions
+    assert (
+        "GITHUB_PROVENANCE_EVIDENCE: ${{ runner.temp }}/splash-evals-github-provenance.json"
+    ) in release
+    assert "python scripts/collect_github_provenance.py" in release
+    assert '--output "$GITHUB_PROVENANCE_EVIDENCE"' in release
+    assert '--repository "$GITHUB_REPOSITORY"' in release
+    assert '--ref "$GITHUB_REF"' in release
+    assert '--head-sha "${{ steps.audited-source.outputs.sha }}"' in release
+    assert "audited-sha: ${{ steps.audited-source.outputs.sha }}" in release
+    assert '--target "${{ needs.build.outputs.audited-sha }}"' in release
+    assert release.index("python scripts/collect_github_provenance.py") < release.index(
+        "local-evals privacy audit --scope publication"
+    )
     assert 'gitleaks" dir _site --redact --no-banner --no-color' in docs
     assert "gitleaks dir dist --redact --no-banner --no-color" in release
     assert "working-directory: dist" in release
