@@ -38,3 +38,8 @@ def test_model_capable_workflows_are_explicitly_mock_only() -> None:
     assert "local-evals privacy audit --scope publication" in release
     assert 'gitleaks" dir _site --redact --no-banner --no-color' in docs
     assert "gitleaks dir dist --redact --no-banner --no-color" in release
+    assert "working-directory: dist" in release
+    assert "sha256sum *.whl *.tar.gz sbom.cdx.json > SHA256SUMS" in release
+    assert "sha256sum dist/*.whl" not in release
+    assert "working-directory: release-artifacts" in release
+    assert "sha256sum --check SHA256SUMS" in release
