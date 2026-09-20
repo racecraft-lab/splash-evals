@@ -88,9 +88,18 @@ attempt per base task; transport failures remain in the end-to-end denominator, 
 conditional-capability denominator is reported separately.
 
 For local Splash evidence, the gate additionally requires verified physical locality, exact
-loaded-instance attribution, a matching response instance identifier, an explicit accepted
-reasoning setting, and recorded LM Studio/runtime versions. Mock, calibration, post-hoc, or
-attribution-provisional runs cannot produce a frontier delta.
+loaded-instance attribution, an explicit transmitted reasoning setting, and recorded LM
+Studio/runtime versions. Native LM Studio pilot evidence must also return a matching response
+instance identifier and an accepted reasoning setting. EvalScope core runs use LM Studio's
+OpenAI-compatible endpoint, whose response exposes only the configured model alias: the core
+manifest therefore preserves the verified exact-local request binding but leaves response
+instance identity and match as `null`. The core manifest likewise records the reasoning setting
+as transmitted but not read back, rather than claiming runtime acceptance. Mock, calibration,
+post-hoc, or attribution-provisional runs cannot produce a frontier delta.
+
+EvalScope commands enable its progress tracker for local dashboard visibility. That progress
+record does not strengthen model-attribution or effective-settings evidence and contains no
+public benchmark inputs or responses.
 
 ## Frozen sequence
 

@@ -174,15 +174,15 @@ def classify_locality(
 def lms_device_is_local(
     *, device_identifier: str | None, local_device_identifier: str | None
 ) -> bool:
-    """Mirror the documented ``lms`` device-label locality rule.
+    """Apply the macOS ``lms`` loaded-model locality rule.
 
-    A missing model ``deviceIdentifier`` means local. Otherwise it is local only
-    when it equals the CLI's local device identifier. A peer identifier is remote.
+    The local Mac record has a null ``deviceIdentifier``. Any populated value
+    denotes another device and must remain remote even if another discovery
+    field happens to contain the same identifier.
     """
 
-    return device_identifier is None or (
-        local_device_identifier is not None and device_identifier == local_device_identifier
-    )
+    del local_device_identifier
+    return device_identifier is None
 
 
 def require_verified_local(locality: LocalityEvidence) -> None:

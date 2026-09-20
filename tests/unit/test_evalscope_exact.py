@@ -216,6 +216,7 @@ def test_sanitized_aggregate_uses_fixed_planned_denominator() -> None:
 def test_evalscope_mock_cli_runs_registered_exact_adapter_end_to_end(
     tmp_path: Path, benchmark: str, subset: str, count: int
 ) -> None:
+    pytest.importorskip("evalscope")
     records_path = tmp_path / f"{subset}.jsonl"
     records = []
     for index in range(count):

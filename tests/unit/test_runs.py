@@ -259,6 +259,115 @@ def _local_config() -> dict[str, object]:
     }
 
 
+def _qualified_core_plan() -> dict[str, object]:
+    instance_hash = "b" * 64
+    selection_hash = "a" * 64
+    return {
+        "schema_version": 1,
+        "suite": "core",
+        "status": "planned",
+        "blockers": [],
+        "runner": "evalscope-1.12",
+        "experiment_id": "core-experiment",
+        "model_id": "racecraft-splash-local",
+        "model_is_splash": True,
+        "evidence_class": "local_measurement",
+        "held_out": True,
+        "selection_status": "held_out_verified",
+        "selection_hash": selection_hash,
+        "selection_evidence": {
+            "status": "held_out_verified",
+            "ordered_sample_manifest_sha256": selection_hash,
+            "manifest_source": "external",
+            "frozen_before_tuning": True,
+            "contamination_review_revision": "core-review-v1",
+        },
+        "calibration_heldout_separation": "held_out",
+        "protocol": {
+            "task_set": "private-frozen-core-v1",
+            "scorer_version": "family-manifest-pinned",
+        },
+        "historical_protocol": {
+            "benchmark_name": "Racecraft private frozen core",
+            "benchmark_version": "private-frozen-core-v1",
+            "split": "held_out",
+            "dataset_revision": selection_hash,
+            "sample_id_manifest": selection_hash,
+            "metric_name": "accuracy",
+            "metric_unit": "proportion",
+            "sample_count": 60,
+            "few_shot": 0,
+            "prompts_or_template_revision": selection_hash,
+            "reasoning_mode": "off",
+            "output_budget": 4096,
+            "attempts_per_task": 1,
+            "aggregation": "mean_binary_score",
+            "tool_access": "family_defined",
+            "agent_scaffold_revision": None,
+            "scorer_revision": "family-manifest-pinned",
+            "answer_extraction": "family_qualified_exact",
+            "higher_is_better": True,
+            "failure_policy": "count_failures_as_incorrect",
+            "denominator": "all_planned_samples",
+        },
+        "locality_evidence": {
+            "status": "verified_local",
+            "endpoint_loopback": True,
+            "local_instance_evidence": True,
+        },
+        "model_instance_evidence": {
+            "selection": "exact_loaded_record",
+            "splash_attribution": "confirmed",
+            "instance_id_sha256": instance_hash,
+            "native_identity": {"loaded_instance_id_match": True},
+        },
+        "runtime_evidence": {
+            "transport": "lmstudio_native_v1",
+            "endpoint": "/api/v1/chat",
+            "cli_version": "synthetic-cli-v1",
+            "app_version": "synthetic-app-v1",
+            "engine": "synthetic-engine",
+            "engine_version": "synthetic-engine-v1",
+        },
+        "reasoning_evidence": {"requested": "off", "transmitted": "off"},
+        "primary_objective_status_if_run": "answered_with_stated_scope",
+        "limitations": [],
+    }
+
+
+def _qualified_family_results() -> list[dict[str, object]]:
+    counts = {
+        "gpqa_diamond": 12,
+        "ifeval": 16,
+        "mmlu_pro": 14,
+        "tool_json": 10,
+        "context": 8,
+    }
+    return [
+        {
+            "schema_version": 1,
+            "family": family,
+            "planned": count,
+            "attempted": count,
+            "scored": count,
+            "correct": count - 1,
+            "score": (count - 1) / count,
+            "metric_name": "accuracy",
+            "metric_unit": "proportion",
+            "scorer_revision": f"{family}-scorer-v1",
+            "scorer_provenance_sha256": str(index) * 64,
+            "calibration_manifest_sha256": format(index, "x") * 64,
+            "selection_manifest_sha256": format(index + 5, "x") * 64,
+            "ordered_sample_ids_sha256": format(index + 10, "x") * 64,
+            "dataset_tree_sha256": format(index + 1, "x") * 64,
+            "dataset_index_sha256": format(index + 2, "x") * 64,
+            "report_sha256": format(index + 3, "x") * 64,
+            "failure_counts": {"incorrect": 1, "execution_error": 0, "unscored": 0},
+        }
+        for index, (family, count) in enumerate(counts.items(), start=1)
+    ]
+
+
 @pytest.mark.parametrize(
     "locality_status",
     [LocalityStatus.AMBIGUOUS_LM_LINK, LocalityStatus.REMOTE],
@@ -648,6 +757,10 @@ def test_core_plan_uses_sanitized_evalscope_readiness_without_synthetic_tasks(
     assert plan["request_count"] == 60
     assert plan["blockers"] == []
     assert plan["selection_hash"] == "a" * 64
+    assert plan["selection_status"] == "held_out_verified"
+    assert plan["selection_evidence"]["manifest_source"] == "external"
+    assert plan["historical_protocol"]["sample_id_manifest"] == "a" * 64
+    assert plan["historical_protocol"]["sample_count"] == 60
     assert plan["output_directory"].startswith("external-state://runs/")
     assert str(state) not in json.dumps(plan)
 
@@ -656,14 +769,13 @@ def test_core_execution_dispatches_to_evalscope_after_plan_gates(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     state = tmp_path / "external-state"
-    profile = {"suite": "core"}
-    config = _local_config()
-    plan = {
-        "blockers": [],
-        "runner": "evalscope-1.12",
-        "model_is_splash": True,
-        "locality_evidence": {"status": "verified_local"},
+    profile = {
+        "suite": "core",
+        "scorer_version": "family-manifest-pinned",
+        "task_set": "private-frozen-core-v1",
     }
+    config = _local_config()
+    plan = _qualified_core_plan()
     observed: dict[str, object] = {}
     monkeypatch.setattr(runs, "build_execution_plan", lambda *args, **kwargs: plan)
     monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
@@ -672,7 +784,18 @@ def test_core_execution_dispatches_to_evalscope_after_plan_gates(
 
     def execute_core(*args: object, **kwargs: object) -> dict[str, object]:
         observed.update(kwargs)
-        return {"status": "evalscope_completed", "runner": "evalscope-1.12"}
+        return {
+            "status": "completed",
+            "runner": "evalscope-1.12",
+            "model_alias": "racecraft-splash-local",
+            "reasoning_mode": "off",
+            "runtime_evidence": {
+                "transport": "evalscope_openai_api",
+                "endpoint": "/v1/chat/completions",
+                "evalscope_version": "1.12.0",
+            },
+            "family_results": _qualified_family_results(),
+        }
 
     monkeypatch.setattr(runs, "execute_evalscope_core", execute_core)
     monkeypatch.setattr(
@@ -683,10 +806,93 @@ def test_core_execution_dispatches_to_evalscope_after_plan_gates(
 
     result = runs.execute_run("core", "lmstudio-as-found", allow_expanded=True, root=tmp_path)
 
-    assert result["runner"] == "evalscope-1.12"
+    assert result["status"] == "completed"
+    manifest = result["manifest"]
+    assert manifest["schema_version"] == 2
+    assert manifest["suite"] == "core"
+    assert manifest["task_families"] == [
+        "gpqa_diamond",
+        "ifeval",
+        "mmlu_pro",
+        "tool_json",
+        "context",
+    ]
+    assert manifest["aggregate"]["planned"] == 60
+    assert manifest["aggregate"]["attempted"] == 60
+    assert manifest["aggregate"]["scorable"] == 60
+    assert manifest["aggregate"]["correct"] == 55
+    assert manifest["aggregate"]["incorrect"] == 5
+    assert manifest["aggregate"]["failed"] == 0
+    assert manifest["scorer_evidence"]["eligible_for_capability_report"] is True
+    assert manifest["served_model_evidence"] == {
+        "status": "verified_request_binding_without_response_identity",
+        "requested_instance_id_sha256": "b" * 64,
+        "response_instance_id_sha256": None,
+        "match": None,
+        "verification_basis": ("verified_local_exact_instance_and_evalscope_report_model_alias"),
+    }
+    assert manifest["reasoning_evidence"]["effective_status"] == ("transmitted_not_read_back")
+    assert manifest["effective_settings_status"] == "transmitted_not_read_back"
+    assert manifest["primary_objective_status_if_run"] == "answered_with_stated_scope"
+    assert runs._CORE_EVIDENCE_LIMITATION in manifest["limitations"]
+    assert "private_task_manifest" not in manifest
+    assert "raw_response" not in json.dumps(manifest)
+    persisted = json.loads(
+        (state / "runs" / result["run_id"] / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert persisted == manifest
     assert observed["repo"] == tmp_path
     assert observed["state"] == state
     assert observed["server_origin"] == "http://127.0.0.1:1234/v1"
+    assert observed["reasoning_mode"] == "off"
+
+
+@pytest.mark.parametrize("mode", ["missing_family", "wrong_count", "mock", "calibration"])
+def test_core_execution_rejects_incomplete_or_noncapability_results(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mode: str
+) -> None:
+    state = tmp_path / "external-state"
+    plan = _qualified_core_plan()
+    if mode == "mock":
+        plan["evidence_class"] = "synthetic_mock"
+    if mode == "calibration":
+        plan["held_out"] = False
+        plan["selection_status"] = "calibration"
+    family_results = _qualified_family_results()
+    if mode == "missing_family":
+        family_results.pop()
+    if mode == "wrong_count":
+        family_results[0]["scored"] = 11
+    monkeypatch.setattr(runs, "build_execution_plan", lambda *args, **kwargs: plan)
+    monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
+    monkeypatch.setattr(
+        runs,
+        "load_suite",
+        lambda *args, **kwargs: {
+            "suite": "core",
+            "scorer_version": "family-manifest-pinned",
+        },
+    )
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(
+        runs,
+        "execute_evalscope_core",
+        lambda *args, **kwargs: {
+            "status": "completed",
+            "model_alias": "racecraft-splash-local",
+            "reasoning_mode": "off",
+            "runtime_evidence": {
+                "transport": "evalscope_openai_api",
+                "endpoint": "/v1/chat/completions",
+                "evalscope_version": "1.12.0",
+            },
+            "family_results": family_results,
+        },
+    )
+
+    with pytest.raises(runs.RunError, match="core capability manifest"):
+        runs.execute_run("core", "lmstudio-as-found", allow_expanded=True, root=tmp_path)
+    assert not (state / "runs").exists()
 
 
 def test_resume_and_rescore_explicitly_refuse_evalscope_core_semantics(

@@ -62,7 +62,7 @@ jobs:
           version: 0.12.17
           enable-cache: false
       - name: Sync locked development environment
-        run: uv sync --frozen --extra dev --extra evalscope
+        run: uv sync --frozen --extra dev
       - name: Test source and publication controls
         env:
           LOCAL_EVALS_STATE_DIR: ${{ runner.temp }}/splash-evals-state
@@ -144,7 +144,7 @@ jobs:
             'Artifacts contain project code/docs, a wheel, sdist, CycloneDX SBOM, checksums, and provenance; they never contain raw prompts/responses, model weights, or private state.' \
             'The published local pilot is small and synthetic. Its post-hoc, order-reversed comparison is exploratory, does not prove improvement/equivalence, and supports no direct historical frontier delta.' \
             'The earlier candidate locality remains attribution-provisional.' \
-            'From a clean checkout, reproduce with: uv sync --frozen --extra dev --extra evalscope; LOCAL_EVALS_TEST_MODE=mock-only uv run pytest; uv run local-evals frontier validate --catalog references/frontier; uv run local-evals privacy audit --scope publication; uv build; uv export --format cyclonedx1.5 --no-dev --output-file dist/sbom.cdx.json; uv run python scripts/inspect_release.py dist.' \
+            'From a clean checkout, reproduce with: uv sync --frozen --extra dev; LOCAL_EVALS_TEST_MODE=mock-only uv run pytest; uv run local-evals frontier validate --catalog references/frontier; uv run local-evals privacy audit --scope publication; uv build; uv export --format cyclonedx1.5 --no-dev --output-file dist/sbom.cdx.json; uv run python scripts/inspect_release.py dist.' \
             'See docs/local-pilot-results.md, docs/methodology.md, and docs/operations.md.' \
             'Attestations establish provenance only; they do not certify capability, security, or privacy.' > release-notes.md
           gh release create "$RELEASE_TAG" release-artifacts/* \

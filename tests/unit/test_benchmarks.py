@@ -70,20 +70,41 @@ def _write_json(path: Path, value: Mapping[str, Any]) -> str:
     return _sha256(data)
 
 
-def _tree_digest(root: Path) -> str:
-    inventory = []
-    for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file()):
-        inventory.append(
+def _write_evalscope_report(command: list[str], *, score: float = 0.5) -> None:
+    dataset = command[command.index("--datasets") + 1]
+    work_dir = Path(command[command.index("--work-dir") + 1])
+    family = next(name for name, value in EVALSCOPE_DATASETS.items() if value == dataset)
+    count = FAMILY_COUNTS[family]
+    metric_identity = {
+        "name": "prompt_level_strict" if family == "ifeval" else "accuracy",
+        "aggregation": "weighted_mean" if family == "ifeval" else "mean",
+        "dimensions": {},
+    }
+    if family in {"tool_json", "context"}:
+        metric_identity = {"name": "accuracy", "aggregation": "mean", "dimensions": {}}
+    report = {
+        "schema_version": 2,
+        "dataset_name": dataset,
+        "model_name": "racecraft-splash-local",
+        "metrics": [
             {
-                "path": path.relative_to(root).as_posix(),
-                "sha256": _sha256(path.read_bytes()),
+                "identity": metric_identity,
+                "num": count,
+                "score": score,
             }
-        )
-    return _sha256(json.dumps(inventory, sort_keys=True, separators=(",", ":")).encode())
-
-
-def _selection_digest(sample_ids: list[str]) -> str:
-    return _sha256(json.dumps(sample_ids, separators=(",", ":")).encode())
+        ],
+        "primary_metric_identity": metric_identity,
+        "primary_metric_unavailable_reason": None,
+        "execution_summary": {
+            "requested": count,
+            "succeeded": count,
+            "errored": 0,
+            "incomplete": False,
+        },
+        "num": count,
+    }
+    report_path = work_dir / "reports" / "racecraft-splash-local" / f"{dataset}.json"
+    _write_json(report_path, report)
 
 
 def _record(family: str, sample_id: str, subset: str) -> dict[str, Any]:
@@ -179,7 +200,13 @@ def _fixture(tmp_path: Path) -> tuple[dict[str, Any], Path, Path, Path]:
                     else f"{family}-scorer-v1"
                 )
             ),
-            "metric_variant": f"{family}-metric-v1",
+            "metric_variant": (
+                "prompt_level_strict"
+                if family == "ifeval"
+                else "schema_exact_accuracy"
+                if family == "tool_json"
+                else "accuracy"
+            ),
         }
         if family in {"tool_json", "context"}:
             profile_family.update(
@@ -200,9 +227,9 @@ def _fixture(tmp_path: Path) -> tuple[dict[str, Any], Path, Path, Path]:
                 else f"datasets/{family}"
             ),
             "dataset_index_path": f"datasets/{family}/selection-index.json",
-            "dataset_tree_sha256": _tree_digest(dataset),
+            "dataset_tree_sha256": benchmarks._dataset_tree_sha256(dataset, family),
             "ordered_sample_ids": heldout_ids,
-            "ordered_sample_ids_sha256": _selection_digest(heldout_ids),
+            "ordered_sample_ids_sha256": benchmarks._selection_sha256(heldout_ids),
             "frozen_before_tuning": True,
             "contamination_review_revision": f"{family}-contamination-v1",
             "repeats": 1,
@@ -461,7 +488,7 @@ def test_readiness_rejects_sample_hash_count_duplicates_and_overlap(tmp_path: Pa
     sample_ids = list(family["ordered_sample_ids"])
     sample_ids[-1] = sample_ids[0]
     family["ordered_sample_ids"] = sample_ids
-    family["ordered_sample_ids_sha256"] = _selection_digest(sample_ids)
+    family["ordered_sample_ids_sha256"] = benchmarks._selection_sha256(sample_ids)
     family["heldout_ids"] = sample_ids
     _replace_family_manifest(profile, state, "ifeval", family)
     assert "unique" in _inspect(profile, repo, state, executable)["blockers"][0]
@@ -520,9 +547,6 @@ def test_readiness_rejects_dataset_tree_drift_and_symlinks(tmp_path: Path) -> No
     target = state / "datasets" / "context" / "test.jsonl"
     link = state / "datasets" / "context" / "linked.jsonl"
     link.symlink_to(target)
-    family = _read_family_manifest(profile, state, "context")
-    family["dataset_tree_sha256"] = _tree_digest(state / "datasets" / "context")
-    _replace_family_manifest(profile, state, "context", family)
     assert "symbolic links" in _inspect(profile, repo, state, executable)["blockers"][0]
 
 
@@ -531,7 +555,7 @@ def test_readiness_rejects_extra_records_or_records_file_for_wrong_split(tmp_pat
     dataset = state / "datasets" / "gpqa_diamond"
     (dataset / "extra.jsonl").write_text('{"sample_id":"extra"}\n', encoding="utf-8")
     manifest = _read_family_manifest(profile, state, "gpqa_diamond")
-    manifest["dataset_tree_sha256"] = _tree_digest(dataset)
+    manifest["dataset_tree_sha256"] = benchmarks._dataset_tree_sha256(dataset, "gpqa_diamond")
     _replace_family_manifest(profile, state, "gpqa_diamond", manifest)
     assert "only the indexed records" in _inspect(profile, repo, state, executable)["blockers"][0]
 
@@ -618,7 +642,7 @@ def test_all_commands_pin_exact_selection_generation_and_adapter_contract(tmp_pa
     work_root = state / "command-contract"
     work_root.mkdir()
     calls = [
-        benchmarks._family_command(prepared, family, work_root / family.name)
+        benchmarks._family_command(prepared, family, work_root / family.name, "off")
         for family in prepared.families
     ]
     assert [command[command.index("--datasets") + 1] for command in calls] == [
@@ -638,9 +662,11 @@ def test_all_commands_pin_exact_selection_generation_and_adapter_contract(tmp_pa
         assert command[command.index("--api-url") + 1] == "http://localhost:1234/v1"
         assert command[command.index("--eval-batch-size") + 1] == "1"
         assert command[command.index("--repeats") + 1] == "1"
+        assert "--enable-progress-tracker" in command
         assert "--limit" not in command
         assert json.loads(command[command.index("--generation-config") + 1]) == {
             "max_tokens": 4096,
+            "reasoning_effort": "off",
             "retries": 0,
             "stream": False,
         }
@@ -674,7 +700,7 @@ def test_mock_executable_accepts_each_builtin_family_command(tmp_path: Path) -> 
         evalscope_version="1.12.0",
     )
     for family in prepared.families[:3]:
-        command = benchmarks._family_command(prepared, family, state / "work" / family.name)
+        command = benchmarks._family_command(prepared, family, state / "work" / family.name, "off")
         completed = subprocess.run(  # noqa: S603 - absolute fixture executable, no shell
             command, capture_output=True, text=True, check=False
         )
@@ -686,7 +712,9 @@ def test_core_execution_invokes_all_five_qualified_families(tmp_path: Path) -> N
     calls: list[list[str]] = []
 
     def runner(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
-        calls.append(list(args[0]))
+        command = list(args[0])
+        calls.append(command)
+        _write_evalscope_report(command)
         return subprocess.CompletedProcess(args, 0, "", "")
 
     result = execute_evalscope_core(
@@ -696,10 +724,13 @@ def test_core_execution_invokes_all_five_qualified_families(tmp_path: Path) -> N
         server_origin="http://127.0.0.1:1234/v1",
         evalscope_executable=str(executable),
         evalscope_version="1.12.0",
+        reasoning_mode="off",
         runner=runner,
     )
 
-    assert result == {
+    assert {
+        key: result[key] for key in ("status", "families_completed", "family_count", "sample_count")
+    } == {
         "status": "completed",
         "families_completed": list(FAMILY_COUNTS),
         "family_count": 5,
@@ -708,6 +739,55 @@ def test_core_execution_invokes_all_five_qualified_families(tmp_path: Path) -> N
     assert [call[call.index("--datasets") + 1] for call in calls] == list(
         EVALSCOPE_DATASETS.values()
     )
+    assert [family["family"] for family in result["family_results"]] == list(FAMILY_COUNTS)
+    assert result["model_alias"] == "racecraft-splash-local"
+    assert result["reasoning_mode"] == "off"
+    assert result["runtime_evidence"] == {
+        "transport": "evalscope_openai_api",
+        "endpoint": "/v1/chat/completions",
+        "evalscope_version": "1.12.0",
+    }
+    assert sum(int(family["planned"]) for family in result["family_results"]) == 60
+    assert all(family["attempted"] == family["planned"] for family in result["family_results"])
+    assert all(family["scored"] == family["planned"] for family in result["family_results"])
+    assert "report_sha256" in result["family_results"][0]
+    assert "dataset_path" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("mode", ["missing", "malformed", "wrong_count", "wrong_model"])
+def test_core_execution_rejects_unqualified_aggregate_artifact(tmp_path: Path, mode: str) -> None:
+    profile, repo, state, executable = _fixture(tmp_path)
+
+    def runner(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        command = list(args[0])
+        if mode == "missing":
+            return subprocess.CompletedProcess(args, 0, "", "")
+        _write_evalscope_report(command)
+        dataset = command[command.index("--datasets") + 1]
+        work_dir = Path(command[command.index("--work-dir") + 1])
+        report_path = work_dir / "reports" / "racecraft-splash-local" / f"{dataset}.json"
+        if mode == "malformed":
+            report_path.write_text("not-json", encoding="utf-8")
+        else:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            if mode == "wrong_count":
+                report["metrics"][0]["num"] -= 1
+            else:
+                report["model_name"] = "other-instance"
+            _write_json(report_path, report)
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+    with pytest.raises(CoreBenchmarkError, match="aggregate report"):
+        execute_evalscope_core(
+            profile,
+            repo=repo,
+            state=state,
+            server_origin="http://127.0.0.1:1234/v1",
+            evalscope_executable=str(executable),
+            evalscope_version="1.12.0",
+            reasoning_mode="off",
+            runner=runner,
+        )
 
 
 def test_execute_raises_value_error_subclass_before_runner_on_invalid_input(
@@ -730,10 +810,119 @@ def test_execute_raises_value_error_subclass_before_runner_on_invalid_input(
             server_origin="http://127.0.0.1:1234/v1",
             evalscope_executable=str(executable),
             evalscope_version="1.12.0",
+            reasoning_mode="off",
             runner=runner,
         )
 
     assert called is False
+
+
+def _require_evalscope_112() -> Any:
+    evalscope = pytest.importorskip("evalscope", reason="optional EvalScope contract check")
+    if evalscope.__version__ != "1.12.0":
+        pytest.skip("EvalScope contract check is pinned to 1.12.0")
+    return evalscope
+
+
+def test_optional_evalscope_112_builtin_benchmark_contracts() -> None:
+    import importlib
+
+    _require_evalscope_112()
+    for module in (
+        "evalscope.benchmarks.gpqa.gpqa_adapter",
+        "evalscope.benchmarks.ifeval.ifeval_adapter",
+        "evalscope.benchmarks.mmlu_pro.mmlu_pro_adapter",
+    ):
+        importlib.import_module(module)
+    from evalscope.api.registry import BENCHMARK_REGISTRY
+
+    gpqa = BENCHMARK_REGISTRY["gpqa_diamond"]
+    ifeval = BENCHMARK_REGISTRY["ifeval"]
+    mmlu = BENCHMARK_REGISTRY["mmlu_pro"]
+    assert (gpqa.metric_list, gpqa.aggregation, gpqa.eval_split, gpqa.subset_list) == (
+        ["accuracy"],
+        "mean",
+        "train",
+        ["default"],
+    )
+    assert (
+        ifeval.primary_metric.name,
+        ifeval.aggregation,
+        ifeval.eval_split,
+        ifeval.subset_list,
+    ) == ("prompt_level_strict", "weighted_mean", "train", ["default"])
+    assert (mmlu.metric_list, mmlu.aggregation, mmlu.eval_split, mmlu.subset_list) == (
+        ["accuracy"],
+        "mean",
+        "test",
+        list(MMLU_PRO_SUBSETS),
+    )
+    assert mmlu.few_shot_num == 5
+    assert benchmarks._EVALSCOPE_CONTRACTS["mmlu_pro"][3] == 0
+
+
+@pytest.mark.parametrize(
+    ("dataset", "count", "identity"),
+    [
+        ("gpqa_diamond", 12, {"name": "accuracy", "aggregation": "mean", "dimensions": {}}),
+        (
+            "ifeval",
+            16,
+            {"name": "prompt_level_strict", "aggregation": "weighted_mean", "dimensions": {}},
+        ),
+        ("mmlu_pro", 14, {"name": "accuracy", "aggregation": "mean", "dimensions": {}}),
+    ],
+)
+def test_optional_evalscope_112_v2_report_round_trip(
+    dataset: str, count: int, identity: dict[str, Any]
+) -> None:
+    _require_evalscope_112()
+    from evalscope.report.report import Report
+
+    payload = {
+        "schema_version": 2,
+        "dataset_name": dataset,
+        "model_name": "racecraft-splash-local",
+        "metrics": [
+            {
+                "identity": identity,
+                "categories": [
+                    {
+                        "name": ["overall"],
+                        "subsets": [{"name": "default", "score": 0.5, "num": count}],
+                    }
+                ],
+                "semantics": {
+                    "semantic_id": "quality.accuracy.ratio",
+                    "metric_name": identity["name"],
+                    "kind": "quality",
+                    "direction": "higher_is_better",
+                    "raw_unit": "proportion",
+                    "value_range": {"min": 0, "max": 1},
+                    "display_kind": "percent",
+                    "display_multiplier": 100,
+                    "display_unit": "%",
+                    "display_precision": 2,
+                },
+            }
+        ],
+        "primary_metric_identity": identity,
+        "execution_summary": {
+            "requested": count,
+            "succeeded": count,
+            "errored": 0,
+            "incomplete": False,
+            "subsets": {},
+        },
+    }
+    report = Report.model_validate(payload)
+    serialized = json.loads(report.to_json_str())
+    reloaded = Report.from_dict(serialized)
+
+    assert serialized["schema_version"] == 2
+    assert serialized["primary_metric_identity"] == identity
+    assert serialized["num"] == count
+    assert reloaded.primary_metric_identity.model_dump(mode="json") == identity
 
 
 def _read_family_manifest(profile: dict[str, Any], state: Path, family: str) -> dict[str, Any]:
@@ -786,7 +975,7 @@ def _replace_dataset_index(
     _write_json(state / manifest["dataset_index_path"], index)
     dataset_path = state / manifest["dataset_path"]
     root = dataset_path if dataset_path.is_dir() else dataset_path.parent
-    manifest["dataset_tree_sha256"] = _tree_digest(root)
+    manifest["dataset_tree_sha256"] = benchmarks._dataset_tree_sha256(root, family)
     _replace_family_manifest(profile, state, family, manifest)
 
 

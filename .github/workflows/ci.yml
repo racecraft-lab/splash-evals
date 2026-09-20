@@ -47,7 +47,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
       - name: Sync locked lightweight development environment
-        run: uv sync --frozen --extra dev --extra evalscope
+        run: uv sync --frozen --extra dev
       - name: Format
         run: uv run ruff format --check .
       - name: Lint

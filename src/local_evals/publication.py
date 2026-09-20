@@ -11,7 +11,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast, overload
 
-from .runs import RunError, get_state_dir, load_policies, load_run, project_root
+from .runs import (
+    _CORE_EVIDENCE_LIMITATION,
+    RunError,
+    get_state_dir,
+    load_policies,
+    load_run,
+    project_root,
+)
 from .sandbox import (
     SandboxError,
     SandboxPolicy,
@@ -69,6 +76,13 @@ _SIGNATURE_MARKERS = (
     b"-----BEGIN SSH SIGNATURE-----",
     b"-----BEGIN SIGNED MESSAGE-----",
 )
+_CORE_FAMILY_COUNTS = {
+    "gpqa_diamond": 12,
+    "ifeval": 16,
+    "mmlu_pro": 14,
+    "tool_json": 10,
+    "context": 8,
+}
 
 
 @overload
@@ -1383,6 +1397,83 @@ def _validated_coding_sandbox_evidence(
     }, []
 
 
+def _valid_core_family_results(values: Any, families: list[Any], aggregate: dict[str, Any]) -> bool:
+    if not isinstance(values, list) or len(values) != len(_CORE_FAMILY_COUNTS):
+        return False
+    total_correct = 0
+    for value, (family, count) in zip(values, _CORE_FAMILY_COUNTS.items(), strict=True):
+        if not isinstance(value, dict):
+            return False
+        correct = value.get("correct")
+        failures = value.get("failure_counts")
+        if not (
+            value.get("family") == family
+            and _is_exact_int(value.get("planned"), count)
+            and _is_exact_int(value.get("attempted"), count)
+            and _is_exact_int(value.get("scored"), count)
+            and type(correct) is int
+            and 0 <= correct <= count
+            and isinstance(failures, dict)
+            and _is_exact_int(failures.get("incorrect"), count - correct)
+            and _is_exact_int(failures.get("execution_error"), 0)
+            and _is_exact_int(failures.get("unscored"), 0)
+        ):
+            return False
+        total_correct += correct
+    return (
+        families == list(_CORE_FAMILY_COUNTS)
+        and _is_exact_int(aggregate.get("correct"), total_correct)
+        and _is_exact_int(
+            aggregate.get("incorrect"), sum(_CORE_FAMILY_COUNTS.values()) - total_correct
+        )
+    )
+
+
+def _capability_transport_requirements(suite: Any) -> tuple[str, str]:
+    if suite == "core":
+        return "evalscope_openai_api", "/v1/chat/completions"
+    return "lmstudio_native_v1", "/api/v1/chat"
+
+
+def _capability_served_checks(
+    suite: Any, served: dict[str, Any], model: dict[str, Any]
+) -> tuple[bool, bool, bool, bool]:
+    requested = served.get("requested_instance_id_sha256")
+    response = served.get("response_instance_id_sha256")
+    requested_valid = _is_sha256(requested) and requested == model.get("instance_id_sha256")
+    if suite == "core":
+        return (
+            served.get("status") == "verified_request_binding_without_response_identity",
+            served.get("match") is None,
+            requested_valid,
+            response is None,
+        )
+    return (
+        served.get("status") == "verified",
+        served.get("match") is True,
+        requested_valid,
+        _is_sha256(response) and response == requested,
+    )
+
+
+def _capability_reasoning_status(suite: Any) -> str:
+    return "transmitted_not_read_back" if suite == "core" else "accepted_by_runtime"
+
+
+def _valid_core_limitations(suite: Any, limitations: Any) -> bool:
+    if suite != "core":
+        return True
+    return isinstance(limitations, list) and _CORE_EVIDENCE_LIMITATION in limitations
+
+
+def _valid_suite_family_results(
+    suite: Any, values: Any, families: list[Any], aggregate: dict[str, Any]
+) -> bool:
+    if suite != "core":
+        return True
+    return _valid_core_family_results(values, families, aggregate)
+
+
 def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
     """Return every missing fact that prevents a capability-evidence export."""
     aggregate = _evidence_mapping(manifest.get("aggregate"))
@@ -1405,8 +1496,6 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
     )
     sample_manifest = historical.get("sample_id_manifest")
     scorer_id = scorer.get("scorer_id")
-    requested_instance = served.get("requested_instance_id_sha256")
-    response_instance = served.get("response_instance_id_sha256")
     task_families = manifest.get("task_families")
     families = task_families if isinstance(task_families, list) else []
     valid_task_families = bool(families) and all(
@@ -1415,10 +1504,16 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
     includes_coding = valid_task_families and any(
         str(item).casefold() == "coding" for item in families
     )
+    suite = manifest.get("suite")
+    expected_runtime = _capability_transport_requirements(suite)
+    served_checks = _capability_served_checks(suite, served, model)
+    effective_status = _capability_reasoning_status(suite)
+    core_results = manifest.get("family_results")
+    valid_core_results = _valid_suite_family_results(suite, core_results, families, aggregate)
 
     checks: list[tuple[str, bool]] = [
         ("status", manifest.get("status") == "completed"),
-        ("suite", manifest.get("suite") == "pilot"),
+        ("suite", suite in {"pilot", "core"}),
         ("evidence_class", manifest.get("evidence_class") == "local_measurement"),
         ("model_is_splash", manifest.get("model_is_splash") is True),
         ("held_out", manifest.get("held_out") is True),
@@ -1428,6 +1523,8 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
             manifest.get("calibration_heldout_separation") != _POST_HOC_SELECTION,
         ),
         ("task_families", valid_task_families),
+        ("family_results", valid_core_results),
+        ("limitations", _valid_core_limitations(suite, manifest.get("limitations"))),
         ("historical_protocol.sample_count", valid_sample_count),
         (
             "aggregate.planned",
@@ -1464,19 +1561,18 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
             "model_instance_evidence.native_identity.loaded_instance_id_match",
             native_model.get("loaded_instance_id_match") is True,
         ),
-        ("served_model_evidence.status", served.get("status") == "verified"),
-        ("served_model_evidence.match", served.get("match") is True),
+        ("served_model_evidence.status", served_checks[0]),
+        ("served_model_evidence.match", served_checks[1]),
         (
             "served_model_evidence.requested_instance_id_sha256",
-            _is_sha256(requested_instance)
-            and requested_instance == model.get("instance_id_sha256"),
+            served_checks[2],
         ),
         (
             "served_model_evidence.response_instance_id_sha256",
-            _is_sha256(response_instance) and response_instance == requested_instance,
+            served_checks[3],
         ),
-        ("runtime_evidence.transport", runtime.get("transport") == "lmstudio_native_v1"),
-        ("runtime_evidence.endpoint", runtime.get("endpoint") == "/api/v1/chat"),
+        ("runtime_evidence.transport", runtime.get("transport") == expected_runtime[0]),
+        ("runtime_evidence.endpoint", runtime.get("endpoint") == expected_runtime[1]),
         ("runtime_evidence.cli_version", _qualified_evidence_text(runtime.get("cli_version"))),
         ("runtime_evidence.engine", _qualified_evidence_text(runtime.get("engine"))),
         (
@@ -1495,7 +1591,11 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
         ),
         (
             "reasoning_evidence.effective_status",
-            reasoning.get("effective_status") == "accepted_by_runtime",
+            reasoning.get("effective_status") == effective_status,
+        ),
+        (
+            "effective_settings_status",
+            suite != "core" or manifest.get("effective_settings_status") == effective_status,
         ),
         (
             "selection_evidence.ordered_sample_manifest_sha256",
@@ -1563,7 +1663,7 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
 
 def _capability_publication_blockers(manifest: dict[str, Any]) -> list[dict[str, str]]:
     is_candidate = (
-        manifest.get("suite") == "pilot"
+        manifest.get("suite") in {"pilot", "core"}
         and manifest.get("evidence_class") == "local_measurement"
         and manifest.get("model_is_splash") is True
         and manifest.get("held_out") is True
@@ -1599,9 +1699,9 @@ def _sanitize_public_value(value: Any, run_id: str) -> Any:
 
 
 def _publication_purpose(manifest: dict[str, Any]) -> str | None:
-    """Classify only unambiguous local Splash pilot evidence for export."""
+    """Classify only unambiguous local Splash measurement evidence for export."""
     if (
-        manifest.get("suite") != "pilot"
+        manifest.get("suite") not in {"pilot", "core"}
         or manifest.get("evidence_class") != "local_measurement"
         or manifest.get("model_is_splash") is not True
     ):
@@ -1617,7 +1717,8 @@ def _publication_purpose(manifest: dict[str, Any]) -> str | None:
     ):
         return _CAPABILITY_PUBLICATION
     if (
-        manifest.get("held_out") is False
+        manifest.get("suite") == "pilot"
+        and manifest.get("held_out") is False
         and selection_status == _POST_HOC_SELECTION
         and separation == _POST_HOC_SELECTION
     ):

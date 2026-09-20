@@ -160,20 +160,14 @@ def test_explicit_zero_usage_is_distinct_from_missing_usage() -> None:
     assert usage.total_tokens == 0
 
 
-@pytest.mark.parametrize(
-    ("device_identifier", "local_device_identifier"),
-    [(None, "local-device"), ("local-device", "local-device")],
-)
-def test_lms_local_device_semantics_mark_selected_instance_local(
-    device_identifier: str | None, local_device_identifier: str
-) -> None:
+def test_null_device_identifier_marks_selected_instance_local() -> None:
     payload = {
-        "localDeviceIdentifier": local_device_identifier,
+        "localDeviceIdentifier": "local-device",
         "models": [
             {
                 "modelKey": "synthetic-model",
                 "instanceIdentifier": "synthetic-instance",
-                "deviceIdentifier": device_identifier,
+                "deviceIdentifier": None,
             }
         ],
     }
@@ -186,6 +180,28 @@ def test_lms_local_device_semantics_mark_selected_instance_local(
 
     assert locality.status is LocalityStatus.VERIFIED_LOCAL
     assert locality.local_instance_evidence is True
+
+
+def test_matching_non_null_device_identifier_is_not_local() -> None:
+    payload = {
+        "localDeviceIdentifier": "local-device",
+        "models": [
+            {
+                "modelKey": "synthetic-model",
+                "instanceIdentifier": "synthetic-instance",
+                "deviceIdentifier": "local-device",
+            }
+        ],
+    }
+
+    locality = classify_model_instance_locality(
+        payload,
+        model_or_instance_id="synthetic-instance",
+        lm_link_state="connected",
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
 
 
 def test_lms_peer_device_is_not_local() -> None:

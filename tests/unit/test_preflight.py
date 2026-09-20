@@ -13,6 +13,7 @@ from local_evals.preflight import (
     RequestBudget,
     UnsupportedControlError,
     classify_locality,
+    lms_device_is_local,
     require_verified_local,
     validate_context_budget,
     validate_load_controls,
@@ -95,6 +96,16 @@ def test_concrete_local_instance_evidence_passes_locality_gate() -> None:
 
     assert locality.status is LocalityStatus.VERIFIED_LOCAL
     require_verified_local(locality)
+
+
+def test_lms_null_device_identifier_is_local() -> None:
+    assert lms_device_is_local(device_identifier=None, local_device_identifier="local-device")
+
+
+def test_lms_matching_non_null_device_identifier_is_remote() -> None:
+    assert not lms_device_is_local(
+        device_identifier="local-device", local_device_identifier="local-device"
+    )
 
 
 def test_llama_only_control_is_rejected_for_splash_engine() -> None:

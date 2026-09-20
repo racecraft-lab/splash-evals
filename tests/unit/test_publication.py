@@ -178,6 +178,63 @@ def _capability_manifest() -> dict[str, Any]:
     }
 
 
+def _core_capability_manifest() -> dict[str, Any]:
+    manifest = _capability_manifest()
+    family_counts = {
+        "gpqa_diamond": 12,
+        "ifeval": 16,
+        "mmlu_pro": 14,
+        "tool_json": 10,
+        "context": 8,
+    }
+    family_results = [
+        {
+            "family": family,
+            "planned": count,
+            "attempted": count,
+            "scored": count,
+            "correct": count - 1,
+            "failure_counts": {"incorrect": 1, "execution_error": 0, "unscored": 0},
+        }
+        for family, count in family_counts.items()
+    ]
+    manifest.update(
+        suite="core",
+        task_families=list(family_counts),
+        family_results=family_results,
+        served_model_evidence={
+            **manifest["served_model_evidence"],
+            "status": "verified_request_binding_without_response_identity",
+            "response_instance_id_sha256": None,
+            "match": None,
+        },
+        runtime_evidence={
+            **manifest["runtime_evidence"],
+            "transport": "evalscope_openai_api",
+            "endpoint": "/v1/chat/completions",
+        },
+        aggregate={
+            "planned": 60,
+            "attempted": 60,
+            "completed": 60,
+            "scorable": 60,
+            "correct": 55,
+            "incorrect": 5,
+            "failed": 0,
+            "censored": 0,
+            "unattempted": 0,
+        },
+        reasoning_evidence={
+            **manifest["reasoning_evidence"],
+            "effective_status": "transmitted_not_read_back",
+        },
+        effective_settings_status="transmitted_not_read_back",
+        limitations=[publication._CORE_EVIDENCE_LIMITATION],
+    )
+    manifest["historical_protocol"]["sample_count"] = 60
+    return manifest
+
+
 def _replace_path(manifest: dict[str, Any], path: tuple[str, ...], replacement: Any) -> None:
     target = manifest
     for key in path[:-1]:
@@ -667,6 +724,59 @@ def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
         "private-hidden-test",
     ):
         assert forbidden not in serialized
+
+
+def test_complete_core_manifest_is_capability_publication_eligible(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = _core_capability_manifest()
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-core-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_ready_for_human_review"
+    assert result["preview"]["publication_purpose"] == "held_out_model_capability"
+    assert publication._capability_publication_failures(manifest) == []
+
+
+def test_core_publication_rejects_fabricated_response_identity_or_reasoning_acceptance() -> None:
+    manifest = _core_capability_manifest()
+    manifest["served_model_evidence"].update(
+        response_instance_id_sha256=manifest["served_model_evidence"][
+            "requested_instance_id_sha256"
+        ],
+        match=True,
+    )
+    manifest["reasoning_evidence"]["effective_status"] = "accepted_by_runtime"
+    manifest["effective_settings_status"] = "accepted_by_runtime_not_read_back"
+
+    failures = publication._capability_publication_failures(manifest)
+
+    assert "served_model_evidence.match" in failures
+    assert "served_model_evidence.response_instance_id_sha256" in failures
+    assert "reasoning_evidence.effective_status" in failures
+    assert "effective_settings_status" in failures
+
+
+@pytest.mark.parametrize("mode", ["incomplete", "mock", "calibration"])
+def test_incomplete_or_noncapability_core_manifest_is_rejected(mode: str) -> None:
+    manifest = _core_capability_manifest()
+    if mode == "incomplete":
+        manifest["family_results"].pop()
+    elif mode == "mock":
+        manifest["evidence_class"] = "synthetic_mock"
+    else:
+        manifest["held_out"] = False
+        manifest["selection_status"] = "calibration"
+
+    assert publication._publication_purpose(manifest) is None
+    if mode == "incomplete":
+        assert "family_results" in publication._capability_publication_failures(manifest)
 
 
 @pytest.mark.parametrize(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.metadata
 import json
+import math
 import os
 import shutil
 import stat
@@ -861,7 +862,9 @@ def inspect_core_readiness(
     }
 
 
-def _family_command(prepared: _Prepared, family: _Family, work_dir: Path) -> list[str]:
+def _family_command(
+    prepared: _Prepared, family: _Family, work_dir: Path, reasoning_mode: str
+) -> list[str]:
     dataset_args = {
         family.evalscope_dataset: {
             "dataset_id": str(family.dataset_path),
@@ -901,9 +904,15 @@ def _family_command(prepared: _Prepared, family: _Family, work_dir: Path) -> lis
         "1",
         "--generation-config",
         json.dumps(
-            {"max_tokens": prepared.max_output_tokens, "retries": 0, "stream": False},
+            {
+                "max_tokens": prepared.max_output_tokens,
+                "reasoning_effort": reasoning_mode,
+                "retries": 0,
+                "stream": False,
+            },
             separators=(",", ":"),
         ),
+        "--enable-progress-tracker",
         "--work-dir",
         str(work_dir),
         "--no-timestamp",
@@ -946,7 +955,7 @@ def _launch_environment(state: Path) -> dict[str, str]:
     return environment
 
 
-def _initialize_launch(prepared: _Prepared) -> tuple[Path, list[list[str]]]:
+def _initialize_launch(prepared: _Prepared, reasoning_mode: str) -> tuple[Path, list[list[str]]]:
     if prepared.blockers:
         raise CoreBenchmarkError("; ".join(prepared.blockers))
     launch_root = prepared.state / "launches"
@@ -960,13 +969,14 @@ def _initialize_launch(prepared: _Prepared) -> tuple[Path, list[list[str]]]:
     for family in prepared.families:
         family_work = work_root / family.name
         _private_directory(family_work)
-        commands.append(_family_command(prepared, family, family_work))
+        commands.append(_family_command(prepared, family, family_work, reasoning_mode))
     _write_private_json(
         launch_dir / "launch-evidence.json",
         {
             "schema_version": 1,
             "evalscope_version": EVALSCOPE_VERSION,
             "manifest_set_sha256": prepared.manifest_set_sha256,
+            "reasoning_mode": reasoning_mode,
             "commands": commands,
             "status": "planned",
         },
@@ -979,10 +989,11 @@ def _execute_commands(
     launch_dir: Path,
     commands: Sequence[Sequence[str]],
     runner: Callable[..., subprocess.CompletedProcess[str]] | None,
-) -> None:
+) -> list[dict[str, Any]]:
     run = cast(_Runner, runner or subprocess.run)
     environment = _launch_environment(prepared.state)
     results: list[dict[str, Any]] = []
+    family_results: list[dict[str, Any]] = []
     for family, command in zip(prepared.families, commands, strict=True):
         completed = run(
             command,
@@ -1006,6 +1017,128 @@ def _execute_commands(
         )
         if completed.returncode != 0:
             raise CoreBenchmarkError(f"EvalScope failed for {family.name}")
+        family_results.append(_read_family_report(family, command))
+    return family_results
+
+
+def _report_metric_identity(family: _Family) -> dict[str, Any]:
+    if family.name in {"gpqa_diamond", "mmlu_pro"}:
+        return {"name": "accuracy", "aggregation": "mean", "dimensions": {}}
+    if family.name == "ifeval":
+        return {
+            "name": "prompt_level_strict",
+            "aggregation": "weighted_mean",
+            "dimensions": {},
+        }
+    return {"name": "accuracy", "aggregation": "mean", "dimensions": {}}
+
+
+def _report_path(command: Sequence[str], family: _Family) -> Path:
+    try:
+        work_dir = Path(command[command.index("--work-dir") + 1])
+    except (ValueError, IndexError) as exc:
+        raise CoreBenchmarkError(f"{family.name} aggregate report command is invalid") from exc
+    return work_dir / "reports" / MODEL_ALIAS / f"{family.evalscope_dataset}.json"
+
+
+def _exact_report_int(value: Any, expected: int) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value == expected
+
+
+def _read_family_report(family: _Family, command: Sequence[str]) -> dict[str, Any]:
+    report_path = _report_path(command, family)
+    try:
+        if report_path.is_symlink() or not report_path.is_file():
+            raise CoreBenchmarkError(f"{family.name} aggregate report is missing or unsafe")
+        raw = report_path.read_bytes()
+        if not raw or len(raw) > 1_048_576:
+            raise CoreBenchmarkError(f"{family.name} aggregate report size is invalid")
+        report = _mapping(json.loads(raw), f"{family.name} aggregate report document")
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CoreBenchmarkError(f"{family.name} aggregate report is unreadable") from exc
+
+    expected_identity = _report_metric_identity(family)
+    expected_metric = expected_identity["name"]
+    primary = _mapping(
+        report.get("primary_metric_identity"), f"{family.name} aggregate report identity"
+    )
+    metrics = report.get("metrics")
+    if not isinstance(metrics, list):
+        raise CoreBenchmarkError(f"{family.name} aggregate report metrics are invalid")
+    matching = [
+        _mapping(metric, f"{family.name} aggregate report metric")
+        for metric in metrics
+        if isinstance(metric, Mapping) and metric.get("identity") == expected_identity
+    ]
+    execution = _mapping(
+        report.get("execution_summary"), f"{family.name} aggregate report execution"
+    )
+    valid_identity = dict(primary) == expected_identity
+    valid_execution = (
+        _exact_report_int(execution.get("requested"), family.sample_count)
+        and _exact_report_int(execution.get("succeeded"), family.sample_count)
+        and _exact_report_int(execution.get("errored"), 0)
+        and execution.get("incomplete") is False
+    )
+    if (
+        report.get("schema_version") != 2
+        or report.get("dataset_name") != family.evalscope_dataset
+        or report.get("model_name") != MODEL_ALIAS
+        or report.get("primary_metric_unavailable_reason") is not None
+        or not _exact_report_int(report.get("num"), family.sample_count)
+        or not valid_identity
+        or len(matching) != 1
+        or not valid_execution
+    ):
+        raise CoreBenchmarkError(f"{family.name} aggregate report contract does not match")
+    metric = matching[0]
+    score = metric.get("score")
+    if (
+        not _exact_report_int(metric.get("num"), family.sample_count)
+        or not isinstance(score, (int, float))
+        or isinstance(score, bool)
+        or not math.isfinite(score)
+        or not 0 <= score <= 1
+    ):
+        raise CoreBenchmarkError(f"{family.name} aggregate report score is invalid")
+    correct_value = float(score) * family.sample_count
+    correct = round(correct_value)
+    if not math.isclose(correct_value, correct, abs_tol=1e-9):
+        raise CoreBenchmarkError(f"{family.name} aggregate report score is not an exact count")
+    scorer_provenance = {
+        "evalscope_version": EVALSCOPE_VERSION,
+        "evalscope_dataset": family.evalscope_dataset,
+        "scorer_revision": family.scorer_revision,
+        "metric_variant": family.metric_variant,
+        "adapter_revision": family.adapter_revision,
+        "adapter_source_sha256": family.adapter_source_sha256,
+    }
+    return {
+        "schema_version": 1,
+        "family": family.name,
+        "planned": family.sample_count,
+        "attempted": family.sample_count,
+        "scored": family.sample_count,
+        "correct": correct,
+        "score": float(score),
+        "metric_name": expected_metric,
+        "metric_unit": "proportion",
+        "scorer_revision": family.scorer_revision,
+        "scorer_provenance_sha256": _sha256(
+            json.dumps(scorer_provenance, sort_keys=True, separators=(",", ":")).encode()
+        ),
+        "calibration_manifest_sha256": family.manifest_sha256,
+        "selection_manifest_sha256": family.manifest_sha256,
+        "ordered_sample_ids_sha256": family.ordered_sample_ids_sha256,
+        "dataset_tree_sha256": family.dataset_tree_sha256,
+        "dataset_index_sha256": family.dataset_index_sha256,
+        "report_sha256": _sha256(raw),
+        "failure_counts": {
+            "incorrect": family.sample_count - correct,
+            "execution_error": 0,
+            "unscored": 0,
+        },
+    }
 
 
 def execute_evalscope_core(
@@ -1016,11 +1149,14 @@ def execute_evalscope_core(
     server_origin: str,
     evalscope_executable: str | None = None,
     evalscope_version: str | None = None,
+    reasoning_mode: str | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] | None = None,
 ) -> dict[str, Any]:
     """Run qualified core families sequentially and retain all evidence externally."""
 
     checked_profile = _call_arguments_valid(profile, repo, state, server_origin)
+    if reasoning_mode not in {"off", "on", "low", "medium", "high"}:
+        raise CoreBenchmarkError("core execution requires an explicit supported reasoning mode")
     prepared = _prepare(
         checked_profile,
         repo=repo,
@@ -1031,11 +1167,19 @@ def execute_evalscope_core(
     )
     if prepared.blockers:
         raise CoreBenchmarkError("; ".join(prepared.blockers))
-    launch_dir, commands = _initialize_launch(prepared)
-    _execute_commands(prepared, launch_dir, commands, runner)
+    launch_dir, commands = _initialize_launch(prepared, reasoning_mode)
+    family_results = _execute_commands(prepared, launch_dir, commands, runner)
     return {
         "status": "completed",
         "families_completed": [family.name for family in prepared.families],
         "family_count": len(prepared.families),
         "sample_count": sum(family.sample_count for family in prepared.families),
+        "model_alias": MODEL_ALIAS,
+        "reasoning_mode": reasoning_mode,
+        "runtime_evidence": {
+            "transport": "evalscope_openai_api",
+            "endpoint": "/v1/chat/completions",
+            "evalscope_version": EVALSCOPE_VERSION,
+        },
+        "family_results": family_results,
     }
