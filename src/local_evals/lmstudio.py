@@ -366,11 +366,32 @@ def _link_state(text: str | None) -> str:
     return "unknown"
 
 
+def _corroborated_device_source(
+    selected: Mapping[str, Any], downloaded_payload: Any
+) -> Mapping[str, Any] | None:
+    """Return the exact record that can establish device locality."""
+
+    if "deviceIdentifier" in selected:
+        return selected
+    model_key = _first_string(selected, ("modelKey", "model_key", "key"))
+    if model_key is None:
+        return None
+    matches = [
+        item
+        for item in _objects(downloaded_payload)
+        if model_key == _first_string(item, ("modelKey", "model_key", "key"))
+    ]
+    if len(matches) != 1 or "deviceIdentifier" not in matches[0]:
+        return None
+    return matches[0]
+
+
 def classify_model_instance_locality(
     loaded_payload: Any,
     *,
     model_or_instance_id: str | None,
     lm_link_state: str | None,
+    downloaded_payload: Any = None,
 ) -> LocalityEvidence:
     """Apply the LMS device rule to one explicitly selected loaded instance.
 
@@ -400,14 +421,14 @@ def classify_model_instance_locality(
             lm_link_state=lm_link_state,
             local_instance_evidence=False,
         )
-    selected = matches[0]
-    if "deviceIdentifier" not in selected:
+    device_source = _corroborated_device_source(matches[0], downloaded_payload)
+    if device_source is None:
         return classify_locality(
             endpoint_loopback=True,
             lm_link_state=lm_link_state,
             local_instance_evidence=False,
         )
-    device_id = selected.get("deviceIdentifier")
+    device_id = device_source.get("deviceIdentifier")
     local_device_id = _find_value(loaded_payload, {"localDeviceIdentifier"})
     if device_id is not None and not isinstance(device_id, str):
         local = False
@@ -417,7 +438,7 @@ def classify_model_instance_locality(
             local_device_identifier=local_device_id if isinstance(local_device_id, str) else None,
         )
     device_name = (
-        "linked-peer" if _first_string(selected, ("deviceName", "deviceIdentifier")) else None
+        "linked-peer" if _first_string(device_source, ("deviceName", "deviceIdentifier")) else None
     )
     return classify_locality(
         endpoint_loopback=True,
@@ -575,6 +596,7 @@ def discover(
         loaded_payload,
         model_or_instance_id=selected_model,
         lm_link_state=link_state,
+        downloaded_payload=cli_payloads.get("downloaded_models"),
     )
     if not has_loaded:
         issues.append(
