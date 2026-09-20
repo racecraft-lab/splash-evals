@@ -158,6 +158,8 @@ def _scan_file(path: Path, repo: Path, policies: dict[str, Any]) -> list[dict[st
         findings.append({"rule": "denied-filename", "path": relative, "severity": "block"})
     size = path.stat().st_size
     max_size = int(policies["publication"]["max_file_bytes"])
+    if relative == "uv.lock":
+        max_size = int(policies["publication"].get("max_root_uv_lock_bytes", max_size))
     if size > max_size:
         findings.append({"rule": "file-too-large", "path": relative, "severity": "block"})
         return findings

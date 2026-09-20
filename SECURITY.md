@@ -38,3 +38,10 @@ graph before closing it.
 
 The development dependency floor for pytest is 9.0.3, the patched version for
 [GHSA-6w46-j5rx-g56g](https://github.com/advisories/GHSA-6w46-j5rx-g56g).
+
+## Generated lockfile publication bound
+
+The maintainer-approved size limit is 1,100,000 bytes for the exact root `uv.lock` only.
+All other files retain the 1,000,000-byte limit. The larger bound does not bypass UTF-8,
+filename, symlink, content, identity, history, or secret-scanner checks. Nested lockfiles
+and differently named files do not receive this allowance.

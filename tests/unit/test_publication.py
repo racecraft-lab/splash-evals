@@ -109,6 +109,58 @@ def test_publication_scan_detects_private_path_without_echoing_it(tmp_path: Path
     assert all(finding.get("matched_text_redacted") is True for finding in findings)
 
 
+@pytest.mark.parametrize(
+    ("filename", "size", "blocked"),
+    [
+        ("uv.lock", 1_000_001, False),
+        ("uv.lock", 1_100_000, False),
+        ("uv.lock", 1_100_001, True),
+        ("nested/uv.lock", 1_000_001, True),
+        ("other.lock", 1_000_001, True),
+        ("UV.LOCK", 1_000_001, True),
+        ("report.md", 1_000_001, True),
+    ],
+)
+def test_publication_size_allowance_is_only_for_exact_root_lockfile(
+    tmp_path: Path, filename: str, size: int, blocked: bool
+) -> None:
+    policies = _policies()
+    policies["publication"].update(max_file_bytes=1_000_000, max_root_uv_lock_bytes=1_100_000)
+    policies["publication"]["allowed_suffixes"].append(".lock")
+    candidate = tmp_path / filename
+    candidate.parent.mkdir(parents=True, exist_ok=True)
+    candidate.write_bytes(b"#" * size)
+
+    findings = publication._scan_file(candidate, tmp_path, policies)
+
+    assert bool(findings) is blocked
+    assert all(finding["rule"] == "file-too-large" for finding in findings)
+
+
+def test_publication_root_lockfile_keeps_default_limit_without_opt_in(tmp_path: Path) -> None:
+    candidate = tmp_path / "uv.lock"
+    candidate.write_bytes(b"#" * 100_001)
+
+    findings = publication._scan_file(candidate, tmp_path, _policies())
+
+    assert findings == [{"rule": "file-too-large", "path": "uv.lock", "severity": "block"}]
+
+
+def test_publication_large_root_lockfile_still_scans_content_to_end(tmp_path: Path) -> None:
+    policies = _policies()
+    policies["publication"].update(max_file_bytes=1_000_000, max_root_uv_lock_bytes=1_100_000)
+    policies["publication"]["allowed_suffixes"].append(".lock")
+    sentinel = "/" + "Users/synthetic-operator/private-project/result.json"
+    candidate = tmp_path / "uv.lock"
+    candidate.write_text("#" * 1_000_001 + "\n" + sentinel, encoding="utf-8")
+
+    findings = publication._scan_file(candidate, tmp_path, policies)
+
+    assert any(finding["rule"] == "absolute-user-path" for finding in findings)
+    assert not any(finding["rule"] == "file-too-large" for finding in findings)
+    assert sentinel not in repr(findings)
+
+
 def test_publication_scan_detects_synthetic_email_without_echoing_it(tmp_path: Path) -> None:
     email_sentinel = "synthetic.operator" + "@example.invalid"
     candidate = tmp_path / "metadata.json"
