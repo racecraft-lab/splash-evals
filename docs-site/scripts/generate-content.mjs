@@ -21,6 +21,7 @@ const PAGES = [
   ['docs/architecture.md', 'architecture.md'],
   ['docs/privacy.md', 'privacy.md'],
   ['docs/operations.md', 'operations.md'],
+  ['docs/capability-readiness.md', 'capability-readiness.md'],
   ['docs/glossary.md', 'glossary.md'],
   ['docs/sources.md', 'sources.md'],
   ['docs/historical-frontier-comparison.md', 'historical-frontier-comparison.md'],

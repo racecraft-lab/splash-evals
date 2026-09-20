@@ -36,6 +36,7 @@ def _verified_locality() -> LocalityEvidence:
 
 
 def _write_cli(path: Path, content: bytes) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(content)
     path.chmod(0o700)
     return path
@@ -56,6 +57,53 @@ def test_macos_cli_guard_accepts_exact_lm_studio_match(tmp_path: Path) -> None:
     )
 
     assert resolved == cached_target.resolve()
+
+
+def test_macos_cli_guard_accepts_official_llmster_home_pointer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    user_home = tmp_path / "home"
+    user_home.mkdir()
+    lm_studio_home = tmp_path / "lm-studio-home"
+    versioned_cli = _write_cli(
+        lm_studio_home / "llmster" / "0.0.25-1" / "llmster",
+        b"official-llmster-cli",
+    )
+    cached_cli = lm_studio_home / "bin" / "lms"
+    cached_cli.parent.mkdir()
+    cached_cli.symlink_to(versioned_cli)
+    (user_home / ".lmstudio-home-pointer").write_text(str(lm_studio_home), encoding="utf-8")
+    monkeypatch.setattr(Path, "home", lambda: user_home)
+
+    resolved = verify_lms_cli_executable(
+        cached_cli,
+        platform_name="darwin",
+        lm_studio_paths=(),
+        bionic_paths=(),
+    )
+
+    assert resolved == versioned_cli.resolve()
+
+
+def test_macos_cli_guard_refuses_same_bytes_outside_official_llmster_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    user_home = tmp_path / "home"
+    user_home.mkdir()
+    official_cli = _write_cli(
+        user_home / ".lmstudio" / "bin" / "lms",
+        b"official-llmster-cli",
+    )
+    spoof = _write_cli(tmp_path / "path-spoof-lms", official_cli.read_bytes())
+    monkeypatch.setattr(Path, "home", lambda: user_home)
+
+    with pytest.raises(LMStudioError, match="does not match"):
+        verify_lms_cli_executable(
+            spoof,
+            platform_name="darwin",
+            lm_studio_paths=(),
+            bionic_paths=(),
+        )
 
 
 def test_macos_cli_guard_refuses_bionic_match_without_disclosing_details(
@@ -205,6 +253,103 @@ def test_current_lms_identifier_field_selects_local_instance() -> None:
     assert locality.status is LocalityStatus.VERIFIED_LOCAL
     assert locality.local_instance_evidence is True
     assert locality.execution_device == "local"
+
+
+def test_enabled_link_does_not_override_selected_local_instance_evidence() -> None:
+    payload = {
+        "models": [
+            {
+                "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+                "identifier": "racecraft-splash-local",
+                "deviceIdentifier": None,
+            },
+            {
+                "modelKey": "hal/remote-model",
+                "indexedModelIdentifier": "hal/remote-model",
+                "identifier": "hal-remote-instance",
+                "deviceIdentifier": "hal-device",
+            },
+        ]
+    }
+
+    locality = classify_model_instance_locality(
+        payload,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+    )
+
+    assert locality.status is LocalityStatus.VERIFIED_LOCAL
+    assert locality.local_instance_evidence is True
+    assert locality.execution_device == "local"
+
+
+def test_enabled_link_selected_remote_instance_is_ambiguous() -> None:
+    payload = {
+        "models": [
+            {
+                "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+                "identifier": "racecraft-splash-local",
+                "deviceIdentifier": None,
+            },
+            {
+                "modelKey": "hal/remote-model",
+                "indexedModelIdentifier": "hal/remote-model",
+                "identifier": "hal-remote-instance",
+                "deviceIdentifier": "hal-device",
+            },
+        ]
+    }
+
+    locality = classify_model_instance_locality(
+        payload,
+        model_or_instance_id="hal-remote-instance",
+        lm_link_state="connected",
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+
+
+def test_single_loaded_instance_without_explicit_selection_is_ambiguous() -> None:
+    payload = {
+        "models": [
+            {
+                "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+                "identifier": "racecraft-splash-local",
+                "deviceIdentifier": None,
+            }
+        ]
+    }
+
+    locality = classify_model_instance_locality(
+        payload,
+        model_or_instance_id=None,
+        lm_link_state="connected",
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+
+
+def test_model_key_alias_cannot_select_loaded_instance() -> None:
+    payload = {
+        "models": [
+            {
+                "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+                "identifier": "racecraft-splash-local",
+                "deviceIdentifier": None,
+            }
+        ]
+    }
+
+    locality = classify_model_instance_locality(
+        payload,
+        model_or_instance_id="qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+        lm_link_state="connected",
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
 
 
 def test_native_identity_fields_are_retained_without_paths_or_devices() -> None:

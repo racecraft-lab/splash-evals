@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 import httpx
 import yaml
 
+from .benchmarks import execute_evalscope_core, inspect_core_readiness
 from .lmstudio import LMStudioError, model_keys_equivalent
 from .lmstudio import discover as discover_lmstudio
 from .models import DiscoveryReport, LocalityStatus, ModelRecord, ModelRecordSource
@@ -490,6 +491,15 @@ def _config_origin(config: dict[str, Any]) -> str:
     return validate_loopback_origin(origin)
 
 
+def _config_openai_base_url(config: dict[str, Any]) -> str:
+    origin = _config_origin(config)
+    expected = f"{origin}/v1"
+    configured = (config.get("server") or {}).get("openai_base_url")
+    if configured != expected:
+        raise RunError("configuration must pin the loopback LM Studio OpenAI API root at /v1")
+    return expected
+
+
 def _api_key(config: dict[str, Any]) -> str | None:
     env_name = (config.get("server") or {}).get("api_key_env")
     return os.environ.get(env_name) if isinstance(env_name, str) else None
@@ -800,6 +810,47 @@ def _comparison_evidence(
     }
 
 
+def _suite_plan_metadata(
+    suite: str,
+    profile: dict[str, Any],
+    config: dict[str, Any],
+    repo: Path,
+    tasks: list[Task],
+) -> dict[str, Any]:
+    public_tasks = [task.public_manifest() for task in tasks]
+    metadata: dict[str, Any] = {
+        "runner": "builtin-local",
+        "core_readiness": None,
+        "sample_count": len(tasks),
+        "blockers": [],
+        "output_directory": get_state_dir(repo, create=False) / "runs",
+        "selection_hash": _sha256_json(public_tasks),
+    }
+    if suite != "core":
+        return metadata
+    readiness = inspect_core_readiness(
+        profile,
+        repo=repo,
+        state=get_state_dir(repo, create=False),
+        server_origin=_config_openai_base_url(config),
+    )
+    readiness_metadata = readiness.get("metadata", {})
+    metadata.update(
+        runner=str(readiness_metadata.get("runner", "evalscope-1.12")),
+        core_readiness=readiness,
+        sample_count=int(readiness_metadata.get("total_samples", 0)),
+        blockers=list(readiness.get("blockers", [])),
+        output_directory="external-state://runs",
+        selection_hash=readiness_metadata.get("manifest_set_sha256"),
+    )
+    return metadata
+
+
+def _planned_output_directory(base: Path | str, experiment_id: str) -> str:
+    suffix = f"{experiment_id}-RUN_TIMESTAMP"
+    return str(base / suffix) if isinstance(base, Path) else f"{base}/{suffix}"
+
+
 def build_plan(
     suite: str,
     config_name: str,
@@ -907,6 +958,84 @@ def build_plan(
         "selection_evidence": selection_evidence,
         "selection_hash": _sha256_json(public_tasks),
     }
+
+
+def build_execution_plan(
+    suite: str,
+    config_name: str,
+    *,
+    allow_expanded: bool = False,
+    root: Path | None = None,
+    resolve_live_model: bool = True,
+) -> dict[str, Any]:
+    """Build the public plan, adding private-manifest readiness only for core."""
+    plan = build_plan(
+        suite,
+        config_name,
+        allow_expanded=allow_expanded,
+        root=root,
+        resolve_live_model=resolve_live_model,
+    )
+    if suite != "core":
+        return plan
+    repo = root or project_root()
+    profile = load_suite(suite, repo)
+    config = load_config(config_name, repo)
+    metadata = _suite_plan_metadata(suite, profile, config, repo, [])
+    readiness = metadata["core_readiness"]
+    readiness_metadata = readiness.get("metadata", {})
+    sample_count = int(metadata["sample_count"])
+    blockers = [
+        blocker
+        for blocker in plan["blockers"]
+        if not blocker.startswith("No licensed/version-pinned executable task manifest")
+    ]
+    blockers.extend(metadata["blockers"])
+    comparison = _comparison_evidence(
+        suite,
+        profile,
+        plan["model_instance_evidence"],
+        plan["reasoning_evidence"],
+        sample_count=sample_count,
+        output_budget=int(profile.get("max_output_tokens", 512)),
+    )
+    ready = readiness.get("status") == "ready"
+    selection_evidence = {
+        "status": "frozen_held_out" if ready else "blocked",
+        "manifest_set_sha256": readiness_metadata.get("manifest_set_sha256"),
+        "family_evidence": readiness_metadata.get("family_evidence", {}),
+    }
+    experiment_id = _sha256_json(
+        {
+            "config": config,
+            "model": plan["model_id"],
+            "locality": plan["locality_evidence"],
+            "model_instance": plan["model_instance_evidence"],
+            "protocol": plan["protocol"],
+            "core_readiness": readiness,
+        }
+    )[:20]
+    plan.update(
+        experiment_id=experiment_id,
+        runner=metadata["runner"],
+        core_readiness=readiness,
+        sample_count=sample_count,
+        request_count=sample_count,
+        estimated_max_generated_tokens=sample_count * int(profile.get("max_output_tokens", 512)),
+        blockers=sorted(set(blockers)),
+        output_directory=_planned_output_directory(metadata["output_directory"], experiment_id),
+        held_out=ready,
+        selection_status=selection_evidence["status"],
+        selection_evidence=selection_evidence,
+        selection_hash=metadata["selection_hash"],
+        primary_objective_status_if_run=(
+            "capability_measurement"
+            if ready and plan["model_is_splash"] and not blockers
+            else "blocked"
+        ),
+        **comparison,
+    )
+    return plan
 
 
 def _session_ledger(state: Path, limits: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
@@ -1251,7 +1380,7 @@ def execute_run(
     run_label: str | None = None,
 ) -> dict[str, Any]:
     repo = root or project_root()
-    plan = build_plan(suite, config_name, allow_expanded=allow_expanded, root=repo)
+    plan = build_execution_plan(suite, config_name, allow_expanded=allow_expanded, root=repo)
     if dry_run:
         return {"status": "dry_run", "plan": plan}
     if plan["blockers"]:
@@ -1259,6 +1388,21 @@ def execute_run(
     state = get_state_dir(repo)
     config = load_config(config_name, repo)
     profile = load_suite(suite, repo)
+    if suite == "core":
+        result = execute_evalscope_core(
+            profile,
+            repo=repo,
+            state=state,
+            server_origin=_config_openai_base_url(config),
+        )
+        return {
+            **result,
+            "runner": plan["runner"],
+            "experiment_id": plan.get("experiment_id"),
+            "model_is_splash": plan.get("model_is_splash", False),
+            "locality_evidence": plan.get("locality_evidence", {}),
+            "model_instance_evidence": plan.get("model_instance_evidence", {}),
+        }
     tasks = suite_tasks(suite)
     requested_settings, settings = _run_settings(plan, config, profile, operation_override)
     fingerprint = _run_fingerprint(plan, config, requested_settings)
@@ -1374,10 +1518,21 @@ def load_run(run_id: str, root: Path | None = None) -> tuple[dict[str, Any], lis
     return manifest, _read_attempts(directory / "attempts.jsonl")
 
 
+def _refuse_evalscope_operation(manifest: dict[str, Any], error: RunError) -> None:
+    if manifest.get("suite") == "core" or manifest.get("runner") == "evalscope-1.12":
+        raise error
+
+
 def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) -> dict[str, Any]:
     repo = root or project_root()
     directory = _run_dir(run_id, repo)
     manifest, attempts = load_run(run_id, repo)
+    _refuse_evalscope_operation(
+        manifest,
+        ResumeRefused(
+            "EvalScope core resume is unavailable; rerun the unchanged frozen manifest set."
+        ),
+    )
     if manifest["status"] == "completed":
         return {"status": "already_complete", "run_id": run_id}
     if any(_served_instance_failure(record) for record in attempts):
@@ -1520,11 +1675,18 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
 
 
 def rescore_run(run_id: str, scorer_version: str, *, root: Path | None = None) -> dict[str, Any]:
-    if scorer_version not in {"builtin-exact-v1"}:
-        raise RunError("requested scorer version is not installed")
     repo = root or project_root()
     directory = _run_dir(run_id, repo)
     manifest, attempts = load_run(run_id, repo)
+    _refuse_evalscope_operation(
+        manifest,
+        RunError(
+            "EvalScope core rescore is unavailable; family scorers are pinned in the private "
+            "frozen manifests."
+        ),
+    )
+    if scorer_version not in {"builtin-exact-v1"}:
+        raise RunError("requested scorer version is not installed")
     tasks = {item["task_id"]: item for item in manifest["private_task_manifest"]}
     rescored: list[dict[str, Any]] = []
     for attempt in attempts:

@@ -20,7 +20,7 @@ from .optimization import optimize
 from .publication import audit_publication, prepare_publication
 from .runs import (
     RunError,
-    build_plan,
+    build_execution_plan,
     compare_runs,
     execute_run,
     get_state_dir,
@@ -71,7 +71,7 @@ def _origin_and_model(config_name: str = "lmstudio-as-found") -> tuple[str, str 
     model = config.get("model") or {}
     return (
         str(server.get("origin", "http://127.0.0.1:1234")),
-        model.get("key") or os.environ.get("LOCAL_EVALS_MODEL"),
+        model.get("instance_id") or model.get("key") or os.environ.get("LOCAL_EVALS_MODEL"),
         str(server.get("api_key_env", "LM_STUDIO_API_KEY")),
     )
 
@@ -237,7 +237,7 @@ def plan(
     """Resolve samples, repetitions, budgets, blockers, and outputs before execution."""
     del dry_run  # Planning is always read-only; retained for interface consistency.
     try:
-        _emit(build_plan(suite, config, allow_expanded=allow_expanded))
+        _emit(build_execution_plan(suite, config, allow_expanded=allow_expanded))
     except (RunError, OSError, ValueError) as error:
         _abort(error)
 
@@ -249,7 +249,7 @@ def run_command(
     dry_run: bool = typer.Option(False, "--dry-run"),
     allow_expanded: bool = typer.Option(False, "--allow-expanded"),
 ) -> None:
-    """Run a fixed suite through one local LM Studio request per attempt."""
+    """Run a fixed local suite; core dispatches to the pinned EvalScope launcher."""
     try:
         _emit(execute_run(suite, config, dry_run=dry_run, allow_expanded=allow_expanded))
     except (RunError, OSError, ValueError) as error:

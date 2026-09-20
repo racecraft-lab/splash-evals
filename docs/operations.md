@@ -10,6 +10,8 @@ This is a local research workbench, not a hosted model service. Running the site
 - Use an authorized local model in LM Studio and keep the evidence/state directory outside the Git checkout.
 - Check available memory, model identity, and local execution before sending test requests.
 - Choose and freeze the task set and budget. A setup check is not a held-out capability study.
+- Complete the [capability-run readiness checklist](capability-readiness.md) before launching a
+  held-out run.
 
 Start with `doctor`, discovery, and a settings snapshot. The sequence below is an operator reference, **not a script to paste and execute all at once**. Replace uppercase placeholders with reviewed local values; stop when a gate fails.
 
@@ -18,6 +20,38 @@ If you only want to understand the findings, [read the setup-check report](local
 [See how the local system works](architecture.md) · [Review the privacy boundary](privacy.md)
 
 </section>
+
+## Headless LM Studio operator contract
+
+Use LM Studio's recommended standalone `llmster` daemon for the controlled headless condition.
+The model key is an operator-reviewed local input; the loaded API identifier is fixed:
+
+```bash
+lms daemon up
+lms ls
+lms load <REVIEWED_LOCAL_MODEL_KEY> --identifier racecraft-splash-local --context-length 32768
+lms ps
+lms server start
+```
+
+LM Studio's official [headless-service guide](https://lmstudio.ai/docs/developer/core/headless)
+documents `llmster`, `lms daemon up`, and server startup. The official
+[`lms load` reference](https://lmstudio.ai/docs/cli/load) documents custom identifiers and
+`--context-length`.
+
+For this study, select only `racecraft-splash-local`, use 32,768-token context, batch and maximum
+in-flight concurrency 1, and zero transport retries. Disable response caching and refuse JIT
+substitution, cloud fallback, or automatic selection of another model. Confirm the loaded
+instance with `lms ps` and workbench discovery before smoke and held-out execution.
+
+LM Link may remain enabled only if the selected instance reports `deviceIdentifier: null`. Any
+non-null device identifier blocks the run as remote execution. This is a fail-closed workbench
+rule, not a field-level guarantee in LM Studio's documentation. LM Studio's
+[LM Link device guide](https://lmstudio.ai/docs/lmlink/basics/add-device) explains that linked
+remote models are device-associated; re-qualify the null rule after runtime updates.
+
+Do not launch the pilot commands below until every prerequisite through explicit held-out launch
+approval is checked on the [readiness page](capability-readiness.md).
 
 ## Normal local sequence
 

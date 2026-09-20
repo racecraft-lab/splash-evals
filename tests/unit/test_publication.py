@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,7 @@ import pytest
 
 import local_evals.publication as publication
 from local_evals.publication import prepare_publication
+from local_evals.sandbox import SandboxPolicy
 
 
 def _policies() -> dict[str, Any]:
@@ -20,6 +22,167 @@ def _policies() -> dict[str, Any]:
             "denied_suffixes": [".zip", ".tar", ".gz", ".ipynb", ".sqlite", ".db"],
         }
     }
+
+
+def _capability_manifest() -> dict[str, Any]:
+    sample_manifest = "a" * 64
+    instance_hash = "b" * 64
+    scorer_hash = "c" * 64
+    calibration_hash = "d" * 64
+    image_digest = "sha256:" + ("e" * 64)
+    sandbox_policy = {
+        "image_reference": f"racecraft/synthetic-grader@{image_digest}",
+        "image_digest": image_digest,
+    }
+    policy = SandboxPolicy(**sandbox_policy)
+    attestation_revision = "synthetic-sandbox-v1"
+    attestation_file_sha256 = "8" * 64
+    fingerprint = "9" * 64
+    return {
+        "status": "completed",
+        "evidence_class": "local_measurement",
+        "model_is_splash": True,
+        "suite": "pilot",
+        "held_out": True,
+        "selection_status": "held_out_verified",
+        "calibration_heldout_separation": "held_out",
+        "task_families": ["reasoning", "coding"],
+        "protocol": {
+            "task_set": "synthetic-held-out-v1",
+            "scorer_version": "qualified-exact-v1",
+        },
+        "historical_protocol": {
+            "benchmark_version": "synthetic-benchmark-v1",
+            "dataset_revision": "synthetic-dataset-revision-v1",
+            "split": "held_out",
+            "sample_id_manifest": sample_manifest,
+            "sample_count": 3,
+            "prompts_or_template_revision": "synthetic-template-v1",
+            "attempts_per_task": 1,
+            "failure_policy": "count_failures_as_incorrect",
+            "denominator": "all_planned_samples",
+            "scorer_revision": "qualified-exact-v1",
+        },
+        "selection_evidence": {
+            "ordered_sample_manifest_sha256": sample_manifest,
+            "manifest_source": "external",
+            "frozen_before_tuning": True,
+            "contamination_review_revision": "synthetic-review-v1",
+        },
+        "locality_evidence": {
+            "status": "verified_local",
+            "endpoint_loopback": True,
+            "local_instance_evidence": True,
+        },
+        "model_instance_evidence": {
+            "selection": "exact_loaded_record",
+            "splash_attribution": "confirmed",
+            "instance_id_sha256": instance_hash,
+            "native_identity": {"loaded_instance_id_match": True},
+        },
+        "served_model_evidence": {
+            "status": "verified",
+            "match": True,
+            "requested_instance_id_sha256": instance_hash,
+            "response_instance_id_sha256": instance_hash,
+        },
+        "runtime_evidence": {
+            "transport": "lmstudio_native_v1",
+            "endpoint": "/api/v1/chat",
+            "cli_version": "synthetic-cli-v1",
+            "engine": "synthetic-engine",
+            "engine_version": "synthetic-engine-v1",
+        },
+        "transport": {"redirects": False, "cloud_fallback": False},
+        "reasoning_evidence": {
+            "requested": "high",
+            "transmitted": "high",
+            "effective_status": "accepted_by_runtime",
+        },
+        "scorer_evidence": {
+            "scorer_id": "qualified-exact-v1",
+            "content_sha256": scorer_hash,
+            "namespace": "benchmark",
+            "evidence_class": "scorer_qualification",
+            "eligible_for_capability_report": True,
+            "calibration": {
+                "status": "qualified",
+                "manifest_sha256": calibration_hash,
+                "revision": "synthetic-calibration-v1",
+                "independent_from_evaluation": True,
+            },
+        },
+        "sandbox_policy": sandbox_policy,
+        "sandbox_attestation": {
+            "schema_version": 1,
+            "attestation_revision": attestation_revision,
+            "qualified": True,
+            "container_runtime": "docker",
+            "platform": policy.platform,
+            "image_reference": policy.image_reference,
+            "image_digest": policy.image_digest,
+            "policy_sha256": policy.sha256,
+            "disposable": True,
+            "fresh_container_per_case": True,
+            "network_mode": "none",
+            "network_disabled": True,
+            "non_root_user": policy.user,
+            "read_only_rootfs": True,
+            "cap_drop": ["ALL"],
+            "no_new_privileges": True,
+            "pids_limit": policy.pids_limit,
+            "memory_bytes": policy.memory_bytes,
+            "cpus": policy.cpus,
+            "nofile_limit": policy.nofile_limit,
+            "tmpfs_bytes": policy.tmpfs_bytes,
+            "published_ports": [],
+            "host_mounts": [],
+            "host_home_mounted": False,
+            "docker_socket_mounted": False,
+            "secrets_present": False,
+        },
+        "sandbox_qualification": {
+            "schema_version": 1,
+            "qualified": True,
+            "attestation_revision": attestation_revision,
+            "image_digest": policy.image_digest,
+            "policy_sha256": policy.sha256,
+            "qualification_event_count": 17,
+        },
+        "sandbox_attestation_sha256": attestation_file_sha256,
+        "coding_run_binding": {
+            "attestation_file_sha256": attestation_file_sha256,
+            "attestation_revision": attestation_revision,
+            "denominator_count": 1,
+            "denominator_policy": "all_attempted_cases",
+            "frozen_before_execution": True,
+            "image_digest": policy.image_digest,
+            "planned_case_count": 1,
+            "attempted_case_count": 1,
+            "policy_sha256": policy.sha256,
+            "run_fingerprint_sha256": fingerprint,
+        },
+        "fingerprint": fingerprint,
+        "selection_hash": sample_manifest,
+        "aggregate": {
+            "planned": 3,
+            "attempted": 3,
+            "completed": 3,
+            "scorable": 3,
+            "failed": 0,
+            "censored": 0,
+            "unattempted": 0,
+        },
+        "primary_objective_status_if_run": "pilot_only",
+        "limitations": ["Synthetic unit-test record; not a model result."],
+    }
+
+
+def _replace_path(manifest: dict[str, Any], path: tuple[str, ...], replacement: Any) -> None:
+    target = manifest
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = replacement
 
 
 def _init_identity_repo(tmp_path: Path):
@@ -442,22 +605,20 @@ def test_lightweight_tag_requires_manual_review(
 def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    manifest = {
-        "evidence_class": "local_measurement",
-        "model_is_splash": True,
-        "suite": "pilot",
-        "held_out": True,
-        "protocol": {"task_set": "synthetic-held-out-v1", "scorer_version": "synthetic-v1"},
-        "selection_hash": "synthetic-selection-hash",
-        "aggregate": {"successes": 2, "completed": 3},
-        "primary_objective_status_if_run": "pilot_only",
-        "limitations": ["Synthetic unit-test record; not a model result."],
-        "private_task_manifest": [{"prompt": "must not export"}],
-        "raw_response": {"content": "must not export"},
-        "instance_id": "must-not-export",
-        "started_at": "2026-09-19T00:00:00Z",
-        "local_path": "/" + "Users/synthetic-operator/private",
-    }
+    manifest = _capability_manifest()
+    manifest.update(
+        {
+            "private_task_manifest": [{"prompt": "must not export"}],
+            "raw_response": {"content": "must not export"},
+            "instance_id": "must-not-export",
+            "started_at": "2026-09-19T00:00:00Z",
+            "local_path": "/" + "Users/synthetic-operator/private",
+            "sandbox_private_logs": [{"stdout": "private-sandbox-output"}],
+            "sandbox_command": ["docker", "run", "private-container-id"],
+            "generated_code": "private-generated-code",
+            "hidden_tests": ["private-hidden-test"],
+        }
+    )
     monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
     monkeypatch.setattr(
         publication,
@@ -472,6 +633,24 @@ def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
     preview = result["preview"]
     assert preview["publication_purpose"] == "held_out_model_capability"
     assert preview["capability_evidence"] is True
+    assert set(preview["coding_sandbox"]) == {
+        "qualification",
+        "attestation_file_sha256",
+        "run_fingerprint_sha256",
+        "frozen_before_execution",
+        "planned_case_count",
+        "attempted_case_count",
+        "denominator_count",
+        "denominator_policy",
+    }
+    assert set(preview["coding_sandbox"]["qualification"]) == {
+        "schema_version",
+        "qualified",
+        "attestation_revision",
+        "image_digest",
+        "policy_sha256",
+        "qualification_event_count",
+    }
     assert set(preview) == set(result["allowlisted_fields"])
     serialized = repr(preview)
     for forbidden in (
@@ -482,24 +661,249 @@ def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
         "private_task_manifest",
         "raw_response",
         "instance_id",
+        "private-sandbox-output",
+        "private-container-id",
+        "private-generated-code",
+        "private-hidden-test",
     ):
         assert forbidden not in serialized
+
+
+@pytest.mark.parametrize(
+    ("path", "replacement", "expected_field"),
+    [
+        (("status",), "partial", "status"),
+        (("aggregate", "attempted"), 2, "aggregate.attempted"),
+        (("aggregate", "censored"), 1, "aggregate.censored"),
+        (("locality_evidence", "status"), "remote", "locality_evidence.status"),
+        (("served_model_evidence", "match"), False, "served_model_evidence.match"),
+        (
+            ("model_instance_evidence", "instance_id_sha256"),
+            "f" * 64,
+            "served_model_evidence.requested_instance_id_sha256",
+        ),
+        (("runtime_evidence", "engine_version"), None, "runtime_evidence.engine_version"),
+        (
+            ("selection_evidence", "manifest_source"),
+            "builtin",
+            "selection_evidence.manifest_source",
+        ),
+        (
+            ("selection_evidence", "frozen_before_tuning"),
+            False,
+            "selection_evidence.frozen_before_tuning",
+        ),
+        (
+            ("selection_evidence", "contamination_review_revision"),
+            None,
+            "selection_evidence.contamination_review_revision",
+        ),
+        (
+            ("historical_protocol", "benchmark_version"),
+            None,
+            "historical_protocol.benchmark_version",
+        ),
+        (
+            ("historical_protocol", "dataset_revision"),
+            "unresolved",
+            "historical_protocol.dataset_revision",
+        ),
+        (("historical_protocol", "split"), None, "historical_protocol.split"),
+        (
+            ("historical_protocol", "sample_id_manifest"),
+            "e" * 64,
+            "selection_evidence.ordered_sample_manifest_sha256",
+        ),
+        (
+            ("historical_protocol", "prompts_or_template_revision"),
+            None,
+            "historical_protocol.prompts_or_template_revision",
+        ),
+        (
+            ("historical_protocol", "attempts_per_task"),
+            2,
+            "historical_protocol.attempts_per_task",
+        ),
+        (
+            ("historical_protocol", "failure_policy"),
+            "drop_failures",
+            "historical_protocol.failure_policy",
+        ),
+        (
+            ("historical_protocol", "denominator"),
+            "successful_only",
+            "historical_protocol.denominator",
+        ),
+        (
+            ("scorer_evidence", "content_sha256"),
+            "not-a-hash",
+            "scorer_evidence.content_sha256",
+        ),
+        (
+            ("scorer_evidence", "namespace"),
+            "harness-only",
+            "scorer_evidence.namespace",
+        ),
+        (
+            ("scorer_evidence", "evidence_class"),
+            "synthetic_mock",
+            "scorer_evidence.evidence_class",
+        ),
+        (
+            ("scorer_evidence", "eligible_for_capability_report"),
+            False,
+            "scorer_evidence.eligible_for_capability_report",
+        ),
+        (
+            ("scorer_evidence", "calibration", "status"),
+            "harness_only",
+            "scorer_evidence.calibration.status",
+        ),
+        (
+            ("scorer_evidence", "calibration", "independent_from_evaluation"),
+            False,
+            "scorer_evidence.calibration.independent_from_evaluation",
+        ),
+        (("selection_status",), "post_hoc_exploratory", "selection_status"),
+        (
+            ("calibration_heldout_separation",),
+            "post_hoc_exploratory",
+            "calibration_heldout_separation",
+        ),
+        (("sandbox_policy",), {}, "sandbox_policy"),
+        (("sandbox_attestation",), {}, "sandbox_attestation"),
+        (
+            ("sandbox_attestation", "network_mode"),
+            "bridge",
+            "sandbox_attestation",
+        ),
+        (
+            ("sandbox_qualification", "attestation_revision"),
+            "different-revision",
+            "sandbox_qualification.attestation_revision",
+        ),
+        (
+            ("sandbox_qualification", "qualification_event_count"),
+            0,
+            "sandbox_qualification.qualification_event_count",
+        ),
+        (
+            ("sandbox_attestation_sha256",),
+            "not-a-hash",
+            "coding_run_binding.attestation_file_sha256",
+        ),
+        (
+            ("coding_run_binding", "policy_sha256"),
+            "0" * 64,
+            "coding_run_binding.policy_sha256",
+        ),
+        (
+            ("coding_run_binding", "attestation_revision"),
+            "different-revision",
+            "coding_run_binding.attestation_revision",
+        ),
+        (
+            ("coding_run_binding", "run_fingerprint_sha256"),
+            "7" * 64,
+            "coding_run_binding.run_fingerprint_sha256",
+        ),
+        (
+            ("coding_run_binding", "attempted_case_count"),
+            0,
+            "coding_run_binding.case_denominator",
+        ),
+        (
+            ("coding_run_binding", "denominator_count"),
+            0,
+            "coding_run_binding.case_denominator",
+        ),
+    ],
+)
+def test_capability_export_fails_closed_when_evidence_is_incomplete(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    path: tuple[str, ...],
+    replacement: Any,
+    expected_field: str,
+) -> None:
+    manifest = deepcopy(_capability_manifest())
+    _replace_path(manifest, path, replacement)
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_blocked"
+    assert result["preview"]["publication_purpose"] == "not_eligible"
+    assert result["preview"]["capability_evidence"] is False
+    assert any(
+        blocker.get("rule") == "capability-publication-evidence-incomplete"
+        and blocker.get("field") == expected_field
+        for blocker in result["blockers"]
+    )
+
+
+def test_skeletal_held_out_manifest_is_not_capability_evidence(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = {
+        "evidence_class": "local_measurement",
+        "model_is_splash": True,
+        "suite": "pilot",
+        "held_out": True,
+    }
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_blocked"
+    assert result["preview"]["capability_evidence"] is False
+    assert any(
+        blocker.get("rule") == "capability-publication-evidence-incomplete"
+        for blocker in result["blockers"]
+    )
+
+
+def test_private_sandbox_fields_are_rejected_from_sanitized_qualification(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = _capability_manifest()
+    manifest["sandbox_qualification"]["private_logs"] = [
+        {"command": "private-command", "container_id": "private-container"}
+    ]
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_blocked"
+    assert result["preview"]["capability_evidence"] is False
+    assert any(
+        blocker.get("field") == "sandbox_qualification.schema" for blocker in result["blockers"]
+    )
+    assert "private-command" not in repr(result["preview"])
+    assert "private-container" not in repr(result["preview"])
 
 
 def test_public_export_omits_raw_run_id_from_payload_and_markdown(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     raw_run_id = "splash-pilot-20260919T204522Z"
-    manifest = {
-        "evidence_class": "local_measurement",
-        "model_is_splash": True,
-        "suite": "pilot",
-        "held_out": True,
-        "protocol": {"task_set": "synthetic-held-out-v1", "scorer_version": "synthetic-v1"},
-        "aggregate": {"successes": 2, "completed": 3},
-        "primary_objective_status_if_run": "pilot_only",
-        "limitations": [raw_run_id],
-    }
+    manifest = _capability_manifest()
+    manifest["limitations"] = [raw_run_id]
     monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
     monkeypatch.setattr(
         publication,

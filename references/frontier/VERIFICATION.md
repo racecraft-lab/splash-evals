@@ -21,6 +21,12 @@ metric unit, and source revision/content hash against the catalog entry. The res
 `second_pass_match` when those fields agree. A null catalog field remains unknown; this check
 does not turn it into a value and does not make a record directly comparable.
 
+The GPT-5.6 HTML source is dynamic. Its recorded digest is explicitly a normalized hash of the
+source-locator excerpt (publication date, table locator, and the published GPT-5.5/GPT-5.6 GPQA
+values), not a claim that the entire rendered page is immutable. The official URL and locator
+remain the authoritative source; the excerpt hash only makes the second-pass transcription
+check repeatable.
+
 | Record ID | Source family | Reported numeric value | Numeric transcription check |
 |---|---|---:|---|
 | `anthropic-claude-3.5-sonnet-2024-06-gpqa` | Anthropic evaluation reference | 59.4% | `second_pass_match` |
@@ -38,6 +44,10 @@ does not turn it into a value and does not make a record directly comparable.
 | `openai-gpt-4o-2024-11-20-ifeval` | OpenAI GPT-4.1 appendix | 81.0% | `second_pass_match` |
 | `openai-o1-high-gpqa-diamond` | OpenAI GPT-4.1 appendix | 75.7% | `second_pass_match` |
 | `openai-o1-high-ifeval` | OpenAI GPT-4.1 appendix | 92.2% | `second_pass_match` |
+| `openai-gpt-5.5-2026-07-gpqa-diamond` | OpenAI GPT-5.6 announcement, Academic table | 93.6% | `second_pass_match` |
+| `openai-gpt-5.6-sol-2026-07-gpqa-diamond` | OpenAI GPT-5.6 announcement, Academic table | 94.6% | `second_pass_match` |
+| `openai-gpt-5.6-terra-2026-07-gpqa-diamond` | OpenAI GPT-5.6 announcement, Academic table | 92.9% | `second_pass_match` |
+| `openai-gpt-5.6-luna-2026-07-gpqa-diamond` | OpenAI GPT-5.6 announcement, Academic table | 92.3% | `second_pass_match` |
 
 The ledger verifies transcription only. It does not verify undocumented benchmark protocol
 fields, establish an exact benchmark version or dataset revision, or authorize remote

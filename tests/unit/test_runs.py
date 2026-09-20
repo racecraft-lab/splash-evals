@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -246,6 +247,7 @@ def _local_config() -> dict[str, object]:
     return {
         "server": {
             "origin": "http://127.0.0.1:1234",
+            "openai_base_url": "http://127.0.0.1:1234/v1",
             "api_key_env": "LM_STUDIO_API_KEY",
         },
         "model": {"key": "splash"},
@@ -581,3 +583,120 @@ def test_execute_refuses_before_inference_when_locality_is_ambiguous(
         runs.execute_run("smoke", "lmstudio-as-found", root=tmp_path)
 
     assert inference_called is False
+
+
+def test_core_plan_uses_sanitized_evalscope_readiness_without_synthetic_tasks(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    state = tmp_path / "external-state"
+    profile = {
+        "expanded": True,
+        "repetitions": 1,
+        "max_output_tokens": 4096,
+        "task_set": "private-frozen-core-v1",
+        "scorer_version": "family-manifest-pinned",
+        "evidence_class": "local_measurement",
+    }
+    readiness = {
+        "status": "ready",
+        "blockers": [],
+        "metadata": {
+            "runner": "evalscope-1.12",
+            "total_samples": 60,
+            "manifest_set_sha256": "a" * 64,
+        },
+    }
+    monkeypatch.setattr(runs, "load_suite", lambda *args, **kwargs: profile)
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(
+        runs,
+        "load_policies",
+        lambda *args, **kwargs: {"initial_run_limits": {}},
+    )
+    monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
+    monkeypatch.setattr(
+        runs,
+        "_resolve_model",
+        lambda config: runs.ModelAttribution(
+            model_id="publisher/racecraft-splash-local",
+            model_is_splash=True,
+            locality_evidence={"status": "verified_local", "verified": True},
+            model_instance_evidence={"selection": "exact_loaded_record"},
+            blockers=(),
+        ),
+    )
+    monkeypatch.setattr(
+        runs,
+        "_reasoning_evidence",
+        lambda *args: ({"transmitted": "off"}, []),
+    )
+    monkeypatch.setattr(runs, "inspect_core_readiness", lambda *args, **kwargs: readiness)
+    monkeypatch.setattr(
+        runs,
+        "suite_tasks",
+        lambda suite: (_ for _ in ()).throw(AssertionError("core must not use built-in tasks")),
+    )
+
+    plan = runs.build_execution_plan(
+        "core", "lmstudio-as-found", allow_expanded=True, root=tmp_path
+    )
+
+    assert plan["runner"] == "evalscope-1.12"
+    assert plan["core_readiness"] == readiness
+    assert plan["tasks"] == []
+    assert plan["sample_count"] == 60
+    assert plan["request_count"] == 60
+    assert plan["blockers"] == []
+    assert plan["selection_hash"] == "a" * 64
+    assert plan["output_directory"].startswith("external-state://runs/")
+    assert str(state) not in json.dumps(plan)
+
+
+def test_core_execution_dispatches_to_evalscope_after_plan_gates(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    state = tmp_path / "external-state"
+    profile = {"suite": "core"}
+    config = _local_config()
+    plan = {
+        "blockers": [],
+        "runner": "evalscope-1.12",
+        "model_is_splash": True,
+        "locality_evidence": {"status": "verified_local"},
+    }
+    observed: dict[str, object] = {}
+    monkeypatch.setattr(runs, "build_execution_plan", lambda *args, **kwargs: plan)
+    monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
+    monkeypatch.setattr(runs, "load_suite", lambda *args, **kwargs: profile)
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: config)
+
+    def execute_core(*args: object, **kwargs: object) -> dict[str, object]:
+        observed.update(kwargs)
+        return {"status": "evalscope_completed", "runner": "evalscope-1.12"}
+
+    monkeypatch.setattr(runs, "execute_evalscope_core", execute_core)
+    monkeypatch.setattr(
+        runs,
+        "suite_tasks",
+        lambda suite: (_ for _ in ()).throw(AssertionError("core must not use built-in tasks")),
+    )
+
+    result = runs.execute_run("core", "lmstudio-as-found", allow_expanded=True, root=tmp_path)
+
+    assert result["runner"] == "evalscope-1.12"
+    assert observed["repo"] == tmp_path
+    assert observed["state"] == state
+    assert observed["server_origin"] == "http://127.0.0.1:1234/v1"
+
+
+def test_resume_and_rescore_explicitly_refuse_evalscope_core_semantics(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = {"status": "partial", "suite": "core", "runner": "evalscope-1.12"}
+    monkeypatch.setattr(runs, "_run_dir", lambda *args, **kwargs: tmp_path)
+    monkeypatch.setattr(runs, "load_run", lambda *args, **kwargs: (manifest, []))
+
+    with pytest.raises(runs.ResumeRefused, match="EvalScope core resume is unavailable"):
+        runs.resume_run("core-run", dry_run=True, root=tmp_path)
+    with pytest.raises(runs.RunError, match="EvalScope core rescore is unavailable"):
+        runs.rescore_run("core-run", "builtin-exact-v1", root=tmp_path)

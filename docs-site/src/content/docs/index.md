@@ -41,7 +41,7 @@ How close can local Splash / Qwen3.8 come to current and previous-generation fro
 
 ## What comes next
 
-Freeze the tasks, scoring rules, and comparison conditions; run the local study; then publish the results and their limits. [See the comparison coverage](/splash-evals/dashboard/#benchmark-comparison-board).
+Freeze the tasks, scoring rules, and comparison conditions; run the local study; then publish the results and their limits. [Review every remaining launch gate](/splash-evals/capability-readiness/) or [see the comparison coverage](/splash-evals/dashboard/#benchmark-comparison-board).
 
 </div>
 </div>
