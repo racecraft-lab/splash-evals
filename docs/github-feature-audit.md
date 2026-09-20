@@ -3,31 +3,31 @@
 **Audit date:** 2026-09-19
 **Repository target:** `racecraft-lab/splash-evals`
 **Requested state:** shown below
-**Actual state:** `not-yet-applied` for every row until repository/API/UI read-back and a
-safe test pull request prove otherwise.
+**Actual state:** live API read-back and hosted workflow evidence are recorded below. The
+repository was recreated only after the local privacy, identity, and publication gates passed.
 
 | Feature | Requested | Actual | Verification required / blocker |
 |---|---|---|---|
-| Public repo, README, Apache-2.0, community profile | enabled | not-yet-applied | Create only after privacy and identity gates; verify community profile detection. |
-| Issues and forms | enabled | not-yet-applied | Verify repository setting and sanitized issue creation. |
-| Discussions | deferred | not-yet-applied | Blocked until an active moderation owner and conduct channel are verified. |
-| Lightweight Project | if permission allows | not-yet-applied | Non-blocking; do not request paid scope. |
-| Repository branch/tag rulesets | required | not-yet-applied | Bootstrap CI first; then require stable `CI / final gate`; protect release tags. |
-| GitHub squash provenance exception | local policy, outside-checkout evidence boundary, offline validator, current-main containment, and Actions-context binding implemented; clean-repo live readback pending | not-yet-applied | Only a sanitized, schema-validated API evidence file may exempt an already-merged squash ancestor; verify the clean public repository, ref, actor, identities, trees, current `main` containment, and `CI / final gate` check after publication. |
-| Independent approval / CODEOWNERS | team ownership required | not-yet-applied | Create `racecraft-lab/maintainers`, add `fgabelmannjr`, grant `maintain` on this repository only, and verify GitHub recognizes the team rule. A second independent reviewer is not yet available. |
-| Dependency graph | enabled | not-yet-applied | Verify lockfile coverage after first push. |
-| Dependabot alerts and security updates | enabled | not-yet-applied | Read back repository security settings. |
-| Dependabot weekly version updates | configured | not-yet-applied | Verify Actions and uv ecosystem behavior; never auto-merge scientific dependencies. |
-| Dependency review | required on PRs | not-yet-applied | Verify API availability and a completed test PR. |
-| CodeQL | default setup, once | not-yet-applied | Public-repository code scanning is free; enable after push and require a completed Python/Actions analysis, not just the switch. |
-| Secret scanning and repository push protection | enabled | not-yet-applied | Public-repository secret scanning is free and automatic; verify repository-level state and push protection without a purchase or trial. |
-| Private vulnerability reporting | enabled | not-yet-applied | `SECURITY.md` is not proof; read back the feature. |
-| Standard hosted Actions | enabled | not-yet-applied | Restrict to GitHub-hosted CPU runners; no self-hosted labels, secrets, or Mac bridge. |
-| Pages | enabled from Actions | not-yet-applied | Deploy allowlisted static docs and verify the real URL before setting homepage. |
-| Draft release, checksums, SBOM, attestations | manual | not-yet-applied | Run only from protected main after scans; keep first release draft/prerelease. |
-| Merge queue | deferred | not-yet-applied | Revisit only when contributor volume justifies it. |
-| Wiki | disabled | not-yet-applied | Versioned docs and Pages are canonical. |
-| Packages, GHCR, Sponsors, Codespaces, Copilot, GitHub Models | not required | not-yet-applied | No initial value; never use GitHub Models for evaluation. |
+| Public repo, README, Apache-2.0, community profile | enabled | verified | Public repository files and community health files were read back after the audited root push. |
+| Issues and forms | enabled | verified | Issues are enabled and the tracked forms contain no private state. |
+| Discussions | deferred | disabled | No active moderation owner or conduct channel has been established. |
+| Lightweight Project | if permission allows | not created | Non-blocking; no paid scope was requested. |
+| Repository branch/tag rulesets | required | verified | Active no-bypass rulesets protect `main`, require `CI / final gate`, require PRs and squash merges, and prevent release-tag mutation/deletion. |
+| GitHub squash provenance exception | outside-checkout evidence plus offline validation | verified | A GitHub-signed squash commit passed the hosted publication audit and final gate on run `35480361663`. |
+| Independent approval / CODEOWNERS | team ownership required | reduced assurance | `racecraft-lab/maintainers` has repository maintain permission and one member; zero approvals plus mandatory CI is enforced because no independent reviewer is available. |
+| Dependency graph | enabled | verified | GitHub recognized the tracked lockfile after the initial push. |
+| Dependabot alerts and security updates | enabled | verified | Repository security settings were read back as enabled. |
+| Dependabot weekly version updates | configured | verified | Dependabot opened update pull requests; scientific dependencies remain manual-review only. |
+| Dependency review | required on PRs | verified | The dependency-review check completed on hosted pull-request runs. |
+| CodeQL | default setup, once | verified | Default setup completed Python and Actions analysis, including post-merge run `35480361331`. |
+| Secret scanning and repository push protection | enabled | verified | Secret scanning, push protection, and validity checks were read back as enabled without a trial. |
+| Private vulnerability reporting | enabled | verified | The repository feature was read back as enabled. |
+| Standard hosted Actions | enabled | verified | Pull-request and push gates ran on `ubuntu-24.04`; no self-hosted runner, repository secret, webhook, deploy key, or Mac bridge exists. |
+| Pages | enabled from Actions | verified | The hosted documentation workflow passed and `https://racecraft-lab.github.io/splash-evals/` returned HTTP 200. |
+| Draft release, checksums, SBOM, attestations | manual | configured | The workflow is restricted to protected `main`, scans inspected artifacts, emits checksums/SBOM/attestations, and creates draft prereleases for maintainer review. |
+| Merge queue | deferred | disabled | Contributor volume does not justify it. |
+| Wiki | disabled | verified | Versioned docs and Pages are canonical. |
+| Packages, GHCR, Sponsors, Codespaces, Copilot, GitHub Models | not required | not enabled for evaluation | No initial value; GitHub Models is never used for evaluation. |
 
 ## Cost and storage policy
 
@@ -45,8 +45,8 @@ The local squash-provenance collector uses the documented [commit](https://docs.
 [compare](https://docs.github.com/en/rest/commits/commits#compare-two-commits),
 [pull-request](https://docs.github.com/en/rest/pulls/pulls), and
 [check-run](https://docs.github.com/en/rest/checks/runs#list-check-runs-for-a-git-reference)
-REST fields, but this document does not claim that the recreated public repository or its
-settings have been live-verified.
+REST fields. The recreated repository, rulesets, security controls, hosted checks, CodeQL,
+and Pages state were live-verified after publication.
 Do not enable larger runners, private/internal-repository security licensing, trials, or
 other plan-dependent add-ons.
 
