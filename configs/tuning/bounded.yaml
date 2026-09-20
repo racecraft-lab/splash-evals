@@ -1,0 +1,26 @@
+schema_version: 1
+id: bounded
+objective: Preserve calibration correctness and reliability, then prefer lower complete-answer latency.
+held_out_policy: frozen_and_sealed_until_candidate_selection
+max_candidates_beyond_baseline: 3
+candidates:
+  - id: candidate-sampling-reference
+    status: proposed
+    delta:
+      temperature: 1.0
+      top_p: 0.95
+      top_k: 20
+    reason: Source-aligned sampling candidate; transmitted only if the endpoint accepts each field.
+  - id: candidate-low-variance
+    status: proposed
+    delta:
+      temperature: 0.2
+      top_p: 0.95
+    reason: Lower-variance diagnostic; a generation-policy change, not a runtime-speed optimization.
+  - id: candidate-concise
+    status: proposed
+    delta:
+      temperature: 0.7
+      top_p: 0.9
+      max_tokens: 192
+    reason: Bounded-output diagnostic; rejected if output censoring or correctness regresses.

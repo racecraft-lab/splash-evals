@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a bounded capability that preserves local-only inference and privacy.
+title: "feature: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Research or operator outcome
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Safety, privacy, cost, and scientific boundaries
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Required confirmations
+      options:
+        - label: The proposal requires no cloud model calls, paid services, self-hosted public runner, tunnel, or CI bridge to a private machine.
+          required: true
+        - label: The proposal includes no PII, secrets, private paths, raw model logs, or restricted benchmark content.
+          required: true

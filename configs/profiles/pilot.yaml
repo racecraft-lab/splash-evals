@@ -1,0 +1,12 @@
+schema_version: 1
+suite: pilot
+evidence_class: local_measurement
+expanded: false
+repetitions: 1
+task_set: builtin-heldout-pilot-v1
+scorer_version: builtin-exact-v1
+max_output_tokens: 512
+limitations:
+  - Small synthetic practical-task diagnostic, not a leaderboard estimate.
+  - No direct historical-frontier comparison unless a reference uses the identical task manifest and protocol.
+  - Does not include GPQA, IFEval, MMLU-Pro, or executable coding.

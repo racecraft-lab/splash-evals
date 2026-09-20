@@ -1,0 +1,43 @@
+schema_version: 1
+reference_id: aider-claude-3.7-sonnet-20250219-thinking-32k-polyglot-pass2
+provider: Anthropic
+model_display_name: Claude 3.7 Sonnet (32k thinking tokens)
+model_snapshot_id: "claude-3-7-sonnet-20250219"
+release_period: "2025-02"
+measurement_date: "2025-02-24"
+source_publication_date: null
+source_url: "https://aider.chat/docs/leaderboards/"
+source_locator: "Polyglot leaderboard record: claude-3-7-sonnet-20250219 (32k thinking tokens); dirname 2025-02-24-21-47-23--sonnet37-diff-think-32k-64k"
+source_revision_or_content_hash: "sha256:cea6cab3ac65e4d41cce072fcac5540497d757b3a6f72d997b7c3607b44c470e"
+retrieved_on: "2026-09-19"
+evidence_class: published_historical_reference
+benchmark:
+  name: Aider polyglot
+  version: null
+  split: full_six_language
+  dataset_revision: null
+  sample_count: 225
+  sample_id_manifest: null
+  metric_name: success_after_permitted_repair
+  metric_unit: percent
+  higher_is_better: true
+protocol:
+  few_shot: null
+  prompts_or_template_revision: null
+  reasoning_mode: extended_thinking_32000_tokens
+  output_budget: null
+  attempts_per_task: 2
+  aggregation: pass_rate_2
+  tool_access: aider_editing_tools
+  agent_scaffold_revision: "Aider 0.75.1.dev; commits 60d11a6, 93edbda"
+  scorer_revision: null
+  answer_extraction: null
+  edit_format: diff
+reported_score: 64.9
+reported_uncertainty: null
+comparability: incompatible
+comparability_notes:
+  - "Pass rate 2 is success after a permitted repair, not independent-sample pass@2."
+  - "The 32k thinking budget is a distinct condition from standard/no-thinking mode."
+rights_and_access_notes: "Benchmark-operator factual record only; no exercises or model responses redistributed."
+verification_status: source_verified

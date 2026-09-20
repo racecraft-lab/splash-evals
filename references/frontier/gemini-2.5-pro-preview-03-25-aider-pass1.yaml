@@ -1,0 +1,43 @@
+schema_version: 1
+reference_id: aider-gemini-2.5-pro-preview-03-25-polyglot-pass1
+provider: Google
+model_display_name: Gemini 2.5 Pro Preview 03-25
+model_snapshot_id: "gemini-2.5-pro-preview-03-25"
+release_period: "2025-03"
+measurement_date: "2025-04-12"
+source_publication_date: null
+source_url: "https://aider.chat/docs/leaderboards/"
+source_locator: "Polyglot leaderboard record: Gemini 2.5 Pro Preview 03-25; dirname 2025-04-12-04-55-50--gemini-25-pro-diff-fenced"
+source_revision_or_content_hash: "sha256:cea6cab3ac65e4d41cce072fcac5540497d757b3a6f72d997b7c3607b44c470e"
+retrieved_on: "2026-09-19"
+evidence_class: published_historical_reference
+benchmark:
+  name: Aider polyglot
+  version: null
+  split: full_six_language
+  dataset_revision: null
+  sample_count: 225
+  sample_id_manifest: null
+  metric_name: first_attempt_success
+  metric_unit: percent
+  higher_is_better: true
+protocol:
+  few_shot: null
+  prompts_or_template_revision: null
+  reasoning_mode: null
+  output_budget: null
+  attempts_per_task: 1
+  aggregation: pass_rate_1
+  tool_access: aider_editing_tools
+  agent_scaffold_revision: "Aider 0.81.3.dev; commit 0282574"
+  scorer_revision: null
+  answer_extraction: null
+  edit_format: diff-fenced
+reported_score: 40.9
+reported_uncertainty: null
+comparability: incompatible
+comparability_notes:
+  - "This March experimental/preview identity is not a later Gemini 2.5 Pro preview or stable release."
+  - "Planned local coding pilot is not the 225-case six-language suite."
+rights_and_access_notes: "Benchmark-operator factual record only; no exercises or model responses redistributed."
+verification_status: source_verified

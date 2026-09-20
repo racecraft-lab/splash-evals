@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this workbench, cite the software and the primary sources for every historical result."
+title: "Splash Evals"
+type: software
+authors:
+  - name: "Racecraft Lab"
+version: "0.1.0"
+date-released: "2026-09-19"
+license: Apache-2.0
+repository-code: "https://github.com/racecraft-lab/splash-evals"
+url: "https://racecraft-lab.github.io/splash-evals/"
+abstract: "Local evaluation of Splash through LM Studio with qualified dated frontier-model references."
+keywords:
+  - llm-evaluation
+  - lm-studio
+  - splash
+  - benchmarks

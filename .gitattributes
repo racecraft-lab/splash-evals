@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+/.github export-ignore
+/tests export-ignore
+/.env.example export-ignore
+/AGENTS.md export-ignore
+/docs/github-feature-audit.md export-ignore

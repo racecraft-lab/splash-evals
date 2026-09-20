@@ -1,0 +1,12 @@
+changelog:
+  exclude:
+    labels: [skip-changelog]
+  categories:
+    - title: Security and privacy
+      labels: [security, privacy]
+    - title: Research methodology
+      labels: [research]
+    - title: Features and fixes
+      labels: [enhancement, bug]
+    - title: Other changes
+      labels: ["*"]

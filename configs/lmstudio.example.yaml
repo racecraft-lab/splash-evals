@@ -1,0 +1,41 @@
+schema_version: 2
+id: lmstudio-example
+status: template
+server:
+  origin: http://127.0.0.1:1234
+  openai_base_url: http://127.0.0.1:1234/v1
+  api_key_env: LM_STUDIO_API_KEY
+  require_local_execution: true
+model:
+  key: null
+  instance_id: null
+  selected_variant: null
+  file_revision: null
+  engine: null
+  engine_version: null
+  execution_device: null
+load_requested:
+  context_length: null
+  backend_specific: {}
+operation_requested:
+  temperature: null
+  top_p: null
+  top_k: null
+  max_tokens: 1024
+  stream: false
+reasoning_control:
+  mechanism: discover
+  desired_mode: null
+  desired_effort: null
+  transmitted: null
+  verified_effect: null
+metadata:
+  load_effective: null
+  template_sha256: null
+  generation_effective_evidence: null
+  kv_precision: null
+  draft_configuration: null
+execution:
+  max_in_flight_requests: 1
+  transport_retries: 0
+  response_cache: disabled

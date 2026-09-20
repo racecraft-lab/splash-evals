@@ -1,0 +1,11 @@
+schema_version: 1
+suite: calibration
+evidence_class: local_calibration
+expanded: false
+repetitions: 1
+task_set: builtin-calibration-v1
+scorer_version: builtin-exact-v1
+max_output_tokens: 256
+limitations:
+  - Optimization-only synthetic tasks.
+  - Disjoint from the held-out pilot and not an official benchmark score.

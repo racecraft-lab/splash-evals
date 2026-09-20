@@ -1,0 +1,61 @@
+schema_version: 1
+initial_run_limits:
+  max_wall_minutes: 45
+  max_generated_tokens: 250000
+  max_in_flight_requests: 1
+  max_live_requests: 250
+  max_tuning_candidates_beyond_baseline: 3
+  max_generated_candidates_per_problem: 1
+  max_new_download_gib_without_confirmation: 2
+  minimum_free_disk_gib: 20
+  paid_api_budget_usd: 0
+network:
+  allowed_inference_hosts:
+    - 127.0.0.1
+    - ::1
+    - localhost
+  follow_redirects: false
+  transport_retries: 0
+  cloud_fallback: false
+publication:
+  max_file_bytes: 1000000
+  automation_identity:
+    name: Racecraft Lab Automation
+    email: info@racecraft.co
+  github_squash_provenance:
+    repository: racecraft-lab/splash-evals
+    ref: refs/heads/main
+    actor_login: fgabelmannjr
+    committer:
+      name: GitHub
+      login: web-flow
+    required_check:
+      name: final gate
+      app_slug: github-actions
+      status: completed
+      conclusion: success
+  allowed_public_emails:
+    - info@racecraft.co
+    - support@racecraft.co
+  allowed_suffixes:
+    - .cff
+    - .css
+    - .example
+    - .html
+    - .json
+    - .lock
+    - .md
+    - .py
+    - .toml
+    - .txt
+    - .yaml
+    - .yml
+  denied_suffixes:
+    - .db
+    - .env
+    - .gguf
+    - .ipynb
+    - .log
+    - .safetensors
+    - .sqlite
+    - .zip

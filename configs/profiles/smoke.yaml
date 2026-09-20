@@ -1,0 +1,11 @@
+schema_version: 1
+suite: smoke
+evidence_class: synthetic_harness
+expanded: false
+repetitions: 1
+task_set: builtin-smoke-v1
+scorer_version: builtin-exact-v1
+max_output_tokens: 128
+limitations:
+  - Synthetic transport and scorer qualification only.
+  - Must not appear in a model capability comparison.

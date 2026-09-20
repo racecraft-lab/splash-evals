@@ -1,0 +1,11 @@
+schema_version: 1
+suite: core
+evidence_class: local_measurement
+expanded: true
+repetitions: 1
+task_set: external-version-pinned-core
+scorer_version: unresolved
+max_output_tokens: 32768
+blockers:
+  - Requires explicit --allow-expanded authorization.
+  - Requires licensed datasets, fixed selection manifests, and qualified scorers.

@@ -1,0 +1,42 @@
+schema_version: 1
+reference_id: openai-gpt-4.1-2025-04-gpqa-diamond
+provider: OpenAI
+model_display_name: GPT-4.1
+model_snapshot_id: null
+release_period: "2025-04"
+measurement_date: null
+source_publication_date: "2025-04-14"
+source_url: "https://openai.com/index/gpt-4-1/"
+source_locator: "Appendix, Academic knowledge table and GPQA footnote 1"
+source_revision_or_content_hash: "sha256:e2589ffee5b8066b913fececc8e0c6cd7cd97ccac42305ee93e2968781225ccf"
+retrieved_on: "2026-09-19"
+evidence_class: published_historical_reference
+benchmark:
+  name: GPQA Diamond
+  version: null
+  split: Diamond
+  dataset_revision: null
+  sample_count: null
+  sample_id_manifest: null
+  metric_name: accuracy
+  metric_unit: percent
+  higher_is_better: true
+protocol:
+  few_shot: null
+  prompts_or_template_revision: null
+  reasoning_mode: null
+  output_budget: null
+  attempts_per_task: null
+  aggregation: null
+  tool_access: null
+  agent_scaffold_revision: null
+  scorer_revision: null
+  answer_extraction: model_based
+reported_score: 66.3
+reported_uncertainty: null
+comparability: partially_matched
+comparability_notes:
+  - "Exact API snapshot is not disclosed in the source table."
+  - "Publisher extraction and a bounded local subset prevent a direct delta."
+rights_and_access_notes: "Brief factual aggregate from the publisher page; no benchmark questions or responses redistributed."
+verification_status: source_verified
