@@ -38,6 +38,7 @@ exclude = [
   "/.env.example",
   "/.github",
   "/AGENTS.md",
+  "/docs-site",
   "/docs/github-feature-audit.md",
   "/tests",
 ]

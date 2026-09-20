@@ -38,6 +38,7 @@ publication:
     - info@racecraft.co
     - support@racecraft.co
   allowed_suffixes:
+    - .astro
     - .cff
     - .css
     - .example
@@ -45,9 +46,12 @@ publication:
     - .json
     - .lock
     - .md
+    - .mjs
     - .py
+    - .svg
     - .toml
     - .txt
+    - .ts
     - .yaml
     - .yml
   denied_suffixes:

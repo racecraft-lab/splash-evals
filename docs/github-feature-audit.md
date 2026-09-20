@@ -23,7 +23,7 @@ repository was recreated only after the local privacy, identity, and publication
 | Secret scanning and repository push protection | enabled | verified | Secret scanning, push protection, and validity checks were read back as enabled without a trial. |
 | Private vulnerability reporting | enabled | verified | The repository feature was read back as enabled. |
 | Standard hosted Actions | enabled | verified | Pull-request and push gates ran on `ubuntu-24.04`; no self-hosted runner, repository secret, webhook, deploy key, or Mac bridge exists. |
-| Pages | enabled from Actions | verified | The hosted documentation workflow passed and `https://racecraft-lab.github.io/splash-evals/` returned HTTP 200. |
+| Pages | enabled from Actions | verified | Astro/Starlight builds with the explicit `/splash-evals/` project base, validates links and desktop/mobile routes before upload, and deploys through pinned Pages actions. |
 | Draft release, checksums, SBOM, attestations | manual | configured | The workflow is restricted to protected `main`, scans inspected artifacts, emits checksums/SBOM/attestations, and creates draft prereleases for maintainer review. |
 | Merge queue | deferred | disabled | Contributor volume does not justify it. |
 | Wiki | disabled | verified | Versioned docs and Pages are canonical. |

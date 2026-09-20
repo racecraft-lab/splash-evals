@@ -30,6 +30,8 @@ served model is verified as Splash.
 
 See [methodology](docs/methodology.md), [privacy](docs/privacy.md),
 [operations](docs/operations.md), and the [historical catalog](references/frontier/README.md).
+The same public material is available in the
+[Starlight documentation site](https://racecraft-lab.github.io/splash-evals/).
 
 ## Quick start
 

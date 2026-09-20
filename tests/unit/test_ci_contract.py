@@ -54,7 +54,12 @@ def test_model_capable_workflows_are_explicitly_mock_only() -> None:
     assert release.index("python scripts/collect_github_provenance.py") < release.index(
         "local-evals privacy audit --scope publication"
     )
-    assert 'gitleaks" dir _site --redact --no-banner --no-color' in docs
+    assert "pnpm --dir docs-site install --frozen-lockfile" in docs
+    assert "pnpm --dir docs-site validate" in docs
+    assert "python3 scripts/docs_artifact.py prepare docs-site/dist" in docs
+    assert "python3 scripts/docs_artifact.py verify docs-site/dist" in docs
+    assert 'gitleaks" dir docs-site/dist --redact --no-banner --no-color' in docs
+    assert "path: docs-site/dist" in docs
     assert "gitleaks dir dist --redact --no-banner --no-color" in release
     assert "working-directory: dist" in release
     assert "sha256sum *.whl *.tar.gz sbom.cdx.json > SHA256SUMS" in release
