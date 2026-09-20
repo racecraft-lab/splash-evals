@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import httpx
 import pytest
 
 from local_evals.lmstudio import (
+    CommandResult,
     LMStudioClient,
     LMStudioError,
     LMStudioRedirectError,
     _extract_models,
     chat_once,
     classify_model_instance_locality,
+    discover,
     model_keys_equivalent,
     parse_usage,
     verify_lms_cli_executable,
@@ -269,6 +272,226 @@ def test_current_lms_identifier_field_selects_local_instance() -> None:
     assert locality.status is LocalityStatus.VERIFIED_LOCAL
     assert locality.local_instance_evidence is True
     assert locality.execution_device == "local"
+
+
+def test_current_llmster_omitted_device_is_corroborated_by_unique_local_download() -> None:
+    loaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+        }
+    ]
+    downloaded = {
+        "models": [
+            {
+                "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+                "deviceIdentifier": None,
+            }
+        ]
+    }
+
+    locality = classify_model_instance_locality(
+        loaded,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+        downloaded_payload=downloaded,
+    )
+
+    assert locality.status is LocalityStatus.VERIFIED_LOCAL
+    assert locality.local_instance_evidence is True
+    assert locality.execution_device == "local"
+
+
+def test_current_llmster_remote_download_cannot_corroborate_locality() -> None:
+    loaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+        }
+    ]
+    downloaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "deviceIdentifier": "linked-peer-device",
+        }
+    ]
+
+    locality = classify_model_instance_locality(
+        loaded,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+        downloaded_payload=downloaded,
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+    assert locality.execution_device == "linked-peer"
+
+
+def test_current_llmster_duplicate_download_matches_are_ambiguous() -> None:
+    loaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+        }
+    ]
+    downloaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "deviceIdentifier": None,
+        },
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "deviceIdentifier": "linked-peer-device",
+        },
+    ]
+
+    locality = classify_model_instance_locality(
+        loaded,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+        downloaded_payload=downloaded,
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+
+
+@pytest.mark.parametrize(
+    "downloaded",
+    [
+        None,
+        [{"modelKey": "different-model", "deviceIdentifier": None}],
+        [{"modelKey": "qwen3.8-27b-splash"}],  # gitleaks:allow - fixture key
+        [  # gitleaks:allow - fixture key
+            {
+                "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+                "deviceIdentifier": 42,
+            }
+        ],
+        [  # gitleaks:allow - fixture key
+            {
+                "modelKey": "QWEN3.8-27B-SPLASH",  # gitleaks:allow - fixture key
+                "deviceIdentifier": None,
+            }
+        ],
+        [{"modelKey": "incoai/qwen3.8-27b-splash", "deviceIdentifier": None}],
+    ],
+)
+def test_current_llmster_uncorroborated_download_is_ambiguous(
+    downloaded: object,
+) -> None:
+    loaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+        }
+    ]
+
+    locality = classify_model_instance_locality(
+        loaded,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+        downloaded_payload=downloaded,
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+
+
+def test_current_llmster_loaded_remote_device_cannot_be_overridden() -> None:
+    loaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+            "deviceIdentifier": "linked-peer-device",
+        }
+    ]
+    downloaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "deviceIdentifier": None,
+        }
+    ]
+
+    locality = classify_model_instance_locality(
+        loaded,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+        downloaded_payload=downloaded,
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+
+
+def test_current_llmster_loaded_instance_without_model_key_is_ambiguous() -> None:
+    loaded = [{"identifier": "racecraft-splash-local"}]
+    downloaded = [{"identifier": "racecraft-splash-local", "deviceIdentifier": None}]
+
+    locality = classify_model_instance_locality(
+        loaded,
+        model_or_instance_id="racecraft-splash-local",
+        lm_link_state="connected",
+        downloaded_payload=downloaded,
+    )
+
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+
+
+def test_discover_correlates_current_llmster_payloads_without_leaking_devices() -> None:
+    downloaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+            "deviceIdentifier": None,
+        },
+        {
+            "modelKey": "remote-embedding",
+            "identifier": "remote-embedding",
+            "deviceIdentifier": "hal-private-device",
+        },
+    ]
+    loaded = [
+        {
+            "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
+            "identifier": "racecraft-splash-local",
+        },
+        {
+            "modelKey": "remote-embedding",
+            "identifier": "remote-embedding",
+            "deviceIdentifier": "hal-private-device",
+        },
+    ]
+    commands = {
+        ("--version",): "CLI commit: synthetic",
+        ("ls", "--json"): json.dumps(downloaded),
+        ("ps", "--json"): json.dumps(loaded),
+        ("runtime", "ls"): "synthetic-runtime",
+        ("server", "status"): "running",
+        ("link", "status"): "connected",
+    }
+
+    def runner(args: tuple[str, ...]) -> CommandResult:
+        return CommandResult(returncode=0, stdout=commands[args], stderr="")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/v1/models":
+            return httpx.Response(200, json={"models": []})
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": []})
+        return httpx.Response(404)
+
+    report = discover(
+        selected_model="racecraft-splash-local",
+        runner=runner,
+        transport=httpx.MockTransport(handler),
+    )
+
+    assert report.locality.status is LocalityStatus.VERIFIED_LOCAL
+    serialized = repr(report.model_dump(mode="json"))
+    assert "hal-private-device" not in serialized
 
 
 def test_enabled_link_does_not_override_selected_local_instance_evidence() -> None:
