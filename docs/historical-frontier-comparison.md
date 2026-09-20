@@ -6,7 +6,7 @@
 
 ## The next study
 
-The [requested comparison group](dashboard.md#current-and-previous-generation-targets) is Sonnet 5/4.6, Opus 5/4.8, and GPT‑5.6 Sol/5.5, with original Sonnet 4 and Opus 4 as additional older anchors. GPT‑6 Astra and Fable 5 belong in a separately labeled broader-frontier evidence review. This roster was checked on **2026-09-20**; refresh it when the study is frozen.
+The [requested comparison group](dashboard.md#current-and-previous-generation-targets) is Sonnet 5/4.6, Opus 5/4.8, GPT‑5.6 Sol/5.5, and separate GPT‑5.6 Terra and Luna targets, with original Sonnet 4 and Opus 4 as additional older anchors. Terra and Luna need their own model identifiers, reasoning settings, test conditions, and results; their previous-generation anchors have not been selected. GPT‑6 Astra and Fable 5 belong in a separately labeled broader-frontier evidence review. This roster was checked on **2026-09-20**; refresh it when the study is frozen.
 
 ### Remaining work
 

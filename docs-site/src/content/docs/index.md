@@ -68,29 +68,11 @@ An evaluation is a test with a recorded outcome. This project keeps the task, th
 
 ## Understand the project
 
-<div class="reader-columns">
-<div>
-
-### Splash / Qwen3.8
-
-The public label for the local model deployment being studied. Results describe that tested setup, not every deployment of a model family.
-
-</div>
-<div>
-
-### LM Studio
-
-The application serving the model locally. This website is a static report; it cannot send requests to the model or access the test computer.
-
-</div>
-<div>
-
-### This repository
-
-The source code, test tools, dated reference records, and reviewed public summaries. Raw prompts, responses, and private runtime records stay outside it.
-
-</div>
-</div>
+<dl class="project-definitions">
+<div><dt>Splash / Qwen3.8</dt><dd>The public label for the local model deployment being studied. Results describe that tested setup, not every deployment of a model family.</dd></div>
+<div><dt>LM Studio</dt><dd>The application serving the model locally. This website is a static report; it cannot send requests to the model or access the test computer.</dd></div>
+<div><dt>This repository</dt><dd>The source code, test tools, dated reference records, and reviewed public summaries. Raw prompts, responses, and private runtime records stay outside it.</dd></div>
+</dl>
 
 [Read the glossary](/splash-evals/glossary/) · [Explore the source code](https://github.com/racecraft-lab/splash-evals)
 

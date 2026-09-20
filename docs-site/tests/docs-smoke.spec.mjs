@@ -92,7 +92,7 @@ test('results distinguish requested frontier targets from historical scores and 
   await expect(page.locator('.intro-count, .intro-tally, .finding')).toHaveCount(0);
   await expect(page.locator('.intro-visual figcaption')).toContainText('Missing scores are not zero');
   await expect(page.getByRole('heading', { name: 'Current and previous-generation targets' })).toBeVisible();
-  for (const model of ['Sonnet 5', 'Opus 5', 'GPT‑5.6 Sol', 'GPT‑5.5']) {
+  for (const model of ['Sonnet 5', 'Opus 5', 'GPT‑5.6 Sol', 'GPT‑5.6 Terra', 'GPT‑5.6 Luna', 'GPT‑5.5']) {
     await expect(page.getByRole('link', { name: model, exact: true })).toBeVisible();
   }
   await expect(page.getByRole('heading', { name: 'Older reference archive' })).toBeVisible();
@@ -101,7 +101,12 @@ test('results distinguish requested frontier targets from historical scores and 
     const tops = await page.locator('.evidence-track > div').evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top));
     expect(new Set(tops).size).toBe(1);
   }
-  await expect(page.getByRole('cell', { name: 'Not yet measured', exact: true })).toHaveCount(13);
+  await expect(page.getByRole('cell', { name: 'Not yet measured', exact: true })).toHaveCount(15);
+  for (const variant of ['Terra', 'Luna']) {
+    const row = page.getByRole('row').filter({ has: page.getByRole('link', { name: `GPT‑5.6 ${variant}`, exact: true }) });
+    await expect(row).toContainText('Not selected for this variant');
+    await expect(row).toContainText('Not yet measured');
+  }
   await expect(page.getByRole('cell', { name: '46.0%', exact: true })).toBeVisible();
   await expect(page.getByText('Not yet measured is not zero.', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Coding · Aider polyglot' })).toBeVisible();
@@ -166,42 +171,86 @@ test('search finds the local report and returns to its content', async ({ page }
 });
 
 test('reader text and links meet AA contrast on both themed section surfaces', async ({ page }) => {
-  await page.goto('./');
-  for (const theme of ['light', 'dark']) {
-    await page.getByLabel('Select theme').selectOption(theme);
-    const failures = await page.evaluate(() => {
-      const rgb = (color) => color.match(/[\d.]+/g).map(Number);
-      const luminance = (color) => color.slice(0, 3).map((v) => {
-        const channel = v / 255;
-        return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
-      }).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0);
-      const ratio = (a, b) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
-      const failures = [];
-      for (const node of document.querySelectorAll('.primary-nav a, .github-link, .reader-footer nav a, .reader-footer p, .reader-footer span, .page-intro h1, .intro-summary, .intro-visual strong, .intro-visual span, .intro-visual figcaption, .hero .sl-link-button, .finding h2, .finding p, .reader-section h2, .reader-section h3, .reader-section p, .reader-section a, .process strong, .process span')) {
-        const style = getComputedStyle(node);
-        let ancestor = node;
-        let background;
-        while (ancestor) {
-          const candidate = rgb(getComputedStyle(ancestor).backgroundColor);
-          if (candidate.length === 3 || candidate[3] === 1) { background = candidate; break; }
-          ancestor = ancestor.parentElement;
+  for (const path of ['/', '/dashboard/', '/local-pilot-results/']) {
+    await page.goto(routeUrl(path));
+    for (const theme of ['light', 'dark']) {
+      await page.getByLabel('Select theme').selectOption(theme);
+      const failures = await page.evaluate(() => {
+        const rgb = (color) => color.match(/[\d.]+/g).map(Number);
+        const luminance = (color) => color.slice(0, 3).map((v) => {
+          const channel = v / 255;
+          return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+        }).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0);
+        const ratio = (a, b) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
+        const failures = [];
+        for (const node of document.querySelectorAll('.primary-nav a, .github-link, .reader-footer nav a, .reader-footer p, .reader-footer span, .page-intro h1, .intro-summary, .intro-visual strong, .intro-visual span, .intro-visual figcaption, .hero .sl-link-button, .finding h2, .finding p, .reader-section h2, .reader-section h3, .reader-section p, .reader-section a, .process strong, .process span, .document-sheet dt, .document-sheet dd, .document-sheet summary, .document-sheet td, .document-sheet th')) {
+          if (!node.textContent.trim() || !node.getClientRects().length) continue;
+          const style = getComputedStyle(node);
+          let ancestor = node;
+          let background;
+          while (ancestor) {
+            const candidate = rgb(getComputedStyle(ancestor).backgroundColor);
+            if (candidate.length === 3 || candidate[3] === 1) { background = candidate; break; }
+            ancestor = ancestor.parentElement;
+          }
+          if (!background) throw new Error('Unresolved text background');
+          const foreground = rgb(style.color);
+          const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && parseInt(style.fontWeight, 10) >= 700);
+          const required = large ? 3 : 4.5;
+          // Worst-case overlap of both grid lines and dot; no texture on opaque sections/buttons.
+          if (ancestor === document.body || ancestor === document.documentElement) {
+            const dark = document.documentElement.dataset.theme === 'dark';
+            const texture = dark ? [124, 179, 221] : [0, 0, 0];
+            const opacity = dark ? 1 - .93 * .93 * .96 : 1 - .95 * .95 * .97;
+            const marked = background.map((value, i) => texture[i] * opacity + value * (1 - opacity));
+            if (ratio(foreground, marked) < required) failures.push(`texture: ${node.textContent}`);
+          }
+          if (ratio(foreground, background) < required) failures.push(node.textContent);
         }
-        if (!background) throw new Error('Unresolved text background');
-        const foreground = rgb(style.color);
-        const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && parseInt(style.fontWeight, 10) >= 700);
-        const required = large ? 3 : 4.5;
-        // Worst-case overlap of both grid lines and dot; no texture on opaque sections/buttons.
-        if (ancestor === document.body || ancestor === document.documentElement) {
-          const dark = document.documentElement.dataset.theme === 'dark';
-          const texture = dark ? [124, 179, 221] : [0, 0, 0];
-          const opacity = dark ? 1 - .93 * .93 * .96 : 1 - .95 * .95 * .97;
-          const marked = background.map((value, i) => texture[i] * opacity + value * (1 - opacity));
-          if (ratio(foreground, marked) < required) failures.push(`texture: ${node.textContent}`);
-        }
-        if (ratio(foreground, background) < required) failures.push(node.textContent);
-      }
-      return failures;
-    });
-    expect(failures).toEqual([]);
+        return failures;
+      });
+      expect(failures).toEqual([]);
+    }
   }
+});
+
+test('process and definition sections preserve reading order without fake controls', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.locator('.process > li')).toHaveCount(4);
+  await expect(page.locator('.project-definitions dt')).toHaveText(['Splash / Qwen3.8', 'LM Studio', 'This repository']);
+  await expect(page.locator('.project-definitions dd')).toHaveCount(3);
+  await expect(page.locator('.process [tabindex], .project-definitions [tabindex], .process button')).toHaveCount(0);
+  if (process.env.DOCS_SITE_CAPTURE === '1') {
+    for (const theme of ['light', 'dark']) {
+      await page.getByLabel('Select theme').selectOption(theme);
+      for (const section of ['The evaluation process', 'Project definitions']) {
+        await page.getByRole('region', { name: section, exact: true }).screenshot({ path: test.info().outputPath(`${section}-${theme}.png`) });
+      }
+    }
+  }
+});
+
+test('technical disclosure has a comfortable target and visible keyboard feedback', async ({ page }) => {
+  await page.goto(routeUrl('/local-pilot-results/'));
+  const summary = page.locator('summary');
+  await summary.focus();
+  await expect(summary).toBeFocused();
+  expect(await summary.evaluate((node) => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  await expect(summary).toHaveCSS('outline-style', 'solid');
+  expect(await summary.evaluate((node) => getComputedStyle(node, '::before').display)).toBe('none');
+  await summary.press('Enter');
+  await expect(page.locator('details')).toHaveAttribute('open', '');
+  await summary.press('Space');
+  await expect(page.locator('details')).not.toHaveAttribute('open');
+});
+
+test('reduced motion disables section feedback transitions without hiding content', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(routeUrl('/local-pilot-results/'));
+  const summary = page.locator('summary');
+  expect(await summary.evaluate((node) => getComputedStyle(node, '::after').transitionDuration)).toBe('0s');
+  await expect(page.locator('.document-sheet a').first()).toHaveCSS('transition-duration', '0s');
+  await summary.press('Enter');
+  await expect(page.locator('details')).toHaveAttribute('open', '');
+  await expect(page.locator('details')).toContainText('72.2%–100.0%');
 });
