@@ -96,7 +96,7 @@ jobs:
         working-directory: dist
         run: sha256sum *.whl *.tar.gz sbom.cdx.json > SHA256SUMS
       - name: Upload sanitized release candidate
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 source: github.com/actions/upload-artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2 source: github.com/actions/upload-artifact
         with:
           name: release-candidate
           path: |
