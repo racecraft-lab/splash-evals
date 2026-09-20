@@ -19,6 +19,8 @@ network:
   cloud_fallback: false
 publication:
   max_file_bytes: 1000000
+  # Maintainer-approved bound for the generated root lockfile; all scans still apply.
+  max_root_uv_lock_bytes: 1100000
   automation_identity:
     name: Racecraft Lab Automation
     email: info@racecraft.co
