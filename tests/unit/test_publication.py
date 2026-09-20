@@ -79,6 +79,23 @@ def test_publication_scan_rejects_archives_not_just_their_contents(
     assert any(finding["rule"] == "uninspectable-or-denied-type" for finding in findings)
 
 
+@pytest.mark.parametrize(
+    "filename", ["brand-mark.svg", "component.astro", "config.mjs", "content.ts"]
+)
+def test_publication_scan_accepts_reviewable_docs_text_formats(
+    tmp_path: Path, filename: str
+) -> None:
+    candidate = tmp_path / filename
+    candidate.write_text(
+        "synthetic reviewed documentation source\n",
+        encoding="utf-8",
+    )
+    policies = _policies()
+    policies["publication"]["allowed_suffixes"].append(candidate.suffix)
+
+    assert publication._scan_file(candidate, tmp_path, policies) == []
+
+
 def test_publication_scan_detects_private_path_without_echoing_it(tmp_path: Path) -> None:
     private_path_sentinel = "/" + "Users/synthetic-operator/private-project/result.json"
     candidate = tmp_path / "report.md"

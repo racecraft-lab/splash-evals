@@ -1,9 +1,12 @@
 # Splash Evals documentation
 
-This site documents a local-only evaluation workbench. It does not host the dashboard,
-raw evaluation evidence, benchmark prompts, or a model endpoint.
+This site documents a local-only evaluation workbench. It includes a static public dashboard,
+reviewed aggregate evidence, and public task-family descriptions. It never exposes raw prompts,
+responses, reasoning, private runtime evidence, or a model endpoint.
 
+- [Public results dashboard](dashboard.md)
 - [Methodology](methodology.md)
+- [Benchmark task guide](benchmark-tasks.md)
 - [Local pilot results](local-pilot-results.md)
 - [Architecture](architecture.md)
 - [Privacy and publication](privacy.md)
