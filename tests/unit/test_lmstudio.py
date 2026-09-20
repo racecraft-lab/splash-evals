@@ -12,6 +12,7 @@ from local_evals.lmstudio import (
     _extract_models,
     chat_once,
     classify_model_instance_locality,
+    model_keys_equivalent,
     parse_usage,
     verify_lms_cli_executable,
 )
@@ -227,6 +228,12 @@ def test_native_identity_fields_are_retained_without_paths_or_devices() -> None:
                 "quantization": {"name": "4bit", "bits_per_weight": 4},
                 "selected_variant": "qwen/qwen3.8-27b-splash@4bit",
                 "loaded_instances": [{"id": "racecraft-eval-splash", "config": {}}],
+                "capabilities": {
+                    "reasoning": {
+                        "allowed_options": ["off", "low", "medium", "high", "on"],
+                        "default": "on",
+                    }
+                },
             }
         ]
     }
@@ -242,9 +249,18 @@ def test_native_identity_fields_are_retained_without_paths_or_devices() -> None:
     assert native_record.architecture == "qwen3_8"
     assert native_record.model_format == "mlx"
     assert native_record.quantization == "4bit"
+    assert native_record.loaded_instance_ids == ("racecraft-eval-splash",)
+    assert native_record.reasoning_allowed == ("off", "low", "medium", "high", "on")
+    assert native_record.reasoning_default == "on"
     serialized = repr([item.model_dump(mode="json") for item in records])
     assert "private-device-id" not in serialized
     assert "/private/example" not in serialized
+
+
+def test_model_key_equivalence_allows_only_exact_publisher_qualification() -> None:
+    assert model_keys_equivalent("qwen3.8-27b-splash", "qwen/qwen3.8-27b-splash", "qwen")
+    assert not model_keys_equivalent("splash", "qwen/qwen3.8-27b-splash", "qwen")
+    assert not model_keys_equivalent("other/qwen3.8-27b-splash", "qwen3.8-27b-splash", "qwen")
 
 
 def test_client_refuses_redirect_even_when_target_is_loopback() -> None:
@@ -299,7 +315,7 @@ def test_chat_once_blocks_uncertain_lm_link_before_transport() -> None:
     assert called is False
 
 
-def test_chat_once_uses_mock_transport_and_pessimistically_charges_missing_usage() -> None:
+def test_chat_once_uses_native_v1_and_pessimistically_charges_missing_usage() -> None:
     seen: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -309,22 +325,76 @@ def test_chat_once_uses_mock_transport_and_pessimistically_charges_missing_usage
             200,
             json={
                 "id": "synthetic-response",
-                "choices": [{"message": {"content": "synthetic answer"}, "finish_reason": "stop"}],
+                "model_instance_id": "synthetic-instance",
+                "output": [{"type": "message", "content": "synthetic answer"}],
             },
         )
 
     budget = RequestBudget(RequestBudgetLimits(max_generated_tokens=16, max_live_requests=1))
     response = chat_once(
         "http://127.0.0.1:1234",
-        "synthetic-model",
+        "synthetic-instance",
         [{"role": "user", "content": "synthetic prompt"}],
-        {"max_tokens": 16, "temperature": 0.0},
+        {
+            "max_output_tokens": 16,
+            "temperature": 0.0,
+            "top_p": 0.9,
+            "top_k": 20,
+            "reasoning": "on",
+        },
         locality=_verified_locality(),
         budget=budget,
         transport=httpx.MockTransport(handler),
     )
 
     assert response["id"] == "synthetic-response"
-    assert seen["url"] == "http://127.0.0.1:1234/v1/chat/completions"
+    assert seen["url"] == "http://127.0.0.1:1234/api/v1/chat"
+    assert '"store":false' in str(seen["body"])
+    assert '"input":"synthetic prompt"' in str(seen["body"])
+    assert '"reasoning":"on"' in str(seen["body"])
+    assert '"max_output_tokens":16' in str(seen["body"])
     assert budget.usage.generated_tokens == 16
     assert budget.usage.live_requests == 1
+
+
+def test_chat_once_refuses_history_before_transport() -> None:
+    called = False
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return httpx.Response(500)
+
+    with pytest.raises(LMStudioError, match="exactly one user text input"):
+        chat_once(
+            "http://127.0.0.1:1234",
+            "synthetic-instance",
+            [
+                {"role": "system", "content": "system"},
+                {"role": "user", "content": "prompt"},
+            ],
+            {"max_output_tokens": 8, "reasoning": "on"},
+            locality=_verified_locality(),
+            transport=httpx.MockTransport(handler),
+        )
+
+    assert called is False
+
+
+@pytest.mark.parametrize("served", [None, "other-instance"])
+def test_chat_once_refuses_missing_or_mismatched_served_instance(served: str | None) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = {"output": [{"type": "message", "content": "answer"}], "stats": {}}
+        if served is not None:
+            payload["model_instance_id"] = served
+        return httpx.Response(200, json=payload)
+
+    with pytest.raises(LMStudioError, match="served model instance"):
+        chat_once(
+            "http://127.0.0.1:1234",
+            "synthetic-instance",
+            [{"role": "user", "content": "prompt"}],
+            {"max_output_tokens": 8, "reasoning": "on"},
+            locality=_verified_locality(),
+            transport=httpx.MockTransport(handler),
+        )

@@ -3,7 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 
 const previewHost = '127.0.0.1';
-const previewPort = 4321;
+const previewPort = Number.parseInt(process.env.DOCS_SITE_PREVIEW_PORT ?? '4321', 10);
+if (!Number.isInteger(previewPort) || previewPort < 1 || previewPort > 65_535) {
+  throw new Error('DOCS_SITE_PREVIEW_PORT must be an integer from 1 through 65535.');
+}
 const docsBasePath = '/splash-evals/';
 const baseURL = `http://${previewHost}:${previewPort}${docsBasePath}`;
 const artifactRoot =
@@ -36,7 +39,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm preview --host ${previewHost} --port ${previewPort}`,
+    command: `ASTRO_PREVIEW_BACKGROUND=0 pnpm preview --host ${previewHost} --port ${previewPort}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

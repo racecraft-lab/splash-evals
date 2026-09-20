@@ -200,6 +200,45 @@ def _quantization_name(item: Mapping[str, Any]) -> str | None:
     return quantization if isinstance(quantization, str) else None
 
 
+def model_keys_equivalent(cli_key: str, native_key: str, publisher: str | None) -> bool:
+    """Match an exact key or one exact, case-sensitive publisher qualification."""
+    if cli_key == native_key:
+        return True
+    if not publisher or "/" in publisher:
+        return False
+    return native_key == f"{publisher}/{cli_key}" or cli_key == f"{publisher}/{native_key}"
+
+
+def _native_reasoning(item: Mapping[str, Any]) -> tuple[tuple[str, ...], str | None]:
+    capabilities = item.get("capabilities")
+    if not isinstance(capabilities, Mapping):
+        return (), None
+    reasoning = capabilities.get("reasoning")
+    if not isinstance(reasoning, Mapping):
+        return (), None
+    options = reasoning.get("allowed_options")
+    allowed = (
+        tuple(value for value in options if isinstance(value, str) and value)
+        if isinstance(options, list)
+        else ()
+    )
+    default = reasoning.get("default")
+    return allowed, default if isinstance(default, str) and default else None
+
+
+def _native_loaded_instance_ids(item: Mapping[str, Any]) -> tuple[str, ...]:
+    instances = item.get("loaded_instances")
+    if not isinstance(instances, list):
+        return ()
+    return tuple(
+        value
+        for instance in instances
+        if isinstance(instance, Mapping)
+        for value in [instance.get("id")]
+        if isinstance(value, str) and value and not _PRIVATE_PATH.search(value)
+    )
+
+
 def _model_record_from_source(
     item: Mapping[str, Any], *, loaded: bool, source: ModelRecordSource
 ) -> ModelRecord | None:
@@ -210,6 +249,7 @@ def _model_record_from_source(
     if source is ModelRecordSource.NATIVE_REST:
         selected_variant = _first_string(item, ("selected_variant", "selectedVariant"))
         loaded = bool(item.get("loaded_instances"))
+    reasoning_allowed, reasoning_default = _native_reasoning(item)
     return ModelRecord(
         key=key,
         source=source,
@@ -229,6 +269,11 @@ def _model_record_from_source(
         engine=_first_string(item, ("engine", "runtimeName")),
         engine_version=_first_string(item, ("engineVersion", "runtimeVersion")),
         loaded=loaded,
+        loaded_instance_ids=_native_loaded_instance_ids(item)
+        if source is ModelRecordSource.NATIVE_REST
+        else (),
+        reasoning_allowed=reasoning_allowed,
+        reasoning_default=reasoning_default,
     )
 
 
@@ -547,7 +592,7 @@ def discover(
 
 
 def parse_usage(response: Mapping[str, Any]) -> InferenceUsage:
-    usage = response.get("usage")
+    usage = response.get("stats") or response.get("usage")
     if not isinstance(usage, Mapping):
         return InferenceUsage()
 
@@ -555,11 +600,55 @@ def parse_usage(response: Mapping[str, Any]) -> InferenceUsage:
         raw = usage.get(name)
         return raw if isinstance(raw, int) and raw >= 0 else None
 
+    prompt = value("input_tokens")
+    completion = value("total_output_tokens")
     return InferenceUsage(
-        prompt_tokens=value("prompt_tokens"),
-        completion_tokens=value("completion_tokens"),
+        prompt_tokens=prompt if prompt is not None else value("prompt_tokens"),
+        completion_tokens=completion if completion is not None else value("completion_tokens"),
         total_tokens=value("total_tokens"),
     )
+
+
+def _native_chat_payload(
+    model: str,
+    messages: Sequence[Mapping[str, Any]],
+    params: Mapping[str, Any],
+) -> tuple[dict[str, Any], int]:
+    max_tokens = params.get("max_output_tokens", params.get("max_tokens"))
+    if not isinstance(max_tokens, int) or max_tokens <= 0:
+        raise LMStudioError("a finite positive output-token limit is required")
+    if {"model", "messages", "input"}.intersection(params):
+        raise LMStudioError("request parameters must not replace model or messages")
+    if params.get("stream") is True:
+        raise LMStudioError("chat_once supports one non-streaming response only")
+    if len(messages) != 1:
+        raise LMStudioError("native chat accepts exactly one user text input in this evaluator")
+    message = messages[0]
+    content = message.get("content")
+    if message.get("role") != "user" or not isinstance(content, str):
+        raise LMStudioError("native chat accepts exactly one user text input in this evaluator")
+    reasoning = params.get("reasoning")
+    if reasoning not in {"off", "low", "medium", "high", "on"}:
+        raise LMStudioError("an explicit supported reasoning setting is required")
+    wire = {
+        key: value
+        for key, value in params.items()
+        if key in {"temperature", "top_p", "top_k", "max_output_tokens", "reasoning"}
+        and value is not None
+    }
+    wire["max_output_tokens"] = max_tokens
+    return {
+        "model": model,
+        "input": content,
+        "stream": False,
+        "store": False,
+        **wire,
+    }, max_tokens
+
+
+def _require_served_instance(response: Mapping[str, Any], expected: str) -> None:
+    if response.get("model_instance_id") != expected:
+        raise LMStudioError("served model instance is absent or does not match the selection")
 
 
 def chat_once(
@@ -578,24 +667,23 @@ def chat_once(
     require_verified_local(locality)
     if not model.strip():
         raise LMStudioError("a concrete model or instance identifier is required")
-    max_tokens_raw = params.get("max_tokens", params.get("max_completion_tokens"))
-    if not isinstance(max_tokens_raw, int) or max_tokens_raw <= 0:
-        raise LMStudioError("a finite positive output-token limit is required")
-    if "model" in params or "messages" in params:
-        raise LMStudioError("request parameters must not replace model or messages")
-    if params.get("stream") is True:
-        raise LMStudioError("chat_once supports one non-streaming response only")
+    payload, max_tokens = _native_chat_payload(model, messages, params)
     if budget is not None:
-        budget.begin(reserve_output_tokens=max_tokens_raw)
-    payload = {"model": model, "messages": list(messages), **dict(params)}
+        budget.begin(reserve_output_tokens=max_tokens)
     try:
         with LMStudioClient(
             base_url,
             api_key=os.environ.get(api_key_env),
             transport=transport,
         ) as client:
-            response = client.post_json("/v1/chat/completions", payload)
+            response = client.post_json("/api/v1/chat", payload)
     except BaseException:
+        if budget is not None:
+            budget.cancel()
+        raise
+    try:
+        _require_served_instance(response, model)
+    except LMStudioError:
         if budget is not None:
             budget.cancel()
         raise
@@ -603,6 +691,6 @@ def chat_once(
         usage = parse_usage(response)
         budget.finish(
             generated_tokens=usage.completion_tokens,
-            reserved_output_tokens=max_tokens_raw,
+            reserved_output_tokens=max_tokens,
         )
     return response

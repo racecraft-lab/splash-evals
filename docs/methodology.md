@@ -24,6 +24,25 @@ Comparability is `matched`, `partially_matched`, `incompatible`, or `unknown`. A
 benchmark title is insufficient. Direct deltas and paired statistics are refused unless
 the evidence supports them. Null is never rendered as zero.
 
+## Direct-comparison contract
+
+A direct difference requires the same benchmark version, dataset revision, split, exact sample
+manifest, prompt/template, tool and scaffold policy, attempts, scorer/extractor, denominator,
+failure treatment, and aggregation. Each model and runtime condition must be completely
+identified, but the compared models are expected to differ. Missing facts remain `null`; they
+are never inferred from a benchmark title or publication date.
+
+Local binary rates are stored as proportions in `[0, 1]`. Historical percentages are normalized
+to proportions only when their units are explicit. A permitted result is reported as a
+percentage-point difference, never as “percent improvement.” The practical pilot uses one model
+attempt per base task; transport failures remain in the end-to-end denominator, while the
+conditional-capability denominator is reported separately.
+
+For local Splash evidence, the gate additionally requires verified physical locality, exact
+loaded-instance attribution, a matching response instance identifier, an explicit accepted
+reasoning setting, and recorded LM Studio/runtime versions. Mock, calibration, post-hoc, or
+attribution-provisional runs cannot produce a frontier delta.
+
 ## Frozen sequence
 
 1. Freeze the dated reference cohort and map benchmark intersections before seeing Splash

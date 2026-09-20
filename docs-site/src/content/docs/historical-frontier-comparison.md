@@ -24,6 +24,11 @@ benchmark version and dataset revision are `null`. GPQA and IFEval likewise lack
 version/revision facts and do not provide a two-provider intersection. Unknown fields are not
 treated as compatible coverage.
 
+The catalog provider allowlist is exactly OpenAI, Anthropic, and Google. Current primary-source
+research found no record from those providers with all immutable sample, prompt, scorer, and
+sampling facts required for reproduction. The records therefore remain historical context even
+after the local runtime evidence is strengthened.
+
 ## Record-level comparison ledger
 
 `historical result` is the value already recorded from the cited primary source. `local score`
@@ -57,6 +62,8 @@ establish that Splash is above or below any historical model. No direct differen
 paired statistic, or uncertainty transfer is valid from the current pilot.
 
 A future comparison requires a separately authorized run whose benchmark identity, exact
-version, dataset revision, sample IDs, metric, scorer, model/runtime condition, and denominator
-are recorded alongside the local results. Until then, the supported conclusion is the scoped
-`pilot_only` result and the `blocked` historical-comparison status.
+version, dataset revision, sample IDs, prompt/template, metric and unit, scorer/extractor,
+reasoning mode, output budget, attempts, tool/scaffold policy, aggregation, model/runtime
+condition, failure treatment, and denominators are recorded alongside the local results. Until
+then, the supported conclusion is the scoped `pilot_only` result and the `blocked`
+historical-comparison status.
