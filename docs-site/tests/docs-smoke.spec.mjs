@@ -86,6 +86,10 @@ test('results distinguish historical scores, unmeasured local benchmarks, and se
   await expect(page.locator('.intro-visual figcaption')).toContainText('Not a capability score');
   await expect(page.locator('.intro-tally .accepted')).toHaveCount(10);
   await expect(page.getByRole('group', { name: 'Comparison evidence status' })).toContainText('Not yet measured');
+  if (page.viewportSize().width >= 800) {
+    const tops = await page.locator('.evidence-track > div').evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top));
+    expect(new Set(tops).size).toBe(1);
+  }
   await expect(page.getByRole('cell', { name: 'Not yet measured', exact: true })).toHaveCount(10);
   await expect(page.getByRole('cell', { name: '46.0%', exact: true })).toBeVisible();
   await expect(page.getByText('Not yet measured is not zero.', { exact: true })).toBeVisible();
