@@ -1,5 +1,5 @@
 ---
-title: "Can we compare Splash with older leading models?"
+title: "How close is Splash to the frontier?"
 template: splash
 tableOfContents: false
 prev: false
@@ -10,13 +10,39 @@ next: false
 
 <div class="document-sheet">
 
-**Not yet.** We have dated results from other studies, but no eligible local result measured under matching conditions. These records provide historical context, not a ranking of Splash.
+**Not yet measured.** The goal is to measure local Splash/Qwen3.8 against current and previous-generation frontier models, task by task. Older reference records provide context, not a ranking of Splash or coverage of the current frontier.
+
+<section class="reader-section warm" aria-label="Frontier comparison study plan">
+
+## The next study
+
+The [requested comparison group](/splash-evals/dashboard/#current-and-previous-generation-targets) is Sonnet 5/4.6, Opus 5/4.8, and GPT‑5.6 Sol/5.5, with original Sonnet 4 and Opus 4 as additional older anchors. GPT‑6 Astra and Fable 5 belong in a separately labeled broader-frontier evidence review. This roster was checked on **2026-09-20**; refresh it when the study is frozen.
+
+### Remaining work
+
+- [x] Identify the requested model families and distinguish immediate predecessors from original Claude 4 releases.
+- [ ] Verify current scores from official model/system cards or benchmark operators. Record exact model identity, source locator, dates, benchmark revision/split, scorer, reasoning settings, tools, attempts, denominator, and uncertainty. A model's existence is not score verification.
+- [ ] Select a reproducible benchmark intersection. Candidate lanes include reasoning, instruction following, and coding; practical tasks also need their own aligned reference evidence before supporting a frontier gap. Record unavailable coverage and protocol mismatches.
+- [ ] Freeze task IDs/hashes, exposure history, local model artifact and quantization, runtime proof, scoring rules, failure handling, sample size, and stopping rule. Obtain required dataset permissions and expanded-run authorization with a concrete runtime budget.
+- [ ] Qualify each adapter and scorer on separate calibration cases. Verify disposable sandbox isolation before executing generated code. Do not tune on evaluation cases.
+- [ ] Run the frozen local study, retaining failed/unscorable cases in the declared denominator and private evidence outside Git. Restore temporary LM Studio configuration.
+- [ ] Publish reviewed aggregate results, uncertainty, and per-benchmark comparison eligibility. Replace unmeasured states only with admitted evidence.
+
+### What “how close” means
+
+Where protocols match, report **Splash's score minus the reference score in percentage points**, separately for each benchmark and model condition. Show local uncertainty and any reference uncertainty without inventing a paired interval from an aggregate. Define any practical-equivalence margin and statistical rule before seeing results; a small observed gap alone does not establish equivalence.
+
+Keep capability, completion, latency, resource use, and cost separate. No blended intelligence score or percentage-of-frontier badge. If no reproducible intersection exists, publish local capability evidence and external context separately, with the limitation clearly stated.
+
+**The local-only boundary remains unchanged.** Published results or permitted archived responses can supply comparison evidence without remote inference. This plan does not authorize paid API runs, cloud graders, or uploading private tasks. New remote runs would need a separate scope, privacy, and spending decision. Public CI remains disconnected from the evaluation computer.
+
+</section>
 
 <section class="reader-section cool" aria-label="Available historical context">
 
 ## What evidence do we have?
 
-The catalog contains 15 records across OpenAI, Anthropic, and Google. These are different benchmark and testing conditions, **not 15 unique models**. Some records distinguish a first attempt from an answer repaired after feedback.
+The older catalog contains 15 records across OpenAI, Anthropic, and Google. These are different benchmark and testing conditions, **not 15 unique models**, and do not cover the newly requested cohort. Some records distinguish a first attempt from an answer repaired after feedback.
 
 <p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
 
@@ -77,8 +103,8 @@ benchmark version and dataset revision are `null`. GPQA and IFEval likewise lack
 version/revision facts and do not provide a two-provider intersection. Unknown fields are not
 treated as compatible coverage.
 
-The catalog provider allowlist is exactly OpenAI, Anthropic, and Google. Current primary-source
-research found no record from those providers with all immutable sample, prompt, scorer, and
+The catalog provider allowlist is exactly OpenAI, Anthropic, and Google. The original catalog's
+source review found no record from those providers with all immutable sample, prompt, scorer, and
 sampling facts required for reproduction. The records therefore remain historical context even
 after the local runtime evidence is strengthened.
 

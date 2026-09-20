@@ -10,46 +10,65 @@ next: false
 
 <div class="document-sheet">
 
-One local setup-check report is available. It shows that the test pipeline worked on reused cases. **Broader model ability has not yet been established.**
-
-<section class="finding" aria-label="Current finding">
-<h2>First check: the testing setup worked</h2>
-<p class="result-count">10 of 10 reused cases completed and passed their checks.</p>
-<p>Broader ability still needs a fresh test set. Direct comparisons with older leading models are not yet available.</p>
-</section>
+**How close is Splash to the frontier? Not yet measured.** This page tracks the comparisons we want to make, the evidence available, and the gaps still to fill. No capability score or frontier ranking is available yet.
 
 <section class="reader-section cool" aria-label="Local model evaluation card">
 
 ## Splash / Qwen3.8 at a glance
 
-This evaluation card describes **the tested local setup**, not a complete upstream model card. It follows the model-card practice of keeping identity, evaluation conditions, results, and limitations together. It is not a certification or an overall model rating.
+This evaluation card describes **the local deployment under study**, not a complete upstream model card. It keeps identity, measurement status, and limitations together. It is not a certification or an overall model rating.
 
 | Field | Public record |
 |---|---|
-| Tested setup | Splash / Qwen3.8 through local LM Studio |
-| What was evaluated | A small, reused synthetic set for runtime and answer-checker qualification |
-| Checker | `builtin-exact-v1`; configured answer checks, not an independent assessment of general quality |
+| Deployment under study | Splash / Qwen3.8 through local LM Studio |
+| Research objective | Measure the gap to current and previous-generation frontier models, task by task |
 | Capability evidence | Not yet measured on a held-out, qualified test set |
-| Exact artifact and runtime configuration | Not included in this published aggregate; the display name alone is not a reproducible model identity |
+| Exact artifact and runtime configuration | Required in an eligible capability report; the display name alone is not a reproducible model identity |
 | Speed and resource use | Not yet reported as approved public measurements |
-| Appropriate use of this result | Confirming that the tested request-and-check path worked on these cases |
-| Not supported by this result | A frontier-model ranking, broad ability claim, or claim of improvement |
+| Direct comparison | Not yet available; matching benchmark and scoring conditions are required |
+| Unsupported claims | A frontier-model ranking, broad ability claim, or claim of improvement |
 
-[Inspect the local report](/splash-evals/local-pilot-results/) · [Understand the test method](/splash-evals/methodology/)
+[Understand the test method](/splash-evals/methodology/)
 
 </section>
 
 ## Benchmark comparison board
 
+### Current and previous-generation targets
+
+Roster checked **2026-09-20**. These are planned comparisons, not completed runs or verified benchmark-score records. The primary target is the requested Sonnet, Opus, and GPT group; original Claude 4 releases remain additional historical anchors.
+
+<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+
+<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+
+| Family | Newer requested model | Previous-generation anchor | Splash gap |
+|---|---|---|---|
+| Claude Sonnet | [Sonnet 5](https://www.anthropic.com/news/claude-sonnet-5) | Sonnet 4.6; original Sonnet 4 as older context | Not yet measured |
+| Claude Opus | [Opus 5](https://www.anthropic.com/news/claude-opus-5) | Opus 4.8; original Opus 4 as older context | Not yet measured |
+| OpenAI GPT | [GPT‑5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol) | [GPT‑5.5](https://developers.openai.com/api/docs/models/gpt-5.5) | Not yet measured |
+
+</div>
+
+The Claude release sources identify 4.6 and 4.8 as the immediate predecessors. GPT‑5.6 here means Sol, not Terra or Luna. This requested group is **not the entire current frontier**: [OpenAI's catalog](https://developers.openai.com/api/docs/models) also lists GPT‑6 Astra, and the [Opus 5 release](https://www.anthropic.com/news/claude-opus-5) discusses Fable 5. Broader-frontier coverage still needs evidence review.
+
+[What must happen before we can measure the gap](/splash-evals/historical-frontier-comparison/#the-next-study)
+
+### Measurement status
+
 **Splash benchmark scores are not yet measured.** The historical columns below show previously published reference numbers, not evaluations this project ran. No local score difference, ranking, or combined “AI score” is available.
 
 <div class="evidence-track" role="group" aria-label="Comparison evidence status">
-<div><strong>Historical sources</strong><span>Recorded with limitations</span></div>
+<div><strong>Requested frontier cohort</strong><span>Score and protocol review pending</span></div>
 <div><strong>Local benchmark runs</strong><span>Not yet measured</span></div>
 <div><strong>Fair comparison</strong><span>Not yet available</span></div>
 </div>
 
 Read each benchmark on its own. Different tasks, scoring methods, model versions, and reasoning settings must not be merged into one ranking. **Not yet measured is not zero.** “Not reported” means the source does not supply a field; “not comparable” means the test conditions do not support a score-to-score claim.
+
+### Older reference archive
+
+The following records predate the requested cohort. They remain useful historical context, but do not answer today's frontier-comparison question.
 
 <section class="reader-section cool" aria-label="Reasoning benchmark references">
 
@@ -137,26 +156,12 @@ Before a Splash score appears, the public report must identify the model artifac
 
 The numbers above come from the [checked-in historical catalog](/splash-evals/frontier-catalog/) and its [source-number checks](/splash-evals/frontier-verification/). The presentation draws on [model-card reporting practice](https://huggingface.co/docs/hub/model-cards) and [HELM's separation of scenarios, metrics, and evaluation conditions](https://crfm.stanford.edu/2022/11/17/helm.html); it is not an official HELM or Hugging Face evaluation.
 
-## Read the results
-
-<section class="reader-section" aria-label="Available report">
-
-### Local setup check
-
-**Published · Setup qualification · Not eligible for historical comparison**
-
-The report explains what ran, how answers were checked, and why the result is not a general capability score.
-
-[Read the setup-check report](/splash-evals/local-pilot-results/)
-
-</section>
-
 <section class="reader-section cool" aria-label="Open research questions">
 
 ## What is still unanswered?
 
 - **Can it handle unfamiliar practical tasks?** We need a separate test set chosen before results are seen.
-- **How does it compare with older leading models?** We have dated reference records, but no matching eligible local result.
+- **How close is it to current and previous-generation frontier models?** The requested target group is identified, but score/protocol review and matching local runs remain outstanding.
 - **How fast or resource-efficient is it?** This public report does not include approved timing or memory measurements.
 
 [Explore the historical comparison limits](/splash-evals/historical-frontier-comparison/) · [See the planned task families](/splash-evals/benchmark-tasks/)
@@ -165,7 +170,7 @@ The report explains what ran, how answers were checked, and why the result is no
 
 ## How to read a result
 
-Completion tells you whether a test ran. Its purpose tells you what was being checked. Comparability tells you whether two scores can fairly be contrasted. These are separate questions: a completed run is not automatically capability evidence.
+Completion tells you whether a test ran. Its purpose tells you what was being checked. Comparability tells you whether two scores can fairly be contrasted. These are separate questions: a completed run is not automatically capability evidence. Engineering checks are documented separately under [Methodology → Test-system validation](/splash-evals/methodology/#test-system-validation).
 
 This dashboard is a static public summary, not a live connection to LM Studio. [What we publish and keep private](/splash-evals/privacy/).
 

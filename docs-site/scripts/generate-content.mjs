@@ -70,14 +70,14 @@ function renderPage(sourcePath, text, qualification) {
   const frontmatter =
     sourcePath === 'docs/index.md'
       ? `title: ${JSON.stringify(title)}
-description: "What a local Splash setup check found, what it does not prove, and how the tests work."
+description: "How close can local Splash come to current and previous-generation frontier models? Explore comparison coverage, methods, and measurement gaps."
 template: splash
 tableOfContents: false
 prev: false
 next: false
 hero:
   title: How well does Splash work on a local computer?
-  tagline: We test a local AI setup, record what happened, and explain what the results can tell us.
+  tagline: How close can local AI come to the frontier? Explore the evidence and the gaps still to measure.
   actions:
     - text: See what we found
       link: /splash-evals/dashboard/

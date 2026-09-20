@@ -10,7 +10,7 @@ const ROUTES = [
   ['/privacy/', 'Privacy and publication'],
   ['/operations/', 'Run it yourself'],
   ['/sources/', 'Historical sources and coverage'],
-  ['/historical-frontier-comparison/', 'Can we compare Splash with older leading models?'],
+  ['/historical-frontier-comparison/', 'How close is Splash to the frontier?'],
   ['/frontier-catalog/', 'Guide to the historical catalog'],
   ['/frontier-verification/', 'Were the source numbers copied correctly?'],
   ['/glossary/', 'A short guide to the terms'],
@@ -63,10 +63,17 @@ for (const [path, heading] of ROUTES) {
   });
 }
 
-test('novice journey reaches the result and its limitations', async ({ page }) => {
+test('novice journey keeps setup validation under methodology, not capability results', async ({ page }) => {
   await page.goto('./');
+  await expect(page.locator('.finding, .intro-count, .intro-tally')).toHaveCount(0);
+  await expect(page.getByText('Capability results: not yet measured.', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'See what we found' }).click();
   await expect(page).toHaveURL(/\/splash-evals\/dashboard\/$/);
+  await expect(page.locator('.finding, .intro-count, .intro-tally')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Read the setup-check report' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Methodology → Test-system validation', exact: true }).click();
+  await expect(page).toHaveURL(/\/splash-evals\/methodology\/#test-system-validation$/);
+  await expect(page.getByRole('heading', { name: 'Test-system validation', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Read the setup-check report' }).click();
   await expect(page).toHaveURL(/\/splash-evals\/local-pilot-results\/$/);
   await expect(page.getByText('Not permitted for this run', { exact: true })).toBeVisible();
@@ -79,18 +86,22 @@ test('novice journey reaches the result and its limitations', async ({ page }) =
   await expect(page.locator('details')).toContainText('72.2%–100.0%');
 });
 
-test('results distinguish historical scores, unmeasured local benchmarks, and setup qualification', async ({ page }) => {
+test('results distinguish requested frontier targets from historical scores and unmeasured benchmarks', async ({ page }) => {
   await page.goto(routeUrl('/dashboard/'));
   await expect(page.getByRole('heading', { name: 'Benchmark comparison board' })).toBeVisible();
-  await expect(page.locator('.intro-count strong')).toHaveText('10');
-  await expect(page.locator('.intro-visual figcaption')).toContainText('Not a capability score');
-  await expect(page.locator('.intro-tally .accepted')).toHaveCount(10);
+  await expect(page.locator('.intro-count, .intro-tally, .finding')).toHaveCount(0);
+  await expect(page.locator('.intro-visual figcaption')).toContainText('Missing scores are not zero');
+  await expect(page.getByRole('heading', { name: 'Current and previous-generation targets' })).toBeVisible();
+  for (const model of ['Sonnet 5', 'Opus 5', 'GPT‑5.6 Sol', 'GPT‑5.5']) {
+    await expect(page.getByRole('link', { name: model, exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole('heading', { name: 'Older reference archive' })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Comparison evidence status' })).toContainText('Not yet measured');
   if (page.viewportSize().width >= 800) {
     const tops = await page.locator('.evidence-track > div').evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top));
     expect(new Set(tops).size).toBe(1);
   }
-  await expect(page.getByRole('cell', { name: 'Not yet measured', exact: true })).toHaveCount(10);
+  await expect(page.getByRole('cell', { name: 'Not yet measured', exact: true })).toHaveCount(13);
   await expect(page.getByRole('cell', { name: '46.0%', exact: true })).toBeVisible();
   await expect(page.getByText('Not yet measured is not zero.', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Coding · Aider polyglot' })).toBeVisible();
@@ -98,7 +109,7 @@ test('results distinguish historical scores, unmeasured local benchmarks, and se
 
 test('comparison explanation leads to source-number checks without implying equivalence', async ({ page }) => {
   await page.goto(routeUrl('/historical-frontier-comparison/'));
-  await expect(page.getByText('Not yet.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Not yet measured.', { exact: true })).toBeVisible();
   await expect(page.getByText('No matching local result', { exact: true })).toHaveCount(3);
   await page.getByRole('link', { name: 'Source-number checks', exact: true }).click();
   await expect(page).toHaveURL(/\/splash-evals\/frontier-verification\/$/);

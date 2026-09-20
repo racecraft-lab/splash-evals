@@ -2,7 +2,8 @@
 
 Splash Evals is a privacy-first workbench for evaluating Splash/Qwen3.8 through an
 existing **local LM Studio server** and placing the resulting evidence beside dated,
-source-verified results for older frontier models.
+source-verified results for current and previous-generation frontier models. The goal is
+to measure how close the local setup comes on comparable tasks, not to assume it wins.
 
 The project keeps three claims separate:
 

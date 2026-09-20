@@ -9,13 +9,14 @@ type Intro = {
 /** Reader-facing context, not additional evaluation evidence. */
 export const pageIntros: Record<string, Intro> = {
   '': {
-    summary: 'We test a local AI setup, record what happened, and explain what the results can tell us.',
+    summary: 'How close can local AI come to the frontier? We measure practical ability, compare like-for-like evidence, and show where the gaps remain.',
     caption: 'From an instruction to inspectable evidence.',
     steps: [['Task', 'Give the model clear instructions'], ['Local model', 'Run it through LM Studio'], ['Answer check', 'Record what passed—and what it means']],
   },
   dashboard: {
-    summary: 'The testing setup worked on a small reused set. Here is the result—and the boundary around what it proves.',
-    variant: 'results', caption: 'Reused setup-check cases. Not a capability score.',
+    summary: 'Compare the research targets, inspect the available evidence, and see what still needs measuring. No frontier gap has been established yet.',
+    caption: 'The research question is open. Missing scores are not zero.',
+    steps: [['Local capability', 'Not yet measured on eligible tasks'], ['Frontier gap', 'Not yet measured under matching conditions'], ['Next milestone', 'A frozen, qualified capability study']],
   },
   'local-pilot-results': {
     summary: 'A closer look at the run: what completed, how answers were checked, and why this is a setup check rather than a verdict on ability.',
@@ -52,7 +53,7 @@ export const pageIntros: Record<string, Intro> = {
     steps: [['Original source', 'Find the paper or model report'], ['Dated record', 'Keep the task and scoring details'], ['Comparison check', 'Ask whether the conditions match']],
   },
   'historical-frontier-comparison': {
-    summary: 'Not yet. Historical results are available, but this local setup check does not support a direct model comparison.',
+    summary: 'The goal is to measure the gap to current and previous-generation frontier models. Here is the study plan, the available context, and what still blocks a fair comparison.',
     variant: 'comparison', caption: 'Matching tasks and scoring conditions are required before comparing scores.',
   },
   'frontier-catalog': {

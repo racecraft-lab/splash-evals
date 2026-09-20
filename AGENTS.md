@@ -3,7 +3,7 @@
 These rules apply to every automated change in this repository.
 
 1. Preserve the research objective: evaluate verified Splash/Qwen3.8 through local LM
-   Studio against dated historical evidence and practical tasks. Harness work and speed
+   Studio against dated current and previous-generation frontier evidence and practical tasks. Harness work and speed
    tuning are supporting work, not substitute results.
 2. Never add a cloud inference route, hosted grader, provider fallback, web-chat
    automation, LM Link route, tunnel, self-hosted GitHub runner, repository-dispatch
