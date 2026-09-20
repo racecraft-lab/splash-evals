@@ -47,10 +47,12 @@ Roster checked **2026-09-20**. These are planned comparisons, not completed runs
 | Claude Sonnet | [Sonnet 5](https://www.anthropic.com/news/claude-sonnet-5) | Sonnet 4.6; original Sonnet 4 as older context | Not yet measured |
 | Claude Opus | [Opus 5](https://www.anthropic.com/news/claude-opus-5) | Opus 4.8; original Opus 4 as older context | Not yet measured |
 | OpenAI GPT | [GPT‑5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol) | [GPT‑5.5](https://developers.openai.com/api/docs/models/gpt-5.5) | Not yet measured |
+| OpenAI GPT | [GPT‑5.6 Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra) | Not selected for this variant | Not yet measured |
+| OpenAI GPT | [GPT‑5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna) | Not selected for this variant | Not yet measured |
 
 </div>
 
-The Claude release sources identify 4.6 and 4.8 as the immediate predecessors. GPT‑5.6 here means Sol, not Terra or Luna. This requested group is **not the entire current frontier**: [OpenAI's catalog](https://developers.openai.com/api/docs/models) also lists GPT‑6 Astra, and the [Opus 5 release](https://www.anthropic.com/news/claude-opus-5) discusses Fable 5. Broader-frontier coverage still needs evidence review.
+The Claude release sources identify 4.6 and 4.8 as the immediate predecessors. **GPT‑5.6 Sol, Terra, and Luna are separate targets**, not interchangeable names or one combined score. Each needs its own model identifier, reasoning settings, test conditions, and results. Previous-generation anchors for Terra and Luna have not been selected. This requested group is **not the entire current frontier**: [OpenAI's catalog](https://developers.openai.com/api/docs/models) also lists GPT‑6 Astra, and the [Opus 5 release](https://www.anthropic.com/news/claude-opus-5) discusses Fable 5. Broader-frontier coverage still needs evidence review.
 
 [What must happen before we can measure the gap](/splash-evals/historical-frontier-comparison/#the-next-study)
 
