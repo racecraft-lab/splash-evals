@@ -1,13 +1,13 @@
 ---
 title: "How well does Splash work on a local computer?"
-description: "What a local Splash setup check found, what it does not prove, and how the tests work."
+description: "How close can local Splash come to current and previous-generation frontier models? Explore comparison coverage, methods, and measurement gaps."
 template: splash
 tableOfContents: false
 prev: false
 next: false
 hero:
   title: How well does Splash work on a local computer?
-  tagline: We test a local AI setup, record what happened, and explain what the results can tell us.
+  tagline: How close can local AI come to the frontier? Explore the evidence and the gaps still to measure.
   actions:
     - text: See what we found
       link: /splash-evals/dashboard/
@@ -21,33 +21,27 @@ hero:
 
 <div class="document-sheet">
 
-<section class="finding" aria-label="Current finding">
-<h2>First check: the testing setup worked</h2>
-<p class="result-count">10 of 10 reused cases completed and passed their checks.</p>
-<p>Broader ability still needs a fresh test set. Direct comparisons with older leading models are not yet available.</p>
-</section>
-
-<section class="reader-section" aria-label="What the first check tells us">
+<section class="reader-section" aria-label="The research question and current evidence">
 <div class="reader-columns">
 <div>
 
-## What ran
+## The question
 
-A small set of previously used tasks ran through local LM Studio. This was a check of the testing setup, not a fresh test of general ability.
-
-</div>
-<div>
-
-## What we learned
-
-The local request path completed, and the configured answer checker accepted the reused cases. The setup can produce and check answers for those cases.
+How close can local Splash / Qwen3.8 come to current and previous-generation frontier models on useful tasks? We want to measure the gap, not assume a win.
 
 </div>
 <div>
 
-## What remains open
+## What we know
 
-We still need fresh, preselected tests to measure broader ability. We cannot yet compare Splash fairly with older leading models.
+**Capability results: not yet measured.** Published reference scores provide context, but there is no eligible local benchmark result or supported frontier comparison yet.
+
+</div>
+<div>
+
+## What comes next
+
+Freeze the tasks, scoring rules, and comparison conditions; run the local study; then publish the results and their limits. [See the comparison coverage](/splash-evals/dashboard/#benchmark-comparison-board).
 
 </div>
 </div>

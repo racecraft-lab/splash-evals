@@ -1,28 +1,26 @@
 # How well does Splash work on a local computer?
 
-<!-- qualification-finding -->
-
-<section class="reader-section" aria-label="What the first check tells us">
+<section class="reader-section" aria-label="The research question and current evidence">
 <div class="reader-columns">
 <div>
 
-## What ran
+## The question
 
-A small set of previously used tasks ran through local LM Studio. This was a check of the testing setup, not a fresh test of general ability.
-
-</div>
-<div>
-
-## What we learned
-
-The local request path completed, and the configured answer checker accepted the reused cases. The setup can produce and check answers for those cases.
+How close can local Splash / Qwen3.8 come to current and previous-generation frontier models on useful tasks? We want to measure the gap, not assume a win.
 
 </div>
 <div>
 
-## What remains open
+## What we know
 
-We still need fresh, preselected tests to measure broader ability. We cannot yet compare Splash fairly with older leading models.
+**Capability results: not yet measured.** Published reference scores provide context, but there is no eligible local benchmark result or supported frontier comparison yet.
+
+</div>
+<div>
+
+## What comes next
+
+Freeze the tasks, scoring rules, and comparison conditions; run the local study; then publish the results and their limits. [See the comparison coverage](dashboard.md#benchmark-comparison-board).
 
 </div>
 </div>

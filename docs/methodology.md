@@ -1,8 +1,6 @@
 # How we test
 
-We want to know which practical tasks this local setup can handle reliably. To answer that fairly, we must separate **checking the testing setup** from **measuring ability on unfamiliar tasks**.
-
-The published run did the first of these. It did not complete the capability study described below. [Read what actually ran](local-pilot-results.md).
+We want to know which practical tasks this local setup can handle reliably, and how close it comes to current and previous-generation frontier models. To answer that fairly, we must separate **checking the testing setup** from **measuring ability on unfamiliar tasks**.
 
 <section class="reader-section cool" aria-label="The testing sequence">
 
@@ -26,13 +24,25 @@ Two exam scores are not comparable if the exams contain different questions or a
 
 </section>
 
+<section class="reader-section cool" aria-label="Test-system validation">
+
+## Test-system validation
+
+Before measuring model ability, we check that requests reach the local model and that the answer checker works. The published setup check completed on a small set of reused cases. This is engineering evidence about the testing path, **not a score for Splash's intelligence, general reliability, or closeness to frontier models**.
+
+It is useful for troubleshooting and understanding how the testing system was checked. It does not qualify every future benchmark adapter or replace independent scorer validation and a frozen capability study.
+
+[Read the setup-check report](local-pilot-results.md) for the counts, checking method, and limitations. Its original URL and reviewed aggregate remain available; it is not included as a capability result.
+
+</section>
+
 <details>
 <summary>Technical research protocol and comparison requirements</summary>
 
 ## Research question
 
 How capable and practically useful is the exact Splash/Qwen3.8 deployment served by local
-LM Studio relative to dated 2024–2025 frontier-model evidence, and which tasks can it handle
+LM Studio relative to dated current and previous-generation frontier-model evidence, and which tasks can it handle
 reliably with stated verification requirements?
 
 Model identity, runtime reliability, speed, and capability are reported separately.
