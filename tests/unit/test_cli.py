@@ -8,6 +8,29 @@ import local_evals.cli as cli
 from local_evals.cli import app
 
 
+def test_origin_and_model_prefers_exact_instance_id_over_alias_key(monkeypatch) -> None:
+    monkeypatch.setattr(
+        cli,
+        "load_config",
+        lambda name: {
+            "server": {
+                "origin": "http://127.0.0.1:1234",
+                "api_key_env": "LM_STUDIO_API_KEY",
+            },
+            "model": {
+                "key": "qwen3.8-27b-splash",  # gitleaks:allow - synthetic fixture key
+                "instance_id": "racecraft-splash-local",
+            },
+        },
+    )
+
+    assert cli._origin_and_model("splash-local-32k") == (
+        "http://127.0.0.1:1234",
+        "racecraft-splash-local",
+        "LM_STUDIO_API_KEY",
+    )
+
+
 def test_cli_help_exposes_required_command_groups_without_side_effects() -> None:
     result = CliRunner().invoke(
         app,
@@ -64,6 +87,43 @@ def test_expanded_run_requires_explicit_authorization_flag_in_interface() -> Non
 
     assert result.exit_code == 0
     assert "--allow-expanded" in help_text
+
+
+def test_core_run_cli_forwards_expanded_and_dry_run_authorization(monkeypatch) -> None:
+    observed = {}
+
+    def execute(suite, config, *, dry_run, allow_expanded):
+        observed.update(
+            suite=suite,
+            config=config,
+            dry_run=dry_run,
+            allow_expanded=allow_expanded,
+        )
+        return {"status": "dry_run", "runner": "evalscope-1.12"}
+
+    monkeypatch.setattr(cli, "execute_run", execute)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "run",
+            "--suite",
+            "core",
+            "--config",
+            "lmstudio-as-found",
+            "--dry-run",
+            "--allow-expanded",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert observed == {
+        "suite": "core",
+        "config": "lmstudio-as-found",
+        "dry_run": True,
+        "allow_expanded": True,
+    }
+    assert '"runner": "evalscope-1.12"' in result.stdout
 
 
 def test_frontier_validate_default_reports_missing_coverage_without_failing(

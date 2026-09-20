@@ -72,6 +72,8 @@ _SENSITIVE_KEYS = re.compile(
 )
 _MACOS_LM_STUDIO_CLIS = (Path("/Applications/LM Studio.app/Contents/Resources/app/.webpack/lms"),)
 _MACOS_BIONIC_CLIS = (Path("/Applications/Bionic.app/Contents/Resources/app/.webpack-bionic/lms"),)
+_LM_STUDIO_HOME_POINTER = ".lmstudio-home-pointer"
+_MAX_HOME_POINTER_BYTES = 4096
 
 
 def _file_sha256(path: Path) -> bytes:
@@ -82,6 +84,43 @@ def _file_sha256(path: Path) -> bytes:
     return digest.digest()
 
 
+def _pointed_lm_studio_home(user_home: Path) -> Path | None:
+    pointer = user_home / _LM_STUDIO_HOME_POINTER
+    if pointer.is_symlink():
+        raise LMStudioError("LM Studio home pointer cannot be resolved safely")
+    if not pointer.exists():
+        return None
+    try:
+        if not pointer.is_file() or pointer.stat().st_size > _MAX_HOME_POINTER_BYTES:
+            raise LMStudioError("LM Studio home pointer cannot be resolved safely")
+        pointer_value = pointer.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError) as exc:
+        raise LMStudioError("LM Studio home pointer cannot be resolved safely") from exc
+    pointed_root = Path(pointer_value)
+    if not pointer_value or not pointed_root.is_absolute():
+        raise LMStudioError("LM Studio home pointer cannot be resolved safely")
+    return pointed_root
+
+
+def _official_llmster_clis(user_home: Path) -> tuple[Path, ...]:
+    """Resolve official standalone CLI cache entries without executing them."""
+
+    roots = [user_home / ".lmstudio", user_home / ".cache" / "lm-studio"]
+    pointed_root = _pointed_lm_studio_home(user_home)
+    if pointed_root is not None:
+        roots.insert(0, pointed_root)
+
+    candidates: list[Path] = []
+    for root in roots:
+        candidate = root / "bin" / "lms"
+        if candidate.is_file():
+            try:
+                candidates.append(candidate.resolve(strict=True))
+            except (OSError, RuntimeError) as exc:
+                raise LMStudioError("LM Studio CLI cache cannot be resolved safely") from exc
+    return tuple(dict.fromkeys(candidates))
+
+
 def verify_lms_cli_executable(
     executable: str | os.PathLike[str],
     *,
@@ -89,12 +128,12 @@ def verify_lms_cli_executable(
     lm_studio_paths: Sequence[Path] = _MACOS_LM_STUDIO_CLIS,
     bionic_paths: Sequence[Path] = _MACOS_BIONIC_CLIS,
 ) -> Path:
-    """Verify a cached macOS ``lms`` executable by bytes, without running it.
+    """Verify a macOS ``lms`` executable from an official install, without running it.
 
-    Non-macOS and custom macOS installs without either standard application
-    bundle retain the resolved executable. Once a standard LM Studio or Bionic
-    bundle is present, the cached executable must byte-match LM Studio and must
-    not byte-match Bionic.
+    A desktop-app CLI is accepted only by byte identity. A standalone llmster
+    CLI is accepted only when the executable resolves from the user's official
+    LM Studio home pointer or cache entry. Arbitrary PATH executables fail
+    closed even when their bytes copy an official standalone CLI.
     """
 
     try:
@@ -108,8 +147,10 @@ def verify_lms_cli_executable(
 
     lm_candidates = [path.resolve() for path in lm_studio_paths if path.is_file()]
     bionic_candidates = [path.resolve() for path in bionic_paths if path.is_file()]
-    if not lm_candidates and not bionic_candidates:
-        return resolved
+    try:
+        llmster_candidates = _official_llmster_clis(Path.home())
+    except (OSError, RuntimeError) as exc:
+        raise LMStudioError("LM Studio CLI cache cannot be resolved safely") from exc
 
     try:
         executable_hash = _file_sha256(resolved)
@@ -119,7 +160,7 @@ def verify_lms_cli_executable(
         raise LMStudioError("lms executable identity could not be verified") from exc
     if executable_hash in bionic_hashes:
         raise LMStudioError("lms executable resolves to the conflicting Bionic CLI")
-    if not lm_studio_hashes or executable_hash not in lm_studio_hashes:
+    if resolved not in llmster_candidates and executable_hash not in lm_studio_hashes:
         raise LMStudioError("lms executable does not match the installed LM Studio CLI")
     return resolved
 
@@ -338,28 +379,28 @@ def classify_model_instance_locality(
     """
 
     items = _objects(loaded_payload)
-    selected: Mapping[str, Any] | None = None
     if model_or_instance_id is None:
-        if len(items) == 1:
-            selected = items[0]
-    else:
-        for item in items:
-            identifiers = {
-                _first_string(item, ("modelKey", "key", "id", "model", "identifier")),
-                _first_string(
-                    item,
-                    ("instanceIdentifier", "instance_id", "instanceId", "identifier"),
-                ),
-            }
-            if model_or_instance_id in identifiers:
-                selected = item
-                break
-    if selected is None:
         return classify_locality(
             endpoint_loopback=True,
             lm_link_state=lm_link_state,
             local_instance_evidence=False,
         )
+    matches = [
+        item
+        for item in items
+        if model_or_instance_id
+        == _first_string(
+            item,
+            ("instanceIdentifier", "instance_id", "instanceId", "identifier"),
+        )
+    ]
+    if len(matches) != 1:
+        return classify_locality(
+            endpoint_loopback=True,
+            lm_link_state=lm_link_state,
+            local_instance_evidence=False,
+        )
+    selected = matches[0]
     if "deviceIdentifier" not in selected:
         return classify_locality(
             endpoint_loopback=True,

@@ -1,0 +1,43 @@
+schema_version: 1
+reference_id: openai-gpt-5.6-luna-2026-07-gpqa-diamond
+provider: OpenAI
+model_display_name: GPT-5.6 Luna
+model_snapshot_id: null
+release_period: "2026-07"
+measurement_date: null
+source_publication_date: "2026-07-09"
+source_url: "https://openai.com/index/gpt-5-6/"
+source_locator: "Academic table, GPQA Diamond row, GPT-5.6 Luna column"
+source_revision_or_content_hash: "source publication 2026-07-09; normalized locator excerpt sha256:c952e8eff327c1ed126b551f2bca21e7913967116d1fc61a3c96f847a5cb66e9"
+retrieved_on: "2026-09-20"
+evidence_class: published_historical_reference
+benchmark:
+  name: GPQA Diamond
+  version: null
+  split: Diamond
+  dataset_revision: null
+  sample_count: null
+  sample_id_manifest: null
+  metric_name: accuracy
+  metric_unit: percent
+  higher_is_better: true
+protocol:
+  few_shot: null
+  prompts_or_template_revision: null
+  reasoning_mode: null
+  output_budget: null
+  attempts_per_task: null
+  aggregation: null
+  tool_access: null
+  agent_scaffold_revision: null
+  scorer_revision: null
+  answer_extraction: null
+reported_score: 92.3
+reported_uncertainty: null
+comparability: partially_matched
+comparability_notes:
+  - "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition."
+  - "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row."
+  - "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+rights_and_access_notes: "Brief factual aggregate from the publisher page; no benchmark questions or responses redistributed."
+verification_status: source_verified

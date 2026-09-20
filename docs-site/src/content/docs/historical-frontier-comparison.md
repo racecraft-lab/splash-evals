@@ -42,7 +42,7 @@ Keep capability, completion, latency, resource use, and cost separate. No blende
 
 ## What evidence do we have?
 
-The older catalog contains 15 records across OpenAI, Anthropic, and Google. These are different benchmark and testing conditions, **not 15 unique models**, and do not cover the newly requested cohort. Some records distinguish a first attempt from an answer repaired after feedback.
+The older catalog contains 19 records across OpenAI, Anthropic, and Google. These are different benchmark and testing conditions, **not 19 unique models**, and do not provide a fully aligned current-frontier cohort. Some records distinguish a first attempt from an answer repaired after feedback.
 
 <p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
 
@@ -57,6 +57,45 @@ The older catalog contains 15 records across OpenAI, Anthropic, and Google. Thes
 </div>
 
 </section>
+
+## First-party directional references
+
+The official GPT-5.6 announcement's Academic table adds four GPQA Diamond aggregate records,
+including GPT-5.5 alongside GPT-5.6 Sol, Terra, and Luna. They are
+directional context only: the published percentages do not disclose an immutable snapshot,
+benchmark version, dataset revision, sample manifest, prompt/template, reasoning condition,
+attempts, or scorer, so they do not support a local historical delta.
+
+<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+
+<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+
+| Record ID | Historical result | Local score | Status |
+|---|---:|---:|---|
+| `openai-gpt-5.5-2026-07-gpqa-diamond` | 93.6% | `null` | `partially_matched`, directional-only |
+| `openai-gpt-5.6-sol-2026-07-gpqa-diamond` | 94.6% | `null` | `partially_matched`, directional-only |
+| `openai-gpt-5.6-terra-2026-07-gpqa-diamond` | 92.9% | `null` | `partially_matched`, directional-only |
+| `openai-gpt-5.6-luna-2026-07-gpqa-diamond` | 92.3% | `null` | `partially_matched`, directional-only |
+
+</div>
+
+The requested Claude Sonnet/Opus 4/5 roster remains context-only. GPT-5.5 now has a
+first-party directional GPQA Diamond record from the same Academic table, but it does not
+disclose a complete exact intersection with the local GPQA/IFEval/MMLU-Pro/Aider protocol.
+No invented numeric records are added for the remaining roster members.
+
+<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+
+<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+
+| Roster member | Official context | Limitation |
+|---|---|---|
+| Claude Sonnet 4 (`claude-sonnet-4-20250514`) and Claude Opus 4 (`claude-opus-4-20250514`) | [Claude 4 release](https://www.anthropic.com/news/claude-4), [system card](https://www-cdn.anthropic.com/4263b940cabb546aa0e3283f35b686f4f3b2ff47.pdf), [model IDs](https://platform.claude.com/docs/en/about-claude/model-deprecations) | Multiple snapshots and agentic scaffolds are evaluated; no exact local benchmark manifest/protocol intersection. |
+| Claude Sonnet 5 (`claude-sonnet-5`) | [Announcement](https://www.anthropic.com/news/claude-sonnet-5), [API overview](https://platform.claude.com/docs/en/models/sonnet-5/overview), [system-card index](https://www.anthropic.com/system-cards) | BrowseComp and OSWorld-Verified context is disclosed, but not the complete local manifest/scorer/attempt protocol. |
+| Claude Opus 5 (`claude-opus-5`) | [Announcement](https://www.anthropic.com/news/claude-opus-5), [API overview](https://platform.claude.com/docs/en/models/opus-5/overview), [system-card index](https://www.anthropic.com/system-cards) | Frontier-Bench, CursorBench, OSWorld, GDPval-AA, and other context is disclosed, but not an exact local intersection. |
+| GPT-5.5 (`gpt-5.5`; immutable snapshot `gpt-5.5-2026-04-23`) | [Announcement](https://openai.com/index/introducing-gpt-5-5/), [system card](https://openai.com/index/gpt-5-5-system-card/), [API model page](https://developers.openai.com/api/docs/models/gpt-5.5) | Published coding/agentic aggregates do not provide the complete local manifest/protocol; GPT-5.5 Pro is separate. |
+
+</div>
 
 ## Why not put the scores side by side?
 
@@ -100,8 +139,10 @@ explicitly `null`, and no historical delta is reported.
 The exact-intersection gate also remains closed for the historical catalog. The Aider records
 have enough dated model/provider breadth for a candidate intersection, but their exact
 benchmark version and dataset revision are `null`. GPQA and IFEval likewise lack the required
-version/revision facts and do not provide a two-provider intersection. Unknown fields are not
-treated as compatible coverage.
+version/revision facts and do not provide a two-provider intersection. The four GPT-5.5/GPT-5.6
+GPQA Diamond records add first-party directional context, but their exact snapshot,
+benchmark version, dataset revision, sample manifest, and protocol fields remain `null`.
+Unknown fields are not treated as compatible coverage.
 
 The catalog provider allowlist is exactly OpenAI, Anthropic, and Google. The original catalog's
 source review found no record from those providers with all immutable sample, prompt, scorer, and
@@ -136,6 +177,10 @@ the record's `comparability_notes`.
 | `openai-gpt-4o-2024-11-20-ifeval` | `published_historical_reference` | 81.0% publisher-reported IFEval | `null` | `partially_matched` | IFEval metric variant, dataset revision, sample count, template, and scorer revision are unknown. |
 | `openai-o1-high-gpqa-diamond` | `published_historical_reference` | 75.7% accuracy | `null` | `partially_matched` | Exact o1 snapshot and reasoning budget are undisclosed; publisher extraction and a bounded subset prevent a direct delta. |
 | `openai-o1-high-ifeval` | `published_historical_reference` | 92.2% publisher-reported IFEval | `null` | `partially_matched` | Exact snapshot/reasoning budget, IFEval metric variant, and full protocol are not identified. |
+| `openai-gpt-5.5-2026-07-gpqa-diamond` | `published_historical_reference` | 93.6% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
+| `openai-gpt-5.6-sol-2026-07-gpqa-diamond` | `published_historical_reference` | 94.6% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
+| `openai-gpt-5.6-terra-2026-07-gpqa-diamond` | `published_historical_reference` | 92.9% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
+| `openai-gpt-5.6-luna-2026-07-gpqa-diamond` | `published_historical_reference` | 92.3% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
 
 </div>
 

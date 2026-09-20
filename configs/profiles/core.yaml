@@ -3,9 +3,111 @@ suite: core
 evidence_class: local_measurement
 expanded: true
 repetitions: 1
-task_set: external-version-pinned-core
-scorer_version: unresolved
-max_output_tokens: 32768
-blockers:
-  - Requires explicit --allow-expanded authorization.
-  - Requires licensed datasets, fixed selection manifests, and qualified scorers.
+task_set: private-frozen-core-v1
+scorer_version: family-manifest-pinned
+max_output_tokens: 4096
+session_generated_token_cap: 250000
+
+runner: evalscope-1.12
+evalscope_version: 1.12.0
+model_alias: racecraft-splash-local
+eval_type: openai_api
+api_path: /v1
+eval_batch_size: 1
+transport_retries: 0
+cache_policy: disabled
+judge_policy: disabled
+failure_policy: all_attempts_in_denominator
+inspect_fallback: unavailable
+manifest_set_path: benchmarks/core/manifest-set.json
+
+families:
+  gpqa_diamond:
+    sample_count: 12
+    dataset_id: gpqa_diamond
+    evidence_split: held_out
+    evalscope_dataset: gpqa_diamond
+    evalscope_split: train
+    evalscope_subsets: [default]
+    few_shot_num: 0
+    few_shot_random: false
+    prompt_template_revision: gpqa-diamond-zero-shot-v1
+    scorer_revision: gpqa-diamond-exact-choice-v1
+    metric_variant: accuracy
+  ifeval:
+    sample_count: 16
+    dataset_id: ifeval
+    evidence_split: held_out
+    evalscope_dataset: ifeval
+    evalscope_split: train
+    evalscope_subsets: [default]
+    few_shot_num: 0
+    few_shot_random: false
+    prompt_template_revision: ifeval-official-v1
+    scorer_revision: ifeval-strict-v1
+    metric_variant: prompt_level_strict
+  mmlu_pro:
+    sample_count: 14
+    dataset_id: mmlu_pro
+    evidence_split: held_out
+    evalscope_dataset: mmlu_pro
+    evalscope_split: test
+    evalscope_subsets:
+      - computer science
+      - math
+      - chemistry
+      - engineering
+      - law
+      - biology
+      - health
+      - physics
+      - business
+      - philosophy
+      - economics
+      - other
+      - psychology
+      - history
+    few_shot_num: 0
+    few_shot_random: false
+    prompt_template_revision: mmlu-pro-zero-shot-v1
+    scorer_revision: mmlu-pro-exact-choice-v1
+    metric_variant: accuracy
+  tool_json:
+    sample_count: 10
+    dataset_id: tool_json
+    evidence_split: held_out
+    evalscope_dataset: racecraft_tool_json
+    evalscope_split: test
+    evalscope_subsets: [tool_json]
+    few_shot_num: 0
+    few_shot_random: false
+    prompt_template_revision: tool-json-v1
+    scorer_revision: tool-json-schema-exact-v1
+    metric_variant: schema_exact_accuracy
+    adapter_id: racecraft_tool_json
+    adapter_revision: racecraft-evalscope-exact-v1
+  context:
+    sample_count: 8
+    dataset_id: context
+    evidence_split: held_out
+    evalscope_dataset: racecraft_context
+    evalscope_split: test
+    evalscope_subsets: [context]
+    few_shot_num: 0
+    few_shot_random: false
+    prompt_template_revision: context-retrieval-v1
+    scorer_revision: context-exact-v1
+    metric_variant: accuracy
+    adapter_id: racecraft_context
+    adapter_revision: racecraft-evalscope-exact-v1
+
+coding:
+  enabled: false
+  max_sample_count: 10
+  sandbox_attestation_required: true
+
+limitations:
+  - Private benchmark prompts, answers, dataset trees, and frozen sample manifests remain outside Git.
+  - Coding evaluation remains refused until a separate sandbox attestation passes.
+  - Inspect is recorded as unavailable and is never selected as an automatic fallback.
+  - Tool/JSON and context use project-owned exact EvalScope adapters; their raw records and outputs remain external private evidence.

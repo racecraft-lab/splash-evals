@@ -30,7 +30,8 @@ served model is verified as Splash.
   verified disposable sandbox with no network, host-home mount, or Docker socket.
 
 See [methodology](docs/methodology.md), [privacy](docs/privacy.md),
-[operations](docs/operations.md), and the [historical catalog](references/frontier/README.md).
+[operations](docs/operations.md), the tracked [capability-run readiness checklist](docs/capability-readiness.md),
+and the [historical catalog](references/frontier/README.md).
 The same public material is available in the
 [Starlight documentation site](https://racecraft-lab.github.io/splash-evals/).
 
@@ -65,13 +66,12 @@ result is implied by the presence of `published/`.
 
 ## Local pilot result
 
-The reviewed as-found local pilot loaded `qwen3.8-27b-splash` and accepted 10/10 requests
-(0 failures, 0 censored), with a Wilson 95% interval of 72.2467%–100%. This is
-`pilot_only` evidence. A post-hoc, order-reversed candidate comparison used the same tasks
-and scorer and had a paired correctness difference of `0.0`; it is exploratory and cannot
-establish improvement or equivalence. Historical comparison remains blocked because no
-protocol-compatible immutable benchmark version and dataset revision has been established.
-See the [sanitized local pilot results](docs/local-pilot-results.md).
+The reviewed local aggregate is a post-hoc runtime/scorer qualification on reused cases. Its
+publication purpose is `post_hoc_runtime_scorer_qualification` and `capability_evidence` is
+`false`. It cannot establish model capability, improvement, equivalence, ranking, or a frontier
+delta. Historical direct-comparison coverage remains unavailable. See the
+[sanitized qualification result](docs/local-pilot-results.md) and the
+[remaining capability-run gates](docs/capability-readiness.md).
 
 ## License and upstream rights
 

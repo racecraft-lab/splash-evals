@@ -29,6 +29,12 @@ with a small pilot until the 225 tasks, edit format, attempts, scaffold, and san
 
 - OpenAI GPT-4.1, GPT-4o (2024-11-20), and o1 (high): GPQA Diamond and IFEval publisher
   appendix records, with material answer-extraction limitations.
+- OpenAI GPT-5.6 Sol, Terra, and Luna (2026-07): first-party GPQA Diamond aggregate
+  records. The published percentages are directional context only; the exact snapshot,
+  benchmark revision, dataset revision, sample manifest, and scoring protocol remain null.
+- OpenAI GPT-5.5 (2026-07 Academic table): first-party GPQA Diamond aggregate record.
+  The published percentage is directional context only; the exact snapshot, benchmark
+  revision, dataset revision, sample manifest, and scoring protocol remain null.
 - Claude 3.5 Sonnet (June 2024): publisher GPQA record with incomplete protocol details.
 - Claude 3.5 Sonnet (2024-10-22), Claude 3.7 Sonnet (2025-02-19), and Gemini 2.5 Pro
   Preview 03-25: Aider's 225-case polyglot records, preserving first-attempt and
@@ -36,7 +42,9 @@ with a small pilot until the 225 tasks, edit format, attempts, scaffold, and san
 
 </section>
 
-Do not merge Claude 3.5's June and October versions, Claude 3.7 thinking modes, or Gemini
-March experimental and later preview/stable variants.
+Do not merge Claude 3.5's June and October versions, Claude 3.7 thinking modes, Gemini
+March experimental and later preview/stable variants, or GPT-5.5/GPT-5.6 conditions.
+The current GPT-5.5 and GPT-5.6 records do not open the exact-intersection gate because
+version and dataset revision are explicitly unknown.
 
 </div>

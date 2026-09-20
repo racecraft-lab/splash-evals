@@ -1,0 +1,42 @@
+schema_version: 2
+id: splash-local-32k
+status: qualified-local-profile
+server:
+  origin: http://127.0.0.1:1234
+  openai_base_url: http://127.0.0.1:1234/v1
+  api_key_env: LM_STUDIO_API_KEY
+  require_local_execution: true
+model:
+  key: qwen3.8-27b-splash # gitleaks:allow - public LM Studio model alias
+  instance_id: racecraft-splash-local
+  selected_variant: null
+  file_revision: null
+  engine: null
+  engine_version: null
+  execution_device: local
+load_requested:
+  context_length: 32768
+  backend_specific:
+    parallel: 1
+operation_requested:
+  temperature: null
+  top_p: null
+  top_k: null
+  max_output_tokens: 4096
+  stream: false
+reasoning_control:
+  mechanism: native-v1
+  desired_mode: "on"
+  desired_effort: null
+  transmitted: "on"
+  verified_effect: accepted_by_runtime_not_read_back
+metadata:
+  load_effective: verified_from_loaded_instance
+  template_sha256: 3b3b38b6ea9eb7df57eb47892dfd15be9f84361722b229b9220654a8cf467f74
+  model_artifact_set_sha256: b0ec3657c45418a0f9e92806e5e1f1a7893dd3c5d71ae7e3c7a35760e168da81
+  runtime_identifier: splash-mac-arm64-apple-metal-advsimd@0.0.4
+  generation_effective_evidence: accepted_by_runtime_not_read_back
+execution:
+  max_in_flight_requests: 1
+  transport_retries: 0
+  response_cache: disabled

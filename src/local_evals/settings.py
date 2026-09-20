@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import ConfigurationError, secure_resolve
+from .jsonutil import StrictJSONError, canonical_json_text
 from .models import (
     ChangeJournalEntry,
     RestoreAction,
@@ -41,9 +42,9 @@ def _json_value(value: Any) -> Any:
     """Copy settings through strict JSON to prevent later object mutation."""
 
     try:
-        encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+        encoded = canonical_json_text(value)
         return json.loads(encoded)
-    except (TypeError, ValueError) as exc:
+    except StrictJSONError as exc:
         raise SettingsError("settings must contain finite JSON-compatible values") from exc
 
 

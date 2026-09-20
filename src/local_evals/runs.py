@@ -10,6 +10,7 @@ import fcntl
 import hashlib
 import ipaddress
 import json
+import math
 import os
 import re
 import socket
@@ -25,6 +26,7 @@ from urllib.parse import urlparse
 import httpx
 import yaml
 
+from .benchmarks import execute_evalscope_core, inspect_core_readiness
 from .lmstudio import LMStudioError, model_keys_equivalent
 from .lmstudio import discover as discover_lmstudio
 from .models import DiscoveryReport, LocalityStatus, ModelRecord, ModelRecordSource
@@ -55,6 +57,39 @@ class ResumeRefused(RunError):
 
 class ScoringError(RunError):
     """A response cannot be parsed under the frozen scorer contract."""
+
+
+_CORE_FAMILY_COUNTS = {
+    "gpqa_diamond": 12,
+    "ifeval": 16,
+    "mmlu_pro": 14,
+    "tool_json": 10,
+    "context": 8,
+}
+_CORE_FAMILY_RESULT_KEYS = {
+    "schema_version",
+    "family",
+    "planned",
+    "attempted",
+    "scored",
+    "correct",
+    "score",
+    "metric_name",
+    "metric_unit",
+    "scorer_revision",
+    "scorer_provenance_sha256",
+    "calibration_manifest_sha256",
+    "selection_manifest_sha256",
+    "ordered_sample_ids_sha256",
+    "dataset_tree_sha256",
+    "dataset_index_sha256",
+    "report_sha256",
+    "failure_counts",
+}
+_CORE_EVIDENCE_LIMITATION = (
+    "EvalScope's OpenAI-compatible response reports only the configured model alias; "
+    "served response-instance identity and effective reasoning settings are not read back."
+)
 
 
 @dataclass(frozen=True)
@@ -490,6 +525,15 @@ def _config_origin(config: dict[str, Any]) -> str:
     return validate_loopback_origin(origin)
 
 
+def _config_openai_base_url(config: dict[str, Any]) -> str:
+    origin = _config_origin(config)
+    expected = f"{origin}/v1"
+    configured = (config.get("server") or {}).get("openai_base_url")
+    if configured != expected:
+        raise RunError("configuration must pin the loopback LM Studio OpenAI API root at /v1")
+    return expected
+
+
 def _api_key(config: dict[str, Any]) -> str | None:
     env_name = (config.get("server") or {}).get("api_key_env")
     return os.environ.get(env_name) if isinstance(env_name, str) else None
@@ -800,6 +844,47 @@ def _comparison_evidence(
     }
 
 
+def _suite_plan_metadata(
+    suite: str,
+    profile: dict[str, Any],
+    config: dict[str, Any],
+    repo: Path,
+    tasks: list[Task],
+) -> dict[str, Any]:
+    public_tasks = [task.public_manifest() for task in tasks]
+    metadata: dict[str, Any] = {
+        "runner": "builtin-local",
+        "core_readiness": None,
+        "sample_count": len(tasks),
+        "blockers": [],
+        "output_directory": get_state_dir(repo, create=False) / "runs",
+        "selection_hash": _sha256_json(public_tasks),
+    }
+    if suite != "core":
+        return metadata
+    readiness = inspect_core_readiness(
+        profile,
+        repo=repo,
+        state=get_state_dir(repo, create=False),
+        server_origin=_config_openai_base_url(config),
+    )
+    readiness_metadata = readiness.get("metadata", {})
+    metadata.update(
+        runner=str(readiness_metadata.get("runner", "evalscope-1.12")),
+        core_readiness=readiness,
+        sample_count=int(readiness_metadata.get("total_samples", 0)),
+        blockers=list(readiness.get("blockers", [])),
+        output_directory="external-state://runs",
+        selection_hash=readiness_metadata.get("manifest_set_sha256"),
+    )
+    return metadata
+
+
+def _planned_output_directory(base: Path | str, experiment_id: str) -> str:
+    suffix = f"{experiment_id}-RUN_TIMESTAMP"
+    return str(base / suffix) if isinstance(base, Path) else f"{base}/{suffix}"
+
+
 def build_plan(
     suite: str,
     config_name: str,
@@ -907,6 +992,145 @@ def build_plan(
         "selection_evidence": selection_evidence,
         "selection_hash": _sha256_json(public_tasks),
     }
+
+
+def _core_selection_evidence(readiness_metadata: dict[str, Any], ready: bool) -> dict[str, Any]:
+    manifest_set_sha256 = readiness_metadata.get("manifest_set_sha256")
+    return {
+        "status": "held_out_verified" if ready else "blocked",
+        "ordered_sample_manifest_sha256": manifest_set_sha256,
+        "manifest_set_sha256": manifest_set_sha256,
+        "manifest_source": "external" if ready else None,
+        "frozen_before_tuning": ready,
+        "contamination_review_revision": (
+            f"manifest-set-sha256:{manifest_set_sha256}" if ready else None
+        ),
+        "family_evidence": readiness_metadata.get("family_evidence", {}),
+    }
+
+
+def _core_historical_protocol(
+    profile: dict[str, Any],
+    plan: dict[str, Any],
+    sample_count: int,
+    manifest_set_sha256: Any,
+    ready: bool,
+) -> dict[str, Any]:
+    return {
+        "benchmark_name": "Racecraft private frozen core",
+        "benchmark_version": profile.get("task_set"),
+        "split": "held_out" if ready else None,
+        "dataset_revision": manifest_set_sha256,
+        "sample_id_manifest": manifest_set_sha256,
+        "metric_name": "accuracy",
+        "metric_unit": "proportion",
+        "sample_count": sample_count,
+        "few_shot": 0,
+        "prompts_or_template_revision": manifest_set_sha256,
+        "reasoning_mode": plan["reasoning_evidence"]["transmitted"],
+        "output_budget": int(profile.get("max_output_tokens", 512)),
+        "attempts_per_task": 1,
+        "aggregation": "mean_binary_score",
+        "tool_access": "family_defined",
+        "agent_scaffold_revision": None,
+        "scorer_revision": profile.get("scorer_version"),
+        "answer_extraction": "family_qualified_exact",
+        "higher_is_better": True,
+        "failure_policy": "count_failures_as_incorrect",
+        "denominator": "all_planned_samples",
+    }
+
+
+def _core_plan_updates(
+    plan: dict[str, Any],
+    profile: dict[str, Any],
+    config: dict[str, Any],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    readiness = metadata["core_readiness"]
+    readiness_metadata = readiness.get("metadata", {})
+    sample_count = int(metadata["sample_count"])
+    blockers = [
+        blocker
+        for blocker in plan["blockers"]
+        if not blocker.startswith("No licensed/version-pinned executable task manifest")
+    ]
+    blockers.extend(metadata["blockers"])
+    ready = readiness.get("status") == "ready"
+    selection = _core_selection_evidence(readiness_metadata, ready)
+    comparison = _comparison_evidence(
+        "core",
+        profile,
+        plan["model_instance_evidence"],
+        plan["reasoning_evidence"],
+        sample_count=sample_count,
+        output_budget=int(profile.get("max_output_tokens", 512)),
+    )
+    comparison["historical_protocol"] = _core_historical_protocol(
+        profile,
+        plan,
+        sample_count,
+        readiness_metadata.get("manifest_set_sha256"),
+        ready,
+    )
+    experiment_id = _sha256_json(
+        {
+            "config": config,
+            "model": plan["model_id"],
+            "locality": plan["locality_evidence"],
+            "model_instance": plan["model_instance_evidence"],
+            "protocol": plan["protocol"],
+            "core_readiness": readiness,
+        }
+    )[:20]
+    return {
+        "experiment_id": experiment_id,
+        "runner": metadata["runner"],
+        "core_readiness": readiness,
+        "sample_count": sample_count,
+        "request_count": sample_count,
+        "estimated_max_generated_tokens": sample_count * int(profile.get("max_output_tokens", 512)),
+        "blockers": sorted(set(blockers)),
+        "output_directory": _planned_output_directory(metadata["output_directory"], experiment_id),
+        "held_out": ready,
+        "selection_status": selection["status"],
+        "selection_evidence": selection,
+        "calibration_heldout_separation": "held_out" if ready else "unverified",
+        "selection_hash": metadata["selection_hash"],
+        "primary_objective_status_if_run": (
+            "answered_with_stated_scope"
+            if ready and plan["model_is_splash"] and not blockers
+            else "blocked"
+        ),
+        "limitations": [*plan.get("limitations", []), _CORE_EVIDENCE_LIMITATION],
+        **comparison,
+    }
+
+
+def build_execution_plan(
+    suite: str,
+    config_name: str,
+    *,
+    allow_expanded: bool = False,
+    root: Path | None = None,
+    resolve_live_model: bool = True,
+) -> dict[str, Any]:
+    """Build the public plan, adding private-manifest readiness only for core."""
+    plan = build_plan(
+        suite,
+        config_name,
+        allow_expanded=allow_expanded,
+        root=root,
+        resolve_live_model=resolve_live_model,
+    )
+    if suite != "core":
+        return plan
+    repo = root or project_root()
+    profile = load_suite(suite, repo)
+    config = load_config(config_name, repo)
+    metadata = _suite_plan_metadata(suite, profile, config, repo, [])
+    plan.update(_core_plan_updates(plan, profile, config, metadata))
+    return plan
 
 
 def _session_ledger(state: Path, limits: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
@@ -1240,6 +1464,264 @@ def _served_instance_failure(record: dict[str, Any]) -> bool:
     }
 
 
+def _core_manifest_error() -> RunError:
+    return RunError("core capability manifest evidence is incomplete or inconsistent")
+
+
+def _is_sha256(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _require_core_capability_plan(plan: dict[str, Any]) -> None:
+    selection = plan.get("selection_evidence")
+    protocol = plan.get("historical_protocol")
+    if not isinstance(selection, dict) or not isinstance(protocol, dict):
+        raise _core_manifest_error()
+    valid = (
+        plan.get("suite") == "core"
+        and plan.get("evidence_class") == "local_measurement"
+        and plan.get("model_is_splash") is True
+        and plan.get("held_out") is True
+        and plan.get("selection_status") == "held_out_verified"
+        and plan.get("calibration_heldout_separation") == "held_out"
+        and selection.get("manifest_source") == "external"
+        and selection.get("frozen_before_tuning") is True
+        and _is_sha256(selection.get("ordered_sample_manifest_sha256"))
+        and protocol.get("sample_id_manifest") == selection.get("ordered_sample_manifest_sha256")
+        and protocol.get("sample_count") == sum(_CORE_FAMILY_COUNTS.values())
+        and protocol.get("attempts_per_task") == 1
+        and protocol.get("failure_policy") == "count_failures_as_incorrect"
+        and protocol.get("denominator") == "all_planned_samples"
+    )
+    if not valid:
+        raise _core_manifest_error()
+
+
+def _validated_core_family_result(
+    value: Any, expected_family: str, expected_count: int
+) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != _CORE_FAMILY_RESULT_KEYS:
+        raise _core_manifest_error()
+    failures = value.get("failure_counts")
+    correct = value.get("correct")
+    score = value.get("score")
+    exact_counts = all(
+        type(value.get(field)) is int and value[field] == expected_count
+        for field in ("planned", "attempted", "scored")
+    )
+    hashes_valid = all(
+        _is_sha256(value.get(field))
+        for field in (
+            "scorer_provenance_sha256",
+            "calibration_manifest_sha256",
+            "selection_manifest_sha256",
+            "ordered_sample_ids_sha256",
+            "dataset_tree_sha256",
+            "dataset_index_sha256",
+            "report_sha256",
+        )
+    )
+    valid_failures = (
+        (
+            isinstance(failures, dict)
+            and set(failures) == {"incorrect", "execution_error", "unscored"}
+            and failures.get("incorrect") == expected_count - correct
+            and failures.get("execution_error") == 0
+            and failures.get("unscored") == 0
+        )
+        if type(correct) is int
+        else False
+    )
+    valid = (
+        value.get("schema_version") == 1
+        and value.get("family") == expected_family
+        and exact_counts
+        and type(correct) is int
+        and 0 <= correct <= expected_count
+        and isinstance(score, (int, float))
+        and not isinstance(score, bool)
+        and math.isfinite(score)
+        and math.isclose(float(score), correct / expected_count, abs_tol=1e-12)
+        and isinstance(value.get("metric_name"), str)
+        and bool(value["metric_name"].strip())
+        and value.get("metric_unit") == "proportion"
+        and isinstance(value.get("scorer_revision"), str)
+        and bool(value["scorer_revision"].strip())
+        and hashes_valid
+        and valid_failures
+    )
+    if not valid:
+        raise _core_manifest_error()
+    return dict(value)
+
+
+def _validated_core_family_results(result: dict[str, Any]) -> list[dict[str, Any]]:
+    values = result.get("family_results")
+    if not isinstance(values, list) or len(values) != len(_CORE_FAMILY_COUNTS):
+        raise _core_manifest_error()
+    return [
+        _validated_core_family_result(value, family, count)
+        for value, (family, count) in zip(values, _CORE_FAMILY_COUNTS.items(), strict=True)
+    ]
+
+
+def _core_aggregate(families: list[dict[str, Any]]) -> dict[str, Any]:
+    planned = sum(item["planned"] for item in families)
+    correct = sum(item["correct"] for item in families)
+    incorrect = planned - correct
+    return {
+        "planned": planned,
+        "attempted": planned,
+        "completed": planned,
+        "scorable": planned,
+        "correct": correct,
+        "incorrect": incorrect,
+        "failed": 0,
+        "censored": 0,
+        "unattempted": 0,
+        "score": correct / planned,
+        "metric_name": "accuracy",
+        "metric_unit": "proportion",
+        "failure_types": {"incorrect": incorrect, "execution_error": 0, "unscored": 0},
+    }
+
+
+def _core_scorer_evidence(plan: dict[str, Any], families: list[dict[str, Any]]) -> dict[str, Any]:
+    scorer_id = plan.get("protocol", {}).get("scorer_version")
+    provenance = [
+        {
+            "family": item["family"],
+            "scorer_revision": item["scorer_revision"],
+            "scorer_provenance_sha256": item["scorer_provenance_sha256"],
+        }
+        for item in families
+    ]
+    calibration = [
+        {
+            "family": item["family"],
+            "manifest_sha256": item["calibration_manifest_sha256"],
+        }
+        for item in families
+    ]
+    return {
+        "scorer_id": scorer_id,
+        "content_sha256": _sha256_json(provenance),
+        "namespace": "benchmark",
+        "evidence_class": "scorer_qualification",
+        "eligible_for_capability_report": True,
+        "calibration": {
+            "status": "qualified",
+            "manifest_sha256": _sha256_json(calibration),
+            "revision": f"core-family-calibration:{_sha256_json(calibration)[:16]}",
+            "independent_from_evaluation": True,
+        },
+    }
+
+
+def _core_run_manifest(plan: dict[str, Any], result: dict[str, Any], run_id: str) -> dict[str, Any]:
+    _require_core_capability_plan(plan)
+    runtime = result.get("runtime_evidence")
+    reasoning = plan.get("reasoning_evidence")
+    model_id = plan.get("model_id")
+    if (
+        not isinstance(runtime, dict)
+        or not isinstance(reasoning, dict)
+        or result.get("status") != "completed"
+        or result.get("model_alias") != model_id
+        or result.get("reasoning_mode") != reasoning.get("transmitted")
+        or runtime
+        != {
+            "transport": "evalscope_openai_api",
+            "endpoint": "/v1/chat/completions",
+            "evalscope_version": "1.12.0",
+        }
+    ):
+        raise _core_manifest_error()
+    families = _validated_core_family_results(result)
+    instance_hash = plan.get("model_instance_evidence", {}).get("instance_id_sha256")
+    if not _is_sha256(instance_hash):
+        raise _core_manifest_error()
+    now = datetime.now(UTC).isoformat()
+    return {
+        **plan,
+        "schema_version": 2,
+        "run_id": run_id,
+        "status": "completed",
+        "created_at": now,
+        "completed_at": now,
+        "publication_purpose": "capability_measurement",
+        "evaluation_purpose": "held_out_model_capability",
+        "limitations": list(
+            dict.fromkeys([*plan.get("limitations", []), _CORE_EVIDENCE_LIMITATION])
+        ),
+        "task_families": list(_CORE_FAMILY_COUNTS),
+        "family_results": families,
+        "aggregate": _core_aggregate(families),
+        "failure_counts": {"execution_error": 0, "unscored": 0},
+        "scorer_evidence": _core_scorer_evidence(plan, families),
+        "served_model_evidence": {
+            "status": "verified_request_binding_without_response_identity",
+            "requested_instance_id_sha256": instance_hash,
+            "response_instance_id_sha256": None,
+            "match": None,
+            "verification_basis": (
+                "verified_local_exact_instance_and_evalscope_report_model_alias"
+            ),
+        },
+        "runtime_evidence": {
+            **plan["runtime_evidence"],
+            **runtime,
+        },
+        "reasoning_evidence": {
+            **reasoning,
+            "effective_status": "transmitted_not_read_back",
+        },
+        "effective_settings_status": "transmitted_not_read_back",
+        "transport": {
+            "endpoint": "/v1/chat/completions",
+            "retries": 0,
+            "redirects": False,
+            "cloud_fallback": False,
+        },
+        "raw_evidence_publication_eligible": False,
+    }
+
+
+def _execute_core_run(
+    repo: Path,
+    state: Path,
+    plan: dict[str, Any],
+    config: dict[str, Any],
+    profile: dict[str, Any],
+    run_label: str | None,
+) -> dict[str, Any]:
+    _require_core_capability_plan(plan)
+    result = execute_evalscope_core(
+        profile,
+        repo=repo,
+        state=state,
+        server_origin=_config_openai_base_url(config),
+        reasoning_mode=plan["reasoning_evidence"]["transmitted"],
+    )
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    label = f"-{run_label}" if run_label else ""
+    run_id = f"{plan['experiment_id']}-{timestamp}{label}"
+    manifest = _core_run_manifest(plan, result, run_id)
+    run_dir = state / "runs" / run_id
+    run_dir.mkdir(parents=True, exist_ok=False, mode=0o700)
+    _write_json(run_dir / "manifest.json", manifest)
+    return {
+        "status": "completed",
+        "run_id": run_id,
+        "manifest": manifest,
+        "runner": plan["runner"],
+        "experiment_id": plan.get("experiment_id"),
+        "model_is_splash": plan.get("model_is_splash", False),
+        "locality_evidence": plan.get("locality_evidence", {}),
+        "model_instance_evidence": plan.get("model_instance_evidence", {}),
+    }
+
+
 def execute_run(
     suite: str,
     config_name: str,
@@ -1251,7 +1733,7 @@ def execute_run(
     run_label: str | None = None,
 ) -> dict[str, Any]:
     repo = root or project_root()
-    plan = build_plan(suite, config_name, allow_expanded=allow_expanded, root=repo)
+    plan = build_execution_plan(suite, config_name, allow_expanded=allow_expanded, root=repo)
     if dry_run:
         return {"status": "dry_run", "plan": plan}
     if plan["blockers"]:
@@ -1259,6 +1741,8 @@ def execute_run(
     state = get_state_dir(repo)
     config = load_config(config_name, repo)
     profile = load_suite(suite, repo)
+    if suite == "core":
+        return _execute_core_run(repo, state, plan, config, profile, run_label)
     tasks = suite_tasks(suite)
     requested_settings, settings = _run_settings(plan, config, profile, operation_override)
     fingerprint = _run_fingerprint(plan, config, requested_settings)
@@ -1374,10 +1858,21 @@ def load_run(run_id: str, root: Path | None = None) -> tuple[dict[str, Any], lis
     return manifest, _read_attempts(directory / "attempts.jsonl")
 
 
+def _refuse_evalscope_operation(manifest: dict[str, Any], error: RunError) -> None:
+    if manifest.get("suite") == "core" or manifest.get("runner") == "evalscope-1.12":
+        raise error
+
+
 def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) -> dict[str, Any]:
     repo = root or project_root()
     directory = _run_dir(run_id, repo)
     manifest, attempts = load_run(run_id, repo)
+    _refuse_evalscope_operation(
+        manifest,
+        ResumeRefused(
+            "EvalScope core resume is unavailable; rerun the unchanged frozen manifest set."
+        ),
+    )
     if manifest["status"] == "completed":
         return {"status": "already_complete", "run_id": run_id}
     if any(_served_instance_failure(record) for record in attempts):
@@ -1520,11 +2015,18 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
 
 
 def rescore_run(run_id: str, scorer_version: str, *, root: Path | None = None) -> dict[str, Any]:
-    if scorer_version not in {"builtin-exact-v1"}:
-        raise RunError("requested scorer version is not installed")
     repo = root or project_root()
     directory = _run_dir(run_id, repo)
     manifest, attempts = load_run(run_id, repo)
+    _refuse_evalscope_operation(
+        manifest,
+        RunError(
+            "EvalScope core rescore is unavailable; family scorers are pinned in the private "
+            "frozen manifests."
+        ),
+    )
+    if scorer_version not in {"builtin-exact-v1"}:
+        raise RunError("requested scorer version is not installed")
     tasks = {item["task_id"]: item for item in manifest["private_task_manifest"]}
     rescored: list[dict[str, Any]] = []
     for attempt in attempts:

@@ -11,7 +11,21 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast, overload
 
-from .runs import RunError, get_state_dir, load_policies, load_run, project_root
+from .runs import (
+    _CORE_EVIDENCE_LIMITATION,
+    RunError,
+    get_state_dir,
+    load_policies,
+    load_run,
+    project_root,
+)
+from .sandbox import (
+    SandboxError,
+    SandboxPolicy,
+    SandboxQualification,
+    public_qualification_evidence,
+    validate_attestation,
+)
 
 
 class PublicationRefused(RunError):
@@ -62,6 +76,13 @@ _SIGNATURE_MARKERS = (
     b"-----BEGIN SSH SIGNATURE-----",
     b"-----BEGIN SIGNED MESSAGE-----",
 )
+_CORE_FAMILY_COUNTS = {
+    "gpqa_diamond": 12,
+    "ifeval": 16,
+    "mmlu_pro": 14,
+    "tool_json": 10,
+    "context": 8,
+}
 
 
 @overload
@@ -1243,6 +1264,7 @@ _PUBLICATION_RUN_LABEL = "local-pilot"
 _CAPABILITY_PUBLICATION = "held_out_model_capability"
 _QUALIFICATION_PUBLICATION = "post_hoc_runtime_scorer_qualification"
 _POST_HOC_SELECTION = "post_hoc_exploratory"
+_UNRESOLVED_EVIDENCE = frozenset({"", "n/a", "none", "unknown", "unresolved"})
 _QUALIFICATION_AGGREGATE_FIELDS = frozenset(
     {
         "planned",
@@ -1256,6 +1278,407 @@ _QUALIFICATION_AGGREGATE_FIELDS = frozenset(
         "failure_types",
     }
 )
+
+
+def _evidence_mapping(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return cast(dict[str, Any], value)
+
+
+def _qualified_evidence_text(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().casefold() not in _UNRESOLVED_EVIDENCE
+
+
+def _is_sha256(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _is_exact_int(value: Any, expected: Any) -> bool:
+    return type(value) is int and type(expected) is int and value == expected
+
+
+def _validated_coding_sandbox_evidence(
+    manifest: dict[str, Any],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    """Validate private proof and return only the shared sanitized public schema."""
+    policy_evidence = _evidence_mapping(manifest.get("sandbox_policy"))
+    attestation_evidence = _evidence_mapping(manifest.get("sandbox_attestation"))
+    public_evidence = _evidence_mapping(manifest.get("sandbox_qualification"))
+    binding = _evidence_mapping(manifest.get("coding_run_binding"))
+    failures: list[str] = []
+
+    try:
+        policy = SandboxPolicy(**policy_evidence)
+    except (SandboxError, TypeError):
+        failures.append("sandbox_policy")
+        return None, failures
+    try:
+        attestation = validate_attestation(attestation_evidence, policy)
+    except SandboxError:
+        failures.append("sandbox_attestation")
+        return None, failures
+
+    expected_public = public_qualification_evidence(
+        SandboxQualification(attestation=attestation, private_logs=())
+    )
+    if set(public_evidence) != set(expected_public):
+        failures.append("sandbox_qualification.schema")
+    for field in expected_public.keys() - {"qualification_event_count"}:
+        if public_evidence.get(field) != expected_public[field]:
+            failures.append(f"sandbox_qualification.{field}")
+    event_count = public_evidence.get("qualification_event_count")
+    if not isinstance(event_count, int) or isinstance(event_count, bool) or event_count <= 0:
+        failures.append("sandbox_qualification.qualification_event_count")
+
+    binding_keys = {
+        "attestation_file_sha256",
+        "attestation_revision",
+        "denominator_count",
+        "denominator_policy",
+        "frozen_before_execution",
+        "image_digest",
+        "planned_case_count",
+        "attempted_case_count",
+        "policy_sha256",
+        "run_fingerprint_sha256",
+    }
+    if set(binding) != binding_keys:
+        failures.append("coding_run_binding.schema")
+    fingerprint = manifest.get("fingerprint")
+    attestation_file_sha256 = manifest.get("sandbox_attestation_sha256")
+    binding_checks: list[tuple[str, bool]] = [
+        ("frozen_before_execution", binding.get("frozen_before_execution") is True),
+        ("image_digest", binding.get("image_digest") == attestation.image_digest),
+        ("policy_sha256", binding.get("policy_sha256") == attestation.policy_sha256),
+        (
+            "attestation_revision",
+            binding.get("attestation_revision") == attestation.attestation_revision,
+        ),
+        (
+            "attestation_file_sha256",
+            _is_sha256(attestation_file_sha256)
+            and binding.get("attestation_file_sha256") == attestation_file_sha256,
+        ),
+        (
+            "run_fingerprint_sha256",
+            _is_sha256(fingerprint) and binding.get("run_fingerprint_sha256") == fingerprint,
+        ),
+        ("denominator_policy", binding.get("denominator_policy") == "all_attempted_cases"),
+    ]
+    planned = binding.get("planned_case_count")
+    attempted = binding.get("attempted_case_count")
+    denominator = binding.get("denominator_count")
+    aggregate = _evidence_mapping(manifest.get("aggregate"))
+    valid_case_count = (
+        isinstance(planned, int)
+        and not isinstance(planned, bool)
+        and planned > 0
+        and attempted == planned
+        and denominator == attempted
+        and type(aggregate.get("planned")) is int
+        and planned <= aggregate["planned"]
+        and type(aggregate.get("attempted")) is int
+        and attempted <= aggregate["attempted"]
+    )
+    binding_checks.append(("case_denominator", valid_case_count))
+    failures.extend(f"coding_run_binding.{field}" for field, valid in binding_checks if not valid)
+    if failures:
+        return None, failures
+    return {
+        "qualification": public_evidence,
+        "attestation_file_sha256": binding["attestation_file_sha256"],
+        "run_fingerprint_sha256": binding["run_fingerprint_sha256"],
+        "frozen_before_execution": binding["frozen_before_execution"],
+        "planned_case_count": planned,
+        "attempted_case_count": attempted,
+        "denominator_count": denominator,
+        "denominator_policy": binding["denominator_policy"],
+    }, []
+
+
+def _valid_core_family_results(values: Any, families: list[Any], aggregate: dict[str, Any]) -> bool:
+    if not isinstance(values, list) or len(values) != len(_CORE_FAMILY_COUNTS):
+        return False
+    total_correct = 0
+    for value, (family, count) in zip(values, _CORE_FAMILY_COUNTS.items(), strict=True):
+        if not isinstance(value, dict):
+            return False
+        correct = value.get("correct")
+        failures = value.get("failure_counts")
+        if not (
+            value.get("family") == family
+            and _is_exact_int(value.get("planned"), count)
+            and _is_exact_int(value.get("attempted"), count)
+            and _is_exact_int(value.get("scored"), count)
+            and type(correct) is int
+            and 0 <= correct <= count
+            and isinstance(failures, dict)
+            and _is_exact_int(failures.get("incorrect"), count - correct)
+            and _is_exact_int(failures.get("execution_error"), 0)
+            and _is_exact_int(failures.get("unscored"), 0)
+        ):
+            return False
+        total_correct += correct
+    return (
+        families == list(_CORE_FAMILY_COUNTS)
+        and _is_exact_int(aggregate.get("correct"), total_correct)
+        and _is_exact_int(
+            aggregate.get("incorrect"), sum(_CORE_FAMILY_COUNTS.values()) - total_correct
+        )
+    )
+
+
+def _capability_transport_requirements(suite: Any) -> tuple[str, str]:
+    if suite == "core":
+        return "evalscope_openai_api", "/v1/chat/completions"
+    return "lmstudio_native_v1", "/api/v1/chat"
+
+
+def _capability_served_checks(
+    suite: Any, served: dict[str, Any], model: dict[str, Any]
+) -> tuple[bool, bool, bool, bool]:
+    requested = served.get("requested_instance_id_sha256")
+    response = served.get("response_instance_id_sha256")
+    requested_valid = _is_sha256(requested) and requested == model.get("instance_id_sha256")
+    if suite == "core":
+        return (
+            served.get("status") == "verified_request_binding_without_response_identity",
+            served.get("match") is None,
+            requested_valid,
+            response is None,
+        )
+    return (
+        served.get("status") == "verified",
+        served.get("match") is True,
+        requested_valid,
+        _is_sha256(response) and response == requested,
+    )
+
+
+def _capability_reasoning_status(suite: Any) -> str:
+    return "transmitted_not_read_back" if suite == "core" else "accepted_by_runtime"
+
+
+def _valid_core_limitations(suite: Any, limitations: Any) -> bool:
+    if suite != "core":
+        return True
+    return isinstance(limitations, list) and _CORE_EVIDENCE_LIMITATION in limitations
+
+
+def _valid_suite_family_results(
+    suite: Any, values: Any, families: list[Any], aggregate: dict[str, Any]
+) -> bool:
+    if suite != "core":
+        return True
+    return _valid_core_family_results(values, families, aggregate)
+
+
+def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
+    """Return every missing fact that prevents a capability-evidence export."""
+    aggregate = _evidence_mapping(manifest.get("aggregate"))
+    protocol = _evidence_mapping(manifest.get("protocol"))
+    historical = _evidence_mapping(manifest.get("historical_protocol"))
+    selection = _evidence_mapping(manifest.get("selection_evidence"))
+    locality = _evidence_mapping(manifest.get("locality_evidence"))
+    model = _evidence_mapping(manifest.get("model_instance_evidence"))
+    native_model = _evidence_mapping(model.get("native_identity"))
+    served = _evidence_mapping(manifest.get("served_model_evidence"))
+    runtime = _evidence_mapping(manifest.get("runtime_evidence"))
+    transport = _evidence_mapping(manifest.get("transport"))
+    reasoning = _evidence_mapping(manifest.get("reasoning_evidence"))
+    scorer = _evidence_mapping(manifest.get("scorer_evidence"))
+    calibration = _evidence_mapping(scorer.get("calibration"))
+
+    sample_count = historical.get("sample_count")
+    valid_sample_count = (
+        isinstance(sample_count, int) and not isinstance(sample_count, bool) and sample_count > 0
+    )
+    sample_manifest = historical.get("sample_id_manifest")
+    scorer_id = scorer.get("scorer_id")
+    task_families = manifest.get("task_families")
+    families = task_families if isinstance(task_families, list) else []
+    valid_task_families = bool(families) and all(
+        _qualified_evidence_text(item) for item in families
+    )
+    includes_coding = valid_task_families and any(
+        str(item).casefold() == "coding" for item in families
+    )
+    suite = manifest.get("suite")
+    expected_runtime = _capability_transport_requirements(suite)
+    served_checks = _capability_served_checks(suite, served, model)
+    effective_status = _capability_reasoning_status(suite)
+    core_results = manifest.get("family_results")
+    valid_core_results = _valid_suite_family_results(suite, core_results, families, aggregate)
+
+    checks: list[tuple[str, bool]] = [
+        ("status", manifest.get("status") == "completed"),
+        ("suite", suite in {"pilot", "core"}),
+        ("evidence_class", manifest.get("evidence_class") == "local_measurement"),
+        ("model_is_splash", manifest.get("model_is_splash") is True),
+        ("held_out", manifest.get("held_out") is True),
+        ("selection_status", manifest.get("selection_status") == "held_out_verified"),
+        (
+            "calibration_heldout_separation",
+            manifest.get("calibration_heldout_separation") != _POST_HOC_SELECTION,
+        ),
+        ("task_families", valid_task_families),
+        ("family_results", valid_core_results),
+        ("limitations", _valid_core_limitations(suite, manifest.get("limitations"))),
+        ("historical_protocol.sample_count", valid_sample_count),
+        (
+            "aggregate.planned",
+            valid_sample_count and _is_exact_int(aggregate.get("planned"), sample_count),
+        ),
+        (
+            "aggregate.attempted",
+            valid_sample_count and _is_exact_int(aggregate.get("attempted"), sample_count),
+        ),
+        (
+            "aggregate.completed",
+            valid_sample_count and _is_exact_int(aggregate.get("completed"), sample_count),
+        ),
+        (
+            "aggregate.scorable",
+            valid_sample_count and _is_exact_int(aggregate.get("scorable"), sample_count),
+        ),
+        ("aggregate.failed", _is_exact_int(aggregate.get("failed"), 0)),
+        ("aggregate.censored", _is_exact_int(aggregate.get("censored"), 0)),
+        ("aggregate.unattempted", _is_exact_int(aggregate.get("unattempted"), 0)),
+        ("locality_evidence.status", locality.get("status") == "verified_local"),
+        ("locality_evidence.endpoint_loopback", locality.get("endpoint_loopback") is True),
+        (
+            "locality_evidence.local_instance_evidence",
+            locality.get("local_instance_evidence") is True,
+        ),
+        ("model_instance_evidence.selection", model.get("selection") == "exact_loaded_record"),
+        (
+            "model_instance_evidence.splash_attribution",
+            model.get("splash_attribution") == "confirmed",
+        ),
+        ("model_instance_evidence.instance_id_sha256", _is_sha256(model.get("instance_id_sha256"))),
+        (
+            "model_instance_evidence.native_identity.loaded_instance_id_match",
+            native_model.get("loaded_instance_id_match") is True,
+        ),
+        ("served_model_evidence.status", served_checks[0]),
+        ("served_model_evidence.match", served_checks[1]),
+        (
+            "served_model_evidence.requested_instance_id_sha256",
+            served_checks[2],
+        ),
+        (
+            "served_model_evidence.response_instance_id_sha256",
+            served_checks[3],
+        ),
+        ("runtime_evidence.transport", runtime.get("transport") == expected_runtime[0]),
+        ("runtime_evidence.endpoint", runtime.get("endpoint") == expected_runtime[1]),
+        ("runtime_evidence.cli_version", _qualified_evidence_text(runtime.get("cli_version"))),
+        ("runtime_evidence.engine", _qualified_evidence_text(runtime.get("engine"))),
+        (
+            "runtime_evidence.engine_version",
+            _qualified_evidence_text(runtime.get("engine_version")),
+        ),
+        ("transport.redirects", transport.get("redirects") is False),
+        ("transport.cloud_fallback", transport.get("cloud_fallback") is False),
+        (
+            "reasoning_evidence.requested",
+            _qualified_evidence_text(reasoning.get("requested")),
+        ),
+        (
+            "reasoning_evidence.transmitted",
+            reasoning.get("transmitted") == reasoning.get("requested"),
+        ),
+        (
+            "reasoning_evidence.effective_status",
+            reasoning.get("effective_status") == effective_status,
+        ),
+        (
+            "effective_settings_status",
+            suite != "core" or manifest.get("effective_settings_status") == effective_status,
+        ),
+        (
+            "selection_evidence.ordered_sample_manifest_sha256",
+            _is_sha256(selection.get("ordered_sample_manifest_sha256"))
+            and selection.get("ordered_sample_manifest_sha256") == sample_manifest,
+        ),
+        ("selection_evidence.manifest_source", selection.get("manifest_source") == "external"),
+        ("selection_evidence.frozen_before_tuning", selection.get("frozen_before_tuning") is True),
+        (
+            "selection_evidence.contamination_review_revision",
+            _qualified_evidence_text(selection.get("contamination_review_revision")),
+        ),
+        (
+            "historical_protocol.benchmark_version",
+            _qualified_evidence_text(historical.get("benchmark_version")),
+        ),
+        (
+            "historical_protocol.dataset_revision",
+            _qualified_evidence_text(historical.get("dataset_revision")),
+        ),
+        ("historical_protocol.split", _qualified_evidence_text(historical.get("split"))),
+        ("historical_protocol.sample_id_manifest", _is_sha256(sample_manifest)),
+        (
+            "historical_protocol.prompts_or_template_revision",
+            _qualified_evidence_text(historical.get("prompts_or_template_revision")),
+        ),
+        ("historical_protocol.attempts_per_task", historical.get("attempts_per_task") == 1),
+        (
+            "historical_protocol.failure_policy",
+            historical.get("failure_policy") == "count_failures_as_incorrect",
+        ),
+        ("historical_protocol.denominator", historical.get("denominator") == "all_planned_samples"),
+        ("scorer_evidence.scorer_id", _qualified_evidence_text(scorer_id)),
+        (
+            "scorer_evidence.protocol_binding",
+            scorer_id == protocol.get("scorer_version") == historical.get("scorer_revision"),
+        ),
+        ("scorer_evidence.content_sha256", _is_sha256(scorer.get("content_sha256"))),
+        ("scorer_evidence.namespace", scorer.get("namespace") == "benchmark"),
+        ("scorer_evidence.evidence_class", scorer.get("evidence_class") == "scorer_qualification"),
+        (
+            "scorer_evidence.eligible_for_capability_report",
+            scorer.get("eligible_for_capability_report") is True,
+        ),
+        ("scorer_evidence.calibration.status", calibration.get("status") == "qualified"),
+        (
+            "scorer_evidence.calibration.manifest_sha256",
+            _is_sha256(calibration.get("manifest_sha256")),
+        ),
+        (
+            "scorer_evidence.calibration.revision",
+            _qualified_evidence_text(calibration.get("revision")),
+        ),
+        (
+            "scorer_evidence.calibration.independent_from_evaluation",
+            calibration.get("independent_from_evaluation") is True,
+        ),
+    ]
+    if includes_coding:
+        _, sandbox_failures = _validated_coding_sandbox_evidence(manifest)
+    else:
+        sandbox_failures = []
+    return [field for field, valid in checks if not valid] + sandbox_failures
+
+
+def _capability_publication_blockers(manifest: dict[str, Any]) -> list[dict[str, str]]:
+    is_candidate = (
+        manifest.get("suite") in {"pilot", "core"}
+        and manifest.get("evidence_class") == "local_measurement"
+        and manifest.get("model_is_splash") is True
+        and manifest.get("held_out") is True
+    )
+    if not is_candidate:
+        return []
+    return [
+        {
+            "rule": "capability-publication-evidence-incomplete",
+            "scope": "run",
+            "severity": "block",
+            "field": field,
+        }
+        for field in _capability_publication_failures(manifest)
+    ]
 
 
 def _sanitize_public_value(value: Any, run_id: str) -> Any:
@@ -1276,9 +1699,9 @@ def _sanitize_public_value(value: Any, run_id: str) -> Any:
 
 
 def _publication_purpose(manifest: dict[str, Any]) -> str | None:
-    """Classify only unambiguous local Splash pilot evidence for export."""
+    """Classify only unambiguous local Splash measurement evidence for export."""
     if (
-        manifest.get("suite") != "pilot"
+        manifest.get("suite") not in {"pilot", "core"}
         or manifest.get("evidence_class") != "local_measurement"
         or manifest.get("model_is_splash") is not True
     ):
@@ -1287,10 +1710,15 @@ def _publication_purpose(manifest: dict[str, Any]) -> str | None:
     selection_status = manifest.get("selection_status")
     separation = manifest.get("calibration_heldout_separation")
     post_hoc_claimed = selection_status == _POST_HOC_SELECTION or separation == _POST_HOC_SELECTION
-    if manifest.get("held_out") is True and not post_hoc_claimed:
+    if (
+        manifest.get("held_out") is True
+        and not post_hoc_claimed
+        and not _capability_publication_failures(manifest)
+    ):
         return _CAPABILITY_PUBLICATION
     if (
-        manifest.get("held_out") is False
+        manifest.get("suite") == "pilot"
+        and manifest.get("held_out") is False
         and selection_status == _POST_HOC_SELECTION
         and separation == _POST_HOC_SELECTION
     ):
@@ -1305,6 +1733,20 @@ def _qualification_aggregate(aggregate: Any) -> dict[str, Any]:
     return {
         key: value for key, value in aggregate.items() if key in _QUALIFICATION_AGGREGATE_FIELDS
     }
+
+
+def _add_coding_sandbox_public_evidence(
+    payload: dict[str, Any], manifest: dict[str, Any], publication_purpose: str | None
+) -> None:
+    task_families = manifest.get("task_families")
+    includes_coding = isinstance(task_families, list) and any(
+        isinstance(item, str) and item.casefold() == "coding" for item in task_families
+    )
+    if publication_purpose != _CAPABILITY_PUBLICATION or not includes_coding:
+        return
+    coding_sandbox, failures = _validated_coding_sandbox_evidence(manifest)
+    if not failures and coding_sandbox is not None:
+        payload["coding_sandbox"] = coding_sandbox
 
 
 def _publication_payload(
@@ -1355,12 +1797,13 @@ def _publication_payload(
             )
             + [
                 "Raw prompts, responses, reasoning, timestamps, paths, instance identifiers, "
-                "and private hashes are excluded.",
+                "and unallowlisted private hashes are excluded.",
                 "This export is staged for review and is not automatically committed or uploaded.",
             ],
             run_id,
         ),
     }
+    _add_coding_sandbox_public_evidence(payload, manifest, publication_purpose)
     return cast(dict[str, Any], _sanitize_public_value(payload, run_id))
 
 
@@ -1377,6 +1820,7 @@ def prepare_publication(
     payload = _publication_payload(run_id, manifest, publication_purpose)
     audit = audit_publication(root=repo)
     blockers = list(audit["findings"])
+    blockers.extend(_capability_publication_blockers(manifest))
     if publication_purpose is None:
         blockers.append(
             {
