@@ -278,7 +278,7 @@ def validate_private_record(family: str, record: Mapping[str, Any]) -> None:
 def _aggregate_evalscope(
     sample_scores: Sequence[Any], *, planned_denominator: int, scorer_revision: str
 ) -> list[Any]:
-    from evalscope.api.metric import AggScore  # type: ignore[import-untyped]
+    from evalscope.api.metric import AggScore
 
     binary = [int(score.score.value.get("accuracy", 0)) for score in sample_scores]
     aggregate = aggregate_exact_scores(
@@ -304,16 +304,16 @@ def register_adapters() -> None:
     if _REGISTERED:
         return
 
-    from evalscope.api.benchmark import (  # type: ignore[import-untyped]
+    from evalscope.api.benchmark import (
         BenchmarkMeta,
         DefaultDataAdapter,
         FunctionCallAdapter,
     )
-    from evalscope.api.dataset import Sample  # type: ignore[import-untyped]
-    from evalscope.api.messages import dict_to_chat_message  # type: ignore[import-untyped]
+    from evalscope.api.dataset import Sample
+    from evalscope.api.messages import dict_to_chat_message
     from evalscope.api.metric import Score
-    from evalscope.api.registry import register_benchmark  # type: ignore[import-untyped]
-    from evalscope.api.tool import ToolInfo  # type: ignore[import-untyped]
+    from evalscope.api.registry import register_benchmark
+    from evalscope.api.tool import ToolInfo
 
     @register_benchmark(
         BenchmarkMeta(
@@ -454,7 +454,7 @@ def main() -> None:
     """Register exact adapters, then delegate argument parsing to EvalScope."""
 
     register_adapters()
-    from evalscope.cli.cli import run_cmd  # type: ignore[import-untyped]
+    from evalscope.cli.cli import run_cmd
 
     run_cmd()
 
