@@ -237,6 +237,7 @@ test('technical disclosure has a comfortable target and visible keyboard feedbac
   await expect(summary).toBeFocused();
   expect(await summary.evaluate((node) => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   await expect(summary).toHaveCSS('outline-style', 'solid');
+  expect(await summary.evaluate((node) => getComputedStyle(node, '::before').display)).toBe('none');
   await summary.press('Enter');
   await expect(page.locator('details')).toHaveAttribute('open', '');
   await summary.press('Space');

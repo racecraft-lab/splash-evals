@@ -102,6 +102,7 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .sl-markdown-content summary { cursor: pointer; color: var(--sl-color-text-accent); font-weight: 600; min-height: 3.5rem; padding: 1rem 2rem 1rem 0; position: relative; list-style: none; }
 .sl-markdown-content summary::-webkit-details-marker { display: none; }
 .sl-markdown-content summary::marker { content: ''; }
+.sl-markdown-content summary::before { display: none; }
 .sl-markdown-content summary::after { content: ''; position: absolute; right: .25rem; top: 1.3rem; width: .55rem; height: .55rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 150ms ease; }
 .sl-markdown-content details[open] > summary::after { transform: rotate(225deg); }
 .sl-markdown-content details[open] > summary { border-bottom: 1px solid var(--reader-line); margin-bottom: 1.25rem; }
