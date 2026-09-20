@@ -156,6 +156,27 @@ def test_resume_refuses_protocol_fingerprint_mismatch(
         resume_run("synthetic-run", dry_run=True, root=tmp_path)
 
 
+def test_resume_refuses_after_served_instance_mismatch(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = {"status": "partial"}
+    attempts = [
+        {
+            "task_id": "synthetic-task",
+            "score": {
+                "scorable": False,
+                "score": None,
+                "failure_type": "served_model_instance_mismatch",
+            },
+        }
+    ]
+    monkeypatch.setattr(runs, "_run_dir", lambda *args, **kwargs: tmp_path)
+    monkeypatch.setattr(runs, "load_run", lambda *args, **kwargs: (manifest, attempts))
+
+    with pytest.raises(ResumeRefused, match="unverified served model instance"):
+        resume_run("synthetic-run", dry_run=True, root=tmp_path)
+
+
 def _discovery_report(
     locality_status: LocalityStatus,
     *,
@@ -193,6 +214,9 @@ def _discovery_report(
                 quantization="4bit",
                 selected_variant=selected_variant,
                 loaded=True,
+                loaded_instance_ids=(instance_id,),
+                reasoning_allowed=("off", "low", "medium", "high", "on"),
+                reasoning_default="on",
             )
         )
     return DiscoveryReport(
@@ -212,6 +236,8 @@ def _discovery_report(
             execution_device="private-device-identifier-must-not-be-recorded",
             reasons=("synthetic locality evidence",),
         ),
+        cli_version="synthetic-cli-version",
+        app_version="synthetic-app-version",
         models=tuple(records),
     )
 
@@ -224,6 +250,10 @@ def _local_config() -> dict[str, object]:
         },
         "model": {"key": "splash"},
         "operation_requested": {"max_tokens": 64},
+        "reasoning_control": {
+            "desired_mode": "on",
+            "transmitted": "on",
+        },
     }
 
 
@@ -325,6 +355,179 @@ def test_verified_local_splash_requires_corroborated_identity(
     assert native["source"] == "native_rest"
     assert native["display_name"] == "Qwen3.8 27B Splash"
     assert "device" not in repr(native).casefold()
+
+
+def test_publisher_qualified_native_key_corroborates_exact_bare_cli_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    splash_model = "qwen3.8-27b-splash"
+    monkeypatch.setattr(
+        runs,
+        "discover_lmstudio",
+        lambda *args, **kwargs: _discovery_report(
+            LocalityStatus.VERIFIED_LOCAL,
+            key=splash_model,
+            native_key=f"qwen/{splash_model}",
+        ),
+    )
+    config = _local_config()
+    config["model"] = {"key": splash_model}
+
+    assert runs._resolve_model(config).model_is_splash is True
+
+
+def test_native_response_view_requires_matching_instance_and_ignores_reasoning() -> None:
+    payload = {
+        "model_instance_id": "selected-instance",
+        "output": [
+            {"type": "reasoning", "content": "private chain"},
+            {"type": "message", "content": "final answer"},
+        ],
+        "stats": {"total_output_tokens": 9, "reasoning_output_tokens": 4},
+    }
+
+    view = runs._response_view(payload, "selected-instance")
+
+    assert view["content"] == "final answer"
+    assert view["served_instance_match"] is True
+    assert view["response_instance_id_sha256"] == runs._sha256_text("selected-instance")
+    assert "private chain" not in repr(view)
+
+
+@pytest.mark.parametrize(
+    ("served", "failure"),
+    [
+        (None, "missing_served_model_instance"),
+        ("other-instance", "served_model_instance_mismatch"),
+    ],
+)
+def test_native_response_view_blocks_unproven_instance(served: str | None, failure: str) -> None:
+    payload: dict[str, object] = {"output": [{"type": "message", "content": "answer"}]}
+    if served is not None:
+        payload["model_instance_id"] = served
+
+    view = runs._response_view(payload, "selected-instance")
+
+    assert view["content"] is None
+    assert view["protocol_error"] == failure
+    assert view["served_instance_match"] is False
+
+
+def test_historical_protocol_marks_practical_pilot_ineligible() -> None:
+    protocol = runs._historical_protocol(
+        "pilot",
+        {"task_set": "builtin-heldout-pilot-v1", "scorer_version": "builtin-exact-v1"},
+        sample_count=5,
+        output_budget=512,
+        reasoning_mode="on",
+    )
+
+    assert protocol["benchmark_name"] == "Racecraft practical task set"
+    assert protocol["metric_unit"] == "proportion"
+    assert protocol["split"] is None
+    assert protocol["sample_id_manifest"] is None
+    assert protocol["higher_is_better"] is True
+    assert len(protocol) == 19
+
+
+def test_historical_protocol_requires_immutable_selection_evidence_for_held_out() -> None:
+    sample_manifest = "a" * 64
+    protocol = runs._historical_protocol(
+        "future-aligned",
+        {
+            "task_set": "future-aligned-v1",
+            "scorer_version": "scorer-v1",
+            "selection_evidence": {
+                "ordered_sample_manifest_sha256": sample_manifest,
+                "contamination_review_revision": "review-v1",
+                "frozen_before_tuning": True,
+            },
+        },
+        sample_count=10,
+        output_budget=512,
+        reasoning_mode="on",
+    )
+
+    assert protocol["split"] == "held_out"
+    assert protocol["sample_id_manifest"] == sample_manifest
+
+
+def test_plan_records_native_runtime_reasoning_and_practical_identity(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(
+        runs,
+        "load_suite",
+        lambda *args, **kwargs: {
+            "expanded": False,
+            "repetitions": 1,
+            "max_output_tokens": 64,
+            "task_set": "builtin-heldout-pilot-v1",
+            "scorer_version": "builtin-exact-v1",
+            "evidence_class": "local_measurement",
+        },
+    )
+    monkeypatch.setattr(
+        runs,
+        "load_policies",
+        lambda *args, **kwargs: {"initial_run_limits": {}},
+    )
+    monkeypatch.setattr(
+        runs,
+        "get_state_dir",
+        lambda *args, **kwargs: tmp_path / "private-state",
+    )
+    monkeypatch.setattr(
+        runs,
+        "discover_lmstudio",
+        lambda *args, **kwargs: _discovery_report(LocalityStatus.VERIFIED_LOCAL),
+    )
+
+    plan = runs.build_plan("pilot", "lmstudio-as-found", root=tmp_path)
+
+    assert plan["blockers"] == []
+    assert plan["runtime_evidence"] == {
+        "transport": "lmstudio_native_v1",
+        "endpoint": "/api/v1/chat",
+        "cli_version": "synthetic-cli-version",
+        "app_version": "synthetic-app-version",
+        "engine": "mlx",
+        "engine_version": "synthetic-version",
+    }
+    assert plan["reasoning_evidence"] == {
+        "requested": "on",
+        "transmitted": "on",
+        "supported_options": ["off", "low", "medium", "high", "on"],
+        "default": "on",
+        "effective_status": "not_attempted",
+    }
+    assert plan["historical_protocol"]["benchmark_name"] == ("Racecraft practical task set")
+    assert plan["held_out"] is False
+    assert plan["selection_status"] == "post_hoc_exploratory"
+    assert plan["historical_comparison_eligibility"]["eligible_for_frontier_deltas"] is False
+
+
+def test_served_model_evidence_hashes_actual_response_instance() -> None:
+    expected = "selected-instance"
+    actual = "different-instance"
+    manifest = {
+        "reasoning_evidence": {"effective_status": "accepted_by_runtime"},
+        "effective_settings_status": "accepted_by_runtime_not_read_back",
+        "served_model_evidence": {"status": "verified", "match": True},
+    }
+    attempts = [
+        {
+            "served_instance_match": True,
+            "response_instance_id_sha256": runs._sha256_text(actual),
+        }
+    ]
+
+    runs._finalize_run_manifest(manifest, attempts, 1, None, expected)
+
+    assert manifest["served_model_evidence"]["status"] == "not_verified"
+    assert manifest["served_model_evidence"]["response_instance_id_sha256"] is None
+    assert manifest["reasoning_evidence"]["effective_status"] == "not_verified"
 
 
 def test_execute_refuses_before_inference_when_locality_is_ambiguous(

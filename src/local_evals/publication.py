@@ -1238,6 +1238,22 @@ def audit_publication(
 
 
 _PUBLICATION_RUN_LABEL = "local-pilot"
+_CAPABILITY_PUBLICATION = "held_out_model_capability"
+_QUALIFICATION_PUBLICATION = "post_hoc_runtime_scorer_qualification"
+_POST_HOC_SELECTION = "post_hoc_exploratory"
+_QUALIFICATION_AGGREGATE_FIELDS = frozenset(
+    {
+        "planned",
+        "attempted",
+        "completed",
+        "scorable",
+        "failed",
+        "censored",
+        "unattempted",
+        "end_to_end_deployment_success",
+        "failure_types",
+    }
+)
 
 
 def _sanitize_public_value(value: Any, run_id: str) -> Any:
@@ -1257,8 +1273,45 @@ def _sanitize_public_value(value: Any, run_id: str) -> Any:
     return value
 
 
-def _publication_payload(run_id: str, manifest: dict[str, Any]) -> dict[str, Any]:
+def _publication_purpose(manifest: dict[str, Any]) -> str | None:
+    """Classify only unambiguous local Splash pilot evidence for export."""
+    if (
+        manifest.get("suite") != "pilot"
+        or manifest.get("evidence_class") != "local_measurement"
+        or manifest.get("model_is_splash") is not True
+    ):
+        return None
+
+    selection_status = manifest.get("selection_status")
+    separation = manifest.get("calibration_heldout_separation")
+    post_hoc_claimed = selection_status == _POST_HOC_SELECTION or separation == _POST_HOC_SELECTION
+    if manifest.get("held_out") is True and not post_hoc_claimed:
+        return _CAPABILITY_PUBLICATION
+    if (
+        manifest.get("held_out") is False
+        and selection_status == _POST_HOC_SELECTION
+        and separation == _POST_HOC_SELECTION
+    ):
+        return _QUALIFICATION_PUBLICATION
+    return None
+
+
+def _qualification_aggregate(aggregate: Any) -> dict[str, Any]:
+    """Remove capability-only measures from a post-hoc qualification export."""
+    if not isinstance(aggregate, dict):
+        return {}
+    return {
+        key: value for key, value in aggregate.items() if key in _QUALIFICATION_AGGREGATE_FIELDS
+    }
+
+
+def _publication_payload(
+    run_id: str, manifest: dict[str, Any], publication_purpose: str | None
+) -> dict[str, Any]:
     aggregate = manifest.get("aggregate") or {}
+    is_qualification = publication_purpose == _QUALIFICATION_PUBLICATION
+    if is_qualification:
+        aggregate = _qualification_aggregate(aggregate)
     model_label = (
         "Splash/Qwen3.8 through local LM Studio"
         if manifest.get("model_is_splash")
@@ -1268,18 +1321,36 @@ def _publication_payload(run_id: str, manifest: dict[str, Any]) -> dict[str, Any
         "schema_version": 1,
         "run_label": _PUBLICATION_RUN_LABEL,
         "evidence_class": manifest.get("evidence_class"),
+        "publication_purpose": publication_purpose or "not_eligible",
+        "capability_evidence": publication_purpose == _CAPABILITY_PUBLICATION,
         "model": model_label,
         "suite": manifest.get("suite"),
         "task_set": (manifest.get("protocol") or {}).get("task_set"),
         "scorer_version": (manifest.get("protocol") or {}).get("scorer_version"),
         "selection_hash": manifest.get("selection_hash"),
         "aggregate": _sanitize_public_value(aggregate, run_id),
-        "primary_objective_status": manifest.get("primary_objective_status_if_run", "blocked"),
+        "primary_objective_status": (
+            "blocked"
+            if is_qualification
+            else manifest.get("primary_objective_status_if_run", "blocked")
+        ),
         "historical_comparison_status": (
-            "unavailable unless exact benchmark/protocol fields validate"
+            "prohibited for post-hoc runtime/scorer qualification evidence"
+            if is_qualification
+            else "unavailable unless exact benchmark/protocol fields validate"
         ),
         "limitations": _sanitize_public_value(
             manifest.get("limitations", [])
+            + (
+                [
+                    "This post-hoc exploratory export qualifies runtime transport and scorer "
+                    "operation only; it is not model capability evidence.",
+                    "It cannot support a frontier delta, ranking, equivalence, improvement, "
+                    "or historical comparison.",
+                ]
+                if is_qualification
+                else []
+            )
             + [
                 "Raw prompts, responses, reasoning, timestamps, paths, instance identifiers, "
                 "and private hashes are excluded.",
@@ -1300,10 +1371,11 @@ def prepare_publication(
     """Prepare a fresh allowlisted aggregate export outside Git."""
     repo = root or project_root()
     manifest, _ = load_run(run_id, repo)
-    payload = _publication_payload(run_id, manifest)
+    publication_purpose = _publication_purpose(manifest)
+    payload = _publication_payload(run_id, manifest, publication_purpose)
     audit = audit_publication(root=repo)
     blockers = list(audit["findings"])
-    if manifest.get("suite") != "pilot" or not manifest.get("held_out"):
+    if publication_purpose is None:
         blockers.append(
             {
                 "rule": "non-held-out-result-not-capability-evidence",
@@ -1338,6 +1410,8 @@ def prepare_publication(
         f"- Run label: `{_PUBLICATION_RUN_LABEL}`",
         f"- Model: {payload['model']}",
         f"- Suite: `{payload['suite']}`",
+        f"- Publication purpose: `{payload['publication_purpose']}`",
+        f"- Capability evidence: `{str(payload['capability_evidence']).lower()}`",
         f"- Primary objective status: `{payload['primary_objective_status']}`",
         f"- Historical comparison: {payload['historical_comparison_status']}",
         "",

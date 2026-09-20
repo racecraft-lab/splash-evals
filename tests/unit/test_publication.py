@@ -418,6 +418,8 @@ def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
     assert result["status"] == "dry_run_ready_for_human_review"
     assert result["writes_performed"] is False
     preview = result["preview"]
+    assert preview["publication_purpose"] == "held_out_model_capability"
+    assert preview["capability_evidence"] is True
     assert set(preview) == set(result["allowlisted_fields"])
     serialized = repr(preview)
     for forbidden in (
@@ -515,6 +517,98 @@ def test_calibration_run_is_blocked_from_capability_export(
     result = prepare_publication("synthetic-calibration-run", dry_run=True, root=tmp_path)
 
     assert result["status"] == "dry_run_blocked"
+    assert any(
+        blocker["rule"] == "non-held-out-result-not-capability-evidence"
+        for blocker in result["blockers"]
+    )
+
+
+def test_post_hoc_pilot_stages_only_runtime_scorer_qualification(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    raw_run_id = "post-hoc-pilot-private-run-id"
+    manifest = {
+        "evidence_class": "local_measurement",
+        "model_is_splash": True,
+        "suite": "pilot",
+        "held_out": False,
+        "selection_status": "post_hoc_exploratory",
+        "calibration_heldout_separation": "post_hoc_exploratory",
+        "protocol": {"task_set": "reused-pilot", "scorer_version": "synthetic-v1"},
+        "selection_hash": "synthetic-selection-hash",
+        "aggregate": {
+            "planned": 3,
+            "attempted": 3,
+            "completed": 3,
+            "scorable": 3,
+            "failed": 0,
+            "censored": 0,
+            "unattempted": 0,
+            "end_to_end_deployment_success": {"rate": 1.0, "denominator": 3},
+            "capability_conditional_on_valid_execution": {
+                "rate": 1.0,
+                "denominator": 3,
+            },
+            "frontier_delta": 99,
+        },
+        "primary_objective_status_if_run": "pilot_only",
+        "historical_comparison_status": "matched",
+        "raw_response": {"content": "must not export"},
+        "instance_id": "private-runtime-id",
+    }
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+    state_dir = tmp_path / "external-state"
+    monkeypatch.setattr(publication, "get_state_dir", lambda root=None: state_dir)
+
+    result = prepare_publication(raw_run_id, dry_run=False, root=tmp_path)
+    export_dir = Path(result["export_directory"])
+    payload = json.loads((export_dir / "aggregate.json").read_text(encoding="utf-8"))
+    markdown = (export_dir / "README.md").read_text(encoding="utf-8")
+
+    assert payload["publication_purpose"] == "post_hoc_runtime_scorer_qualification"
+    assert payload["capability_evidence"] is False
+    assert payload["primary_objective_status"] == "blocked"
+    assert (
+        payload["historical_comparison_status"]
+        == "prohibited for post-hoc runtime/scorer qualification evidence"
+    )
+    assert "capability_conditional_on_valid_execution" not in payload["aggregate"]
+    assert "frontier_delta" not in payload["aggregate"]
+    serialized = repr(payload) + markdown
+    for forbidden in (raw_run_id, "must not export", "private-runtime-id", "matched"):
+        assert forbidden not in serialized
+    assert "Capability evidence: `false`" in markdown
+
+
+def test_post_hoc_pilot_requires_both_explicit_exploratory_markers(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = {
+        "evidence_class": "local_measurement",
+        "model_is_splash": True,
+        "suite": "pilot",
+        "held_out": False,
+        "selection_status": "post_hoc_exploratory",
+        "protocol": {"task_set": "reused-pilot", "scorer_version": "synthetic-v1"},
+        "aggregate": {"completed": 3},
+    }
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("ambiguous-post-hoc-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_blocked"
+    assert result["preview"]["publication_purpose"] == "not_eligible"
+    assert result["preview"]["capability_evidence"] is False
     assert any(
         blocker["rule"] == "non-held-out-result-not-capability-evidence"
         for blocker in result["blockers"]

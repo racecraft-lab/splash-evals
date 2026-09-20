@@ -20,13 +20,13 @@ operation_requested:
   temperature: null
   top_p: null
   top_k: null
-  max_tokens: 1024
+  max_output_tokens: 1024
   stream: false
 reasoning_control:
   mechanism: preserve_as_found
-  desired_mode: null
+  desired_mode: "on"
   desired_effort: null
-  transmitted: null
+  transmitted: "on"
   verified_effect: null
 metadata:
   load_effective: null

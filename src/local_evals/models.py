@@ -99,6 +99,9 @@ class ModelRecord(FrozenModel):
     engine: str | None = None
     engine_version: str | None = None
     loaded: bool = False
+    loaded_instance_ids: tuple[str, ...] = ()
+    reasoning_allowed: tuple[str, ...] = ()
+    reasoning_default: str | None = None
     capabilities: tuple[CapabilityRecord, ...] = ()
 
 

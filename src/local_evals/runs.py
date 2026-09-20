@@ -19,13 +19,13 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 import yaml
 
-from .lmstudio import LMStudioError
+from .lmstudio import LMStudioError, model_keys_equivalent
 from .lmstudio import discover as discover_lmstudio
 from .models import DiscoveryReport, LocalityStatus, ModelRecord, ModelRecordSource
 from .preflight import LocalityError as PreflightLocalityError
@@ -502,7 +502,9 @@ def _splash_identity_evidence(
     native_matches = [
         model
         for model in discovered
-        if model.source is ModelRecordSource.NATIVE_REST and model.key == selected.key
+        if model.source is ModelRecordSource.NATIVE_REST
+        and model_keys_equivalent(selected.key, model.key, model.publisher)
+        and selected.instance_id in model.loaded_instance_ids
     ]
     if selected.source is not ModelRecordSource.LMS_CLI_LOADED or len(native_matches) != 1:
         return False, [], None
@@ -608,6 +610,7 @@ def _instance_evidence(
     native: ModelRecord | None,
     model_is_splash: bool,
     signals: list[str],
+    report: DiscoveryReport,
 ) -> dict[str, Any]:
     return {
         "selection": "exact_loaded_record",
@@ -619,6 +622,8 @@ def _instance_evidence(
         "file_revision": selected.file_revision,
         "engine": selected.engine,
         "engine_version": selected.engine_version,
+        "cli_version": report.cli_version,
+        "app_version": report.app_version,
         "native_identity": (
             {
                 "source": native.source.value,
@@ -630,6 +635,9 @@ def _instance_evidence(
                 "model_type": native.model_type,
                 "quantization": native.quantization,
                 "selected_variant": native.selected_variant,
+                "loaded_instance_id_match": selected.instance_id in native.loaded_instance_ids,
+                "reasoning_allowed": list(native.reasoning_allowed),
+                "reasoning_default": native.reasoning_default,
             }
             if native is not None
             else None
@@ -670,9 +678,126 @@ def _resolve_model(config: dict[str, Any]) -> ModelAttribution:
         model_id=selected.instance_id,
         model_is_splash=model_is_splash,
         locality_evidence=locality_evidence,
-        model_instance_evidence=_instance_evidence(selected, native, model_is_splash, signals),
+        model_instance_evidence=_instance_evidence(
+            selected, native, model_is_splash, signals, report
+        ),
         blockers=tuple(blockers),
     )
+
+
+def _historical_protocol(
+    suite: str,
+    profile: dict[str, Any],
+    *,
+    sample_count: int,
+    output_budget: int,
+    reasoning_mode: str | None,
+) -> dict[str, Any]:
+    """Emit the complete comparator contract without inventing unknown facts."""
+    practical = suite == "pilot"
+    selection = _selection_evidence(profile)
+    return {
+        "benchmark_name": "Racecraft practical task set" if practical else profile.get("task_set"),
+        "benchmark_version": profile.get("task_set"),
+        "split": "held_out" if selection["held_out"] else None,
+        "dataset_revision": profile.get("task_set"),
+        "sample_id_manifest": selection["ordered_sample_manifest_sha256"],
+        "metric_name": "accuracy",
+        "metric_unit": "proportion",
+        "sample_count": sample_count,
+        "few_shot": 0,
+        "prompts_or_template_revision": profile.get("task_set"),
+        "reasoning_mode": reasoning_mode,
+        "output_budget": output_budget,
+        "attempts_per_task": int(profile.get("repetitions", 1)),
+        "aggregation": "mean_binary_score",
+        "tool_access": "none",
+        "agent_scaffold_revision": None,
+        "scorer_revision": profile.get("scorer_version"),
+        "answer_extraction": "builtin_strict",
+        "higher_is_better": True,
+    }
+
+
+def _selection_evidence(profile: dict[str, Any]) -> dict[str, Any]:
+    evidence = profile.get("selection_evidence")
+    value = evidence if isinstance(evidence, dict) else {}
+    sample_manifest = value.get("ordered_sample_manifest_sha256")
+    contamination_revision = value.get("contamination_review_revision")
+    valid_manifest = isinstance(sample_manifest, str) and bool(
+        re.fullmatch(r"[0-9a-f]{64}", sample_manifest)
+    )
+    immutable = value.get("frozen_before_tuning") is True
+    contamination = isinstance(contamination_revision, str) and bool(contamination_revision.strip())
+    held_out = valid_manifest and immutable and contamination
+    return {
+        "held_out": held_out,
+        "status": "held_out_verified" if held_out else "post_hoc_exploratory",
+        "ordered_sample_manifest_sha256": sample_manifest if valid_manifest else None,
+        "contamination_review_revision": contamination_revision if contamination else None,
+        "frozen_before_tuning": immutable,
+    }
+
+
+def _reasoning_evidence(
+    config: dict[str, Any], model_instance_evidence: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:
+    control = config.get("reasoning_control") or {}
+    transmitted = control.get("transmitted")
+    blockers: list[str] = []
+    if transmitted not in {"off", "low", "medium", "high", "on"}:
+        blockers.append("An explicit native-v1 reasoning setting is required.")
+        transmitted = None
+    native = model_instance_evidence.get("native_identity") or {}
+    supported = native.get("reasoning_allowed") or []
+    if transmitted is not None and supported and transmitted not in supported:
+        blockers.append("The requested reasoning setting is not exposed by the selected model.")
+    return {
+        "requested": control.get("desired_effort") or control.get("desired_mode"),
+        "transmitted": transmitted,
+        "supported_options": supported,
+        "default": native.get("reasoning_default"),
+        "effective_status": "not_attempted",
+    }, blockers
+
+
+def _runtime_evidence(model: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "transport": "lmstudio_native_v1",
+        "endpoint": "/api/v1/chat",
+        "cli_version": model.get("cli_version"),
+        "app_version": model.get("app_version"),
+        "engine": model.get("engine"),
+        "engine_version": model.get("engine_version"),
+    }
+
+
+def _comparison_evidence(
+    suite: str,
+    profile: dict[str, Any],
+    model: dict[str, Any],
+    reasoning: dict[str, Any],
+    *,
+    sample_count: int,
+    output_budget: int,
+) -> dict[str, Any]:
+    return {
+        "historical_protocol": _historical_protocol(
+            suite,
+            profile,
+            sample_count=sample_count,
+            output_budget=output_budget,
+            reasoning_mode=reasoning["transmitted"],
+        ),
+        "historical_comparison_eligibility": {
+            "eligible_for_frontier_deltas": False,
+            "reason": "Practical pilot is not an identical historical frontier benchmark."
+            if suite == "pilot"
+            else "No exact historical protocol match has been established.",
+        },
+        "reasoning_evidence": reasoning,
+        "runtime_evidence": _runtime_evidence(model),
+    }
 
 
 def build_plan(
@@ -721,6 +846,8 @@ def build_plan(
     token_allowance = request_count * output_per_request
     output_root = get_state_dir(repo, create=False) / "runs"
     public_tasks = [task.public_manifest() for task in tasks]
+    reasoning_evidence, reasoning_blockers = _reasoning_evidence(config, model_instance_evidence)
+    blockers.extend(reasoning_blockers)
     protocol = {
         "suite": suite,
         "task_set": profile.get("task_set"),
@@ -730,6 +857,15 @@ def build_plan(
         "transport_retries": 0,
         "response_cache": "disabled",
     }
+    comparison_evidence = _comparison_evidence(
+        suite,
+        profile,
+        model_instance_evidence,
+        reasoning_evidence,
+        sample_count=len(tasks),
+        output_budget=output_per_request,
+    )
+    selection_evidence = _selection_evidence(profile)
     experiment_id = _sha256_json(
         {
             "config": config,
@@ -754,6 +890,7 @@ def build_plan(
         if model_is_splash and suite == "pilot" and not blockers
         else "blocked",
         "protocol": protocol,
+        **comparison_evidence,
         "tasks": public_tasks,
         "sample_count": len(tasks),
         "request_count": request_count,
@@ -765,7 +902,9 @@ def build_plan(
         "forecast_note": "Runtime forecast withheld until relevant local pilot measurements exist.",
         "limitations": profile.get("limitations", []),
         "allow_expanded": allow_expanded,
-        "held_out": suite == "pilot",
+        "held_out": selection_evidence["held_out"],
+        "selection_status": selection_evidence["status"],
+        "selection_evidence": selection_evidence,
         "selection_hash": _sha256_json(public_tasks),
     }
 
@@ -847,21 +986,21 @@ def _chat_once(
     safe_origin = validate_loopback_origin(origin)
     body: dict[str, Any] = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "input": prompt,
         "stream": False,
+        "store": False,
     }
-    for key in ("temperature", "top_p", "max_tokens"):
+    for key in ("temperature", "top_p", "top_k", "max_output_tokens", "reasoning"):
         value = settings.get(key)
         if value is not None:
             body[key] = value
-    # top_k is accepted by some LM Studio model paths but is not OpenAI-standard.
-    if settings.get("top_k") is not None:
-        body["top_k"] = settings["top_k"]
+    if body.get("reasoning") not in {"off", "low", "medium", "high", "on"}:
+        raise RunError("an explicit supported reasoning setting is required")
     headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
     started = time.perf_counter()
     try:
         with httpx.Client(timeout=180.0, follow_redirects=False, trust_env=False) as client:
-            response = client.post(f"{safe_origin}/v1/chat/completions", json=body, headers=headers)
+            response = client.post(f"{safe_origin}/api/v1/chat", json=body, headers=headers)
             response.raise_for_status()
             payload = response.json()
     except httpx.TimeoutException as error:
@@ -876,17 +1015,45 @@ def _chat_once(
     return payload, elapsed
 
 
-def _response_view(payload: dict[str, Any]) -> dict[str, Any]:
-    choices = payload.get("choices")
-    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
-        return {"content": None, "finish_reason": None, "protocol_error": "missing_choices"}
-    first = choices[0]
-    message_value = first.get("message")
-    message = cast(dict[str, Any], message_value) if isinstance(message_value, dict) else {}
+def _response_view(payload: dict[str, Any], expected_instance_id: str) -> dict[str, Any]:
+    served = payload.get("model_instance_id")
+    if not isinstance(served, str):
+        return {
+            "content": None,
+            "finish_reason": None,
+            "protocol_error": "missing_served_model_instance",
+            "served_instance_match": False,
+            "response_instance_id_sha256": None,
+        }
+    served_hash = _sha256_text(served)
+    if served != expected_instance_id:
+        return {
+            "content": None,
+            "finish_reason": None,
+            "protocol_error": "served_model_instance_mismatch",
+            "served_instance_match": False,
+            "response_instance_id_sha256": served_hash,
+        }
+    output = payload.get("output")
+    if not isinstance(output, list):
+        return {
+            "content": None,
+            "finish_reason": None,
+            "protocol_error": "missing_output",
+            "served_instance_match": True,
+            "response_instance_id_sha256": served_hash,
+        }
+    messages = [
+        item.get("content")
+        for item in output
+        if isinstance(item, dict) and item.get("type") == "message"
+    ]
+    content = "\n".join(value for value in messages if isinstance(value, str))
     return {
-        "content": message.get("content"),
-        "tool_calls": message.get("tool_calls"),
-        "finish_reason": first.get("finish_reason"),
+        "content": content or None,
+        "finish_reason": None,
+        "served_instance_match": True,
+        "response_instance_id_sha256": served_hash,
     }
 
 
@@ -928,6 +1095,151 @@ def _aggregate(attempts: list[dict[str, Any]], planned: int) -> dict[str, Any]:
     }
 
 
+def _run_settings(
+    plan: dict[str, Any],
+    config: dict[str, Any],
+    profile: dict[str, Any],
+    override: dict[str, Any] | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    requested = dict(config.get("operation_requested") or {})
+    output_limit = profile.get("max_output_tokens", requested.get("max_output_tokens", 512))
+    if not isinstance(output_limit, int) or output_limit <= 0:
+        raise RunError("suite max_output_tokens must be a positive integer")
+    requested["max_output_tokens"] = output_limit
+    if override:
+        requested.update(override)
+    transmitted = dict(requested)
+    transmitted.pop("max_tokens", None)
+    transmitted["reasoning"] = plan["reasoning_evidence"]["transmitted"]
+    return requested, transmitted
+
+
+def _run_fingerprint(
+    plan: dict[str, Any], config: dict[str, Any], requested: dict[str, Any]
+) -> str:
+    return _sha256_json(
+        {
+            "config": config,
+            "model": plan["model_id"],
+            "locality": plan["locality_evidence"],
+            "model_instance": plan["model_instance_evidence"],
+            "protocol": plan["protocol"],
+            "settings": requested,
+        }
+    )
+
+
+def _initial_run_manifest(
+    plan: dict[str, Any],
+    suite: str,
+    tasks: list[Task],
+    run_id: str,
+    fingerprint: str,
+    requested: dict[str, Any],
+    transmitted: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        **plan,
+        "run_id": run_id,
+        "status": "running",
+        "created_at": datetime.now(UTC).isoformat(),
+        "fingerprint": fingerprint,
+        "requested_settings": requested,
+        "transmitted_settings": {
+            **{key: value for key, value in transmitted.items() if value is not None},
+            "store": False,
+            "stream": False,
+        },
+        "effective_settings_status": "pending_response",
+        "served_model_evidence": {
+            "status": "not_verified",
+            "requested_instance_id_sha256": _sha256_text(str(plan["model_id"])),
+            "response_instance_id_sha256": None,
+            "match": False,
+        },
+        "transport": {
+            "endpoint": "/api/v1/chat",
+            "retries": 0,
+            "redirects": False,
+            "cloud_fallback": False,
+        },
+        "calibration_heldout_separation": (
+            "post_hoc_exploratory"
+            if suite == "pilot"
+            else "calibration"
+            if suite == "calibration"
+            else "harness"
+        ),
+        "private_task_manifest": [task.private_manifest() for task in tasks],
+        "raw_evidence_publication_eligible": False,
+    }
+
+
+def _native_score(
+    task: Task, payload: dict[str, Any], expected_instance: str, output_limit: int
+) -> tuple[dict[str, Any], dict[str, Any], int, str]:
+    view = _response_view(payload, expected_instance)
+    protocol_error = view.get("protocol_error")
+    score = (
+        {"scorable": False, "score": None, "failure_type": protocol_error}
+        if protocol_error
+        else parse_and_score(task, view)
+    )
+    stats = payload.get("stats")
+    completion = stats.get("total_output_tokens") if isinstance(stats, dict) else None
+    if isinstance(completion, int):
+        return view, score, completion, "response_usage"
+    return view, score, output_limit, "requested_cap_fallback"
+
+
+def _finalize_run_manifest(
+    manifest: dict[str, Any],
+    attempts: list[dict[str, Any]],
+    planned: int,
+    partial_reason: str | None,
+    model_id: str,
+) -> None:
+    manifest["status"] = (
+        "partial" if partial_reason is not None or len(attempts) < planned else "completed"
+    )
+    manifest["partial_reason"] = partial_reason
+    manifest["completed_at"] = datetime.now(UTC).isoformat()
+    manifest["aggregate"] = _aggregate(attempts, planned)
+    instance_hash = _sha256_text(model_id)
+    manifest["served_model_evidence"] = {
+        "status": "not_verified",
+        "requested_instance_id_sha256": instance_hash,
+        "response_instance_id_sha256": None,
+        "match": False,
+    }
+    manifest["reasoning_evidence"]["effective_status"] = "not_verified"
+    manifest["effective_settings_status"] = "not_verified"
+    if not attempts or not all(item.get("served_instance_match") is True for item in attempts):
+        return
+    response_hashes = {
+        item.get("response_instance_id_sha256")
+        for item in attempts
+        if isinstance(item.get("response_instance_id_sha256"), str)
+    }
+    if response_hashes != {instance_hash}:
+        return
+    manifest["served_model_evidence"] = {
+        "status": "verified",
+        "requested_instance_id_sha256": instance_hash,
+        "response_instance_id_sha256": response_hashes.pop(),
+        "match": True,
+    }
+    manifest["reasoning_evidence"]["effective_status"] = "accepted_by_runtime"
+    manifest["effective_settings_status"] = "accepted_by_runtime_not_read_back"
+
+
+def _served_instance_failure(record: dict[str, Any]) -> bool:
+    return record.get("score", {}).get("failure_type") in {
+        "missing_served_model_instance",
+        "served_model_instance_mismatch",
+    }
+
+
 def execute_run(
     suite: str,
     config_name: str,
@@ -948,53 +1260,16 @@ def execute_run(
     config = load_config(config_name, repo)
     profile = load_suite(suite, repo)
     tasks = suite_tasks(suite)
-    settings = dict(config.get("operation_requested") or {})
-    max_tokens_value = profile.get("max_output_tokens", settings.get("max_tokens", 512))
-    if not isinstance(max_tokens_value, int) or max_tokens_value <= 0:
-        raise RunError("suite max_output_tokens must be a positive integer")
-    settings["max_tokens"] = max_tokens_value
-    if operation_override:
-        settings.update(operation_override)
-    fingerprint = _sha256_json(
-        {
-            "config": config,
-            "model": plan["model_id"],
-            "locality": plan["locality_evidence"],
-            "model_instance": plan["model_instance_evidence"],
-            "protocol": plan["protocol"],
-            "settings": settings,
-        }
-    )
+    requested_settings, settings = _run_settings(plan, config, profile, operation_override)
+    fingerprint = _run_fingerprint(plan, config, requested_settings)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     label = f"-{run_label}" if run_label else ""
     run_id = f"{plan['experiment_id']}-{timestamp}{label}"
     run_dir = state / "runs" / run_id
     run_dir.mkdir(parents=True, exist_ok=False, mode=0o700)
-    manifest = {
-        **plan,
-        "run_id": run_id,
-        "status": "running",
-        "created_at": datetime.now(UTC).isoformat(),
-        "fingerprint": fingerprint,
-        "requested_settings": settings,
-        "transmitted_settings": {
-            key: value for key, value in settings.items() if value is not None
-        },
-        "effective_settings_status": "accepted_not_verified",
-        "transport": {
-            "endpoint": "/v1/chat/completions",
-            "retries": 0,
-            "redirects": False,
-            "cloud_fallback": False,
-        },
-        "calibration_heldout_separation": "held_out"
-        if suite == "pilot"
-        else "calibration"
-        if suite == "calibration"
-        else "harness",
-        "private_task_manifest": [task.private_manifest() for task in tasks],
-        "raw_evidence_publication_eligible": False,
-    }
+    manifest = _initial_run_manifest(
+        plan, suite, tasks, run_id, fingerprint, requested_settings, settings
+    )
     manifest_path = run_dir / "manifest.json"
     attempts_path = run_dir / "attempts.jsonl"
     _write_json(manifest_path, manifest)
@@ -1004,24 +1279,22 @@ def execute_run(
     for task in tasks:
         try:
             with _locked_session_ledger(state, plan["limits"]) as (ledger_path, ledger):
-                _check_budget(ledger, int(settings["max_tokens"]))
+                _check_budget(ledger, int(settings["max_output_tokens"]))
                 attempt_started = datetime.now(UTC).isoformat()
                 try:
                     payload, elapsed = _chat_once(
-                        origin, api_key, str(plan["model_id"]), task.prompt, settings
+                        origin,
+                        api_key,
+                        str(plan["model_id"]),
+                        task.prompt,
+                        settings,
                     )
-                    view = _response_view(payload)
-                    score = parse_and_score(task, view)
-                    usage_value = payload.get("usage")
-                    usage = (
-                        cast(dict[str, Any], usage_value) if isinstance(usage_value, dict) else {}
+                    view, score, completion_tokens, usage_provenance = _native_score(
+                        task,
+                        payload,
+                        str(plan["model_id"]),
+                        int(settings["max_output_tokens"]),
                     )
-                    completion_tokens = usage.get("completion_tokens")
-                    if not isinstance(completion_tokens, int):
-                        completion_tokens = int(settings["max_tokens"])
-                        usage_provenance = "requested_cap_fallback"
-                    else:
-                        usage_provenance = "response_usage"
                     ledger["live_requests"] = int(ledger["live_requests"]) + 1
                     ledger["generated_tokens"] = int(ledger["generated_tokens"]) + completion_tokens
                     _write_json(ledger_path, ledger)
@@ -1048,6 +1321,8 @@ def execute_run(
                         "completion_tokens": completion_tokens,
                         "token_usage_provenance": usage_provenance,
                         "retries": 0,
+                        "served_instance_match": view.get("served_instance_match", False),
+                        "response_instance_id_sha256": view.get("response_instance_id_sha256"),
                     }
                 except RunError as error:
                     ledger["live_requests"] = int(ledger["live_requests"]) + 1
@@ -1073,11 +1348,13 @@ def execute_run(
             partial_reason = str(error)
             break
         _append_jsonl(attempts_path, record)
+        if _served_instance_failure(record):
+            partial_reason = (
+                "LM Studio did not prove the selected model instance served the response."
+            )
+            break
     attempts = _read_attempts(attempts_path)
-    manifest["status"] = "partial" if len(attempts) < len(tasks) else "completed"
-    manifest["partial_reason"] = partial_reason
-    manifest["completed_at"] = datetime.now(UTC).isoformat()
-    manifest["aggregate"] = _aggregate(attempts, len(tasks))
+    _finalize_run_manifest(manifest, attempts, len(tasks), partial_reason, str(plan["model_id"]))
     _write_json(manifest_path, manifest)
     return {"status": manifest["status"], "run_id": run_id, "manifest": manifest}
 
@@ -1103,6 +1380,8 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
     manifest, attempts = load_run(run_id, repo)
     if manifest["status"] == "completed":
         return {"status": "already_complete", "run_id": run_id}
+    if any(_served_instance_failure(record) for record in attempts):
+        raise ResumeRefused("resume refused after unverified served model instance evidence")
     config = load_config(manifest["config_id"], repo)
     current_plan = build_plan(
         manifest["suite"],
@@ -1136,7 +1415,8 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
             "fingerprint_verified": True,
         }
     state = get_state_dir(repo)
-    settings = manifest["requested_settings"]
+    settings = manifest["transmitted_settings"]
+    partial_reason: str | None = None
     for item in remaining:
         task = Task(
             item["task_id"],
@@ -1151,7 +1431,7 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
                 ledger_path,
                 ledger,
             ):
-                _check_budget(ledger, int(settings["max_tokens"]))
+                _check_budget(ledger, int(settings["max_output_tokens"]))
                 try:
                     payload, elapsed = _chat_once(
                         _config_origin(config),
@@ -1160,17 +1440,11 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
                         task.prompt,
                         settings,
                     )
-                    view = _response_view(payload)
-                    score = parse_and_score(task, view)
-                    usage_value = payload.get("usage")
-                    usage = (
-                        cast(dict[str, Any], usage_value) if isinstance(usage_value, dict) else {}
-                    )
-                    reported_completion_tokens = usage.get("completion_tokens")
-                    completion_tokens = (
-                        reported_completion_tokens
-                        if isinstance(reported_completion_tokens, int)
-                        else int(settings["max_tokens"])
+                    view, score, completion_tokens, usage_provenance = _native_score(
+                        task,
+                        payload,
+                        str(manifest["model_id"]),
+                        int(settings["max_output_tokens"]),
                     )
                     record = {
                         "attempt_index": len(attempts) + 1,
@@ -1193,11 +1467,11 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
                         "score": score,
                         "finish_reason": view.get("finish_reason"),
                         "completion_tokens": completion_tokens,
-                        "token_usage_provenance": "response_usage"
-                        if reported_completion_tokens is not None
-                        else "requested_cap_fallback",
+                        "token_usage_provenance": usage_provenance,
                         "retries": 0,
                         "resumed": True,
+                        "served_instance_match": view.get("served_instance_match", False),
+                        "response_instance_id_sha256": view.get("response_instance_id_sha256"),
                     }
                 except RunError as error:
                     completion_tokens = 0
@@ -1220,14 +1494,22 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
                 ledger["generated_tokens"] = int(ledger["generated_tokens"]) + completion_tokens
                 _write_json(ledger_path, ledger)
         except BudgetExceeded as error:
-            manifest["partial_reason"] = str(error)
+            partial_reason = str(error)
             break
         attempts.append(record)
         _append_jsonl(directory / "attempts.jsonl", record)
-    manifest["status"] = (
-        "completed" if len(attempts) == len(manifest["private_task_manifest"]) else "partial"
+        if _served_instance_failure(record):
+            partial_reason = (
+                "LM Studio did not prove the selected model instance served the response."
+            )
+            break
+    _finalize_run_manifest(
+        manifest,
+        attempts,
+        len(manifest["private_task_manifest"]),
+        partial_reason,
+        str(manifest["model_id"]),
     )
-    manifest["aggregate"] = _aggregate(attempts, len(manifest["private_task_manifest"]))
     manifest["last_resumed_at"] = datetime.now(UTC).isoformat()
     _write_json(directory / "manifest.json", manifest)
     return {
@@ -1259,7 +1541,13 @@ def rescore_run(run_id: str, scorer_version: str, *, root: Path | None = None) -
         if not isinstance(raw, dict):
             score = attempt["score"]
         else:
-            score = parse_and_score(task, _response_view(raw))
+            view = _response_view(raw, str(manifest["model_id"]))
+            protocol_error = view.get("protocol_error")
+            score = (
+                {"scorable": False, "score": None, "failure_type": protocol_error}
+                if protocol_error
+                else parse_and_score(task, view)
+            )
         rescored.append(
             {
                 "task_id": task.task_id,

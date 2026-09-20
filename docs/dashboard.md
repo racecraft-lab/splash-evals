@@ -1,33 +1,26 @@
 # Public results dashboard
 
-This is a static view of the reviewed public aggregate. It does not query LM Studio or read the
-private evidence directory. Every number below is already published in the sanitized local pilot
-summary.
+This static page presents only the reviewed sanitized fields from the post-hoc local
+qualification export. It does not query LM Studio or read the private evidence directory.
 
-## Evaluation status
+## Qualification status
 
-| Signal | Public result | What it proves |
+| Signal | Reviewed public result | Interpretation |
 | --- | --- | --- |
-| Primary objective | `pilot_only` | A bounded practical pilot completed; the full research objective is not answered. |
-| Local pilot | Verified | Ten reviewed requests ran through the verified local condition. |
-| Accepted | 10/10 | All ten pilot responses passed the pilot scorer. |
-| Failures / censored | 0 / 0 | No pilot request failed or was excluded. |
-| Wilson 95% interval | 72.2467%–100% | Uncertainty remains wide because the sample is only ten tasks. |
-| Completion tokens | 660 | Sanitized aggregate count, not raw response content. |
-| Total request latency | 8.1253 seconds | Aggregate request latency for the bounded pilot. |
-| Maximum concurrency | 1 | The pilot was sequential. |
-| Cost | $0 | Local inference incurred no provider charge. |
-| Historical frontier comparison | Blocked | No protocol-compatible local benchmark run supports a direct frontier delta. |
+| Publication purpose | `post_hoc_runtime_scorer_qualification` | Local runtime and scorer qualification only. |
+| Capability evidence | `false` | No model capability, improvement, equivalence, or ranking claim is permitted. |
+| Model | Splash/Qwen3.8 through local LM Studio | Generic public model/runtime label; no private runtime identifier is published. |
+| Scorer | `builtin-exact-v1` | Public scorer identifier used for the reviewed aggregate. |
+| Planned / attempted / completed / scorable | 10 / 10 / 10 / 10 | All planned qualification cases completed and were scorable. |
+| Failed / censored / unattempted | 0 / 0 / 0 | No qualification case entered these categories. |
+| End-to-end deployment success | 10/10 (`1.0`) | The local transport completed and the configured scorer accepted the reused cases; this is not a capability score. |
+| Wilson 95% interval | `0.7224672001371107`–`1.0` | Qualification-aggregate uncertainty only; not a model capability interval. |
+| Historical frontier comparison | Prohibited | Post-hoc qualification evidence cannot support a frontier delta. |
 
-## Evidence available here
+## Evidence and privacy boundary
 
-- [Local pilot results](local-pilot-results.md) provides the reviewed aggregate and runtime-setting summary.
-- [Historical frontier comparison](historical-frontier-comparison.md) explains why no direct ranking or delta is reported.
-- [Frontier verification ledger](../references/frontier/VERIFICATION.md) records the dated external evidence and its limits.
-- [Benchmark task guide](benchmark-tasks.md) describes the evaluated task families without publishing restricted prompt text.
-
-## Boundary
-
-Raw prompts, responses, reasoning, device or instance identifiers, private paths, detailed runtime
-inventory, and timestamped run identifiers remain outside Git and GitHub Pages. They are not needed
-to interpret this aggregate, and publication would break the repository's two-zone privacy model.
+Raw prompts, responses, and reasoning are intentionally not hosted. They remain outside Git and
+GitHub Pages together with private runtime evidence. Public review is limited to the sanitized
+fields above, the [local pilot summary](local-pilot-results.md), the
+[benchmark and task-family descriptions](benchmark-tasks.md), and the
+[historical comparison limitations](historical-frontier-comparison.md).

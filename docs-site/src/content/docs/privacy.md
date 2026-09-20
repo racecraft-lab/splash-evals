@@ -90,6 +90,21 @@ private paths, local instance/account IDs, tokens, operator activity timestamps,
 private-content hashes are excluded. Restricted prompts remain excluded even when their local
 use is authorized.
 
+The gate has two distinct export purposes. A model-capability export still requires a local
+Splash measurement from the pilot suite with `held_out` exactly `true` and no contradictory
+post-hoc marker. A reused pilot may be staged only when `held_out` is exactly `false` and both
+`selection_status` and `calibration_heldout_separation` explicitly equal
+`post_hoc_exploratory`. That second path is labeled
+`post_hoc_runtime_scorer_qualification`, forces `capability_evidence` to `false`, forces the
+primary objective to `blocked`, and prohibits historical comparison. It removes the
+conditional-capability aggregate and any unrecognized aggregate fields. Missing, conflicting,
+or partially specified classification fields block export.
+
+A post-hoc qualification export may show that local transport completed and the scorer ran on
+the reused cases. It must not be described as held-out evidence, a capability estimate, a
+frontier delta, a ranking, equivalence, or improvement. The same raw-evidence exclusions and
+human review requirement apply to both export purposes.
+
 An incident blocks further publication. Revoke exposed credentials, assess Git history,
 Actions artifacts/caches, Pages, releases, forks and mirrors, then use GitHub's removal
 process. A later deletion does not erase earlier public copies.
