@@ -85,11 +85,12 @@ Use `lms ps` and the workbench discovery command to confirm the selected instanc
 smoke check and again before launch. If a reload is needed, unload only the project-owned
 instance; never unload all models or stop an unrelated user service.
 
-LM Link may remain enabled only when the selected `racecraft-splash-local` instance reports
-`deviceIdentifier: null`. A non-null device identifier is treated as remote execution and blocks
-the run. This null check is a fail-closed workbench rule derived from the selected-instance
-record; LM Studio's public documentation explains local and remote linked devices but does not
-promise this field-level null contract. Re-qualify it after an LM Studio or llmster update.
+LM Link may remain enabled only when the exact selected `racecraft-splash-local` loaded-instance
+record contains `deviceIdentifier: null`. A missing or non-null field blocks the run. A downloaded
+model record with the same `modelKey` cannot replace this instance-bound evidence. This explicit
+null check is a fail-closed workbench rule derived from the selected-instance record; LM Studio's
+public documentation explains local and remote linked devices but does not promise this field-level
+null contract. Re-qualify it after an LM Studio or llmster update.
 
 Official LM Studio references:
 

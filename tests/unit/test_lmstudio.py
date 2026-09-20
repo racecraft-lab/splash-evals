@@ -274,7 +274,7 @@ def test_current_lms_identifier_field_selects_local_instance() -> None:
     assert locality.execution_device == "local"
 
 
-def test_current_llmster_omitted_device_is_corroborated_by_unique_local_download() -> None:
+def test_missing_loaded_device_cannot_be_replaced_by_same_key_local_download() -> None:
     loaded = [
         {
             "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
@@ -297,9 +297,9 @@ def test_current_llmster_omitted_device_is_corroborated_by_unique_local_download
         downloaded_payload=downloaded,
     )
 
-    assert locality.status is LocalityStatus.VERIFIED_LOCAL
-    assert locality.local_instance_evidence is True
-    assert locality.execution_device == "local"
+    assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
+    assert locality.local_instance_evidence is False
+    assert locality.execution_device is None
 
 
 def test_current_llmster_remote_download_cannot_corroborate_locality() -> None:
@@ -325,7 +325,7 @@ def test_current_llmster_remote_download_cannot_corroborate_locality() -> None:
 
     assert locality.status is LocalityStatus.AMBIGUOUS_LM_LINK
     assert locality.local_instance_evidence is False
-    assert locality.execution_device == "linked-peer"
+    assert locality.execution_device is None
 
 
 def test_current_llmster_duplicate_download_matches_are_ambiguous() -> None:
@@ -440,7 +440,7 @@ def test_current_llmster_loaded_instance_without_model_key_is_ambiguous() -> Non
     assert locality.local_instance_evidence is False
 
 
-def test_discover_correlates_current_llmster_payloads_without_leaking_devices() -> None:
+def test_discover_uses_exact_loaded_device_evidence_without_leaking_devices() -> None:
     downloaded = [
         {
             "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
@@ -457,6 +457,7 @@ def test_discover_correlates_current_llmster_payloads_without_leaking_devices() 
         {
             "modelKey": "qwen3.8-27b-splash",  # gitleaks:allow - fixture key
             "identifier": "racecraft-splash-local",
+            "deviceIdentifier": None,
         },
         {
             "modelKey": "remote-embedding",
