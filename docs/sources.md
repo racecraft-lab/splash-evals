@@ -1,4 +1,8 @@
-# Historical source map
+# Historical sources and coverage
+
+These are older published results, not models this project ran remotely. Checking their sources helps us understand the context; it does not make them directly comparable to the local setup check.
+
+[Start with the comparison explanation](historical-frontier-comparison.md) · [Check the recorded numbers](../references/frontier/VERIFICATION.md)
 
 The catalog stores short factual records, not copied articles or restricted data. Retrieval
 dates record transcription work, not model measurement dates.
@@ -8,6 +12,10 @@ The provider allowlist is exactly **OpenAI, Anthropic, and Google**. The current
 measurement source, but a record is admitted only when its evaluated model belongs to one of
 those three providers.
 
+<section class="reader-section cool" aria-label="Dated model sources">
+
+## Dated model sources
+
 | Cohort member | Primary identity/result sources | Important limitation |
 |---|---|---|
 | GPT-4o (2024-11-20), OpenAI o1 (high), GPT-4.1 | [OpenAI GPT-4.1 release appendix](https://openai.com/index/gpt-4-1/) | GPQA uses model-based answer extraction; the appendix says this materially changes GPT-4o. |
@@ -15,6 +23,13 @@ those three providers.
 | Claude 3.5 Sonnet (2024-10-22) | [Aider leaderboard](https://aider.chat/docs/leaderboards/) | Full 225-case polyglot result with two-attempt semantics; not a pilot match. |
 | Claude 3.7 Sonnet (2025-02-19) | [Anthropic release](https://www.anthropic.com/news/claude-3-7-sonnet) and [Aider leaderboard](https://aider.chat/docs/leaderboards/) | No-thinking and 32K-thinking conditions are separate. |
 | Gemini 2.5 Pro Experimental (03-25) | [Google March 2025 release](https://blog.google/innovation-and-ai/models-and-research/google-deepmind/gemini-model-thinking-updates-march-2025/) and [Aider leaderboard](https://aider.chat/docs/leaderboards/) | March experimental, later previews, and stable releases are different models/conditions. |
+
+</section>
+
+<section class="reader-section warm" aria-label="Additional source detail">
+
+<details>
+<summary>Supplemental sources and detailed coverage limitations</summary>
 
 ## Supplemental primary-source review
 
@@ -48,3 +63,7 @@ The current 10-case synthetic smoke/pilot evidence qualifies transport and score
 only. Its historical comparison is unavailable and it is not an intelligence result. Primary
 provider research found no record with the immutable benchmark revision, exact sample manifest,
 prompt/scorer contract, and sampling protocol needed for a direct local delta.
+
+</details>
+
+</section>
