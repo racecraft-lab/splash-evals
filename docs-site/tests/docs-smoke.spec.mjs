@@ -107,6 +107,18 @@ test('overview leads readers to the measured result without stale setup-check cl
   page,
 }) => {
   await page.goto('./');
+  const study = page.locator('.intro-study');
+  await expect(study).toContainText('Splash');
+  await expect(study).toContainText('Qwen3.8-27B');
+  await expect(study).toContainText('54.55%');
+  await expect(study).toContainText('20');
+  await expect(study).toContainText('directional');
+  const relationship = page.locator('.relationship-flow');
+  await expect(relationship.getByRole('listitem')).toHaveCount(4);
+  await expect(relationship).toContainText('Qwen Team');
+  await expect(relationship).toContainText('Inco AI');
+  await expect(relationship).toContainText('LM Studio');
+  await expect(relationship).toContainText('Racecraft Lab');
   await expect(page.getByText('Capability results: not yet measured.', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/setup-check report/i)).toHaveCount(0);
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
@@ -121,14 +133,35 @@ test('results expose the reviewed GPQA result, runtime performance, and comparis
   page,
 }) => {
   await page.goto(routeUrl('/dashboard/'));
+  const evaluation = page.locator('.evaluation-summary');
+  await expect(evaluation.locator(':scope > div')).toHaveCount(4);
+  await expect(evaluation).toContainText('Splash / Qwen3.8');
+  await expect(evaluation).toContainText('GPQA Diamond');
+  await expect(evaluation).toContainText('54.55%');
+  await expect(evaluation).toContainText('198 / 198');
+  const runDetails = page.locator('details.evaluation-details');
+  await expect(runDetails).not.toHaveAttribute('open', '');
+  await runDetails.getByText('View run configuration and evidence boundary', { exact: true }).click();
+  await expect(runDetails).toContainText('reasoning_effort: medium');
+  await expect(runDetails).toContainText('EvalScope 1.12.0');
+  await expect(runDetails).toContainText('no prompts, responses, or reasoning traces');
+  await page.getByText('View the complete 21-row source table', { exact: true }).click();
   const splashRow = page
     .getByRole('row')
     .filter({ has: page.getByText('Splash / Qwen3.8 · local LM Studio · medium effort') });
   await expect(splashRow).toContainText('54.6%');
   await expect(splashRow).toContainText('198/198 completed');
-  await expect(page.getByText('198 requested, 198 succeeded, 0 errored', { exact: true })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '43.95 s', exact: true })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '64.13 tokens/s', exact: true })).toBeVisible();
+  const performance = page.locator('.performance-summary');
+  await expect(performance).toContainText('2 h 25 m 16 s');
+  await expect(performance).toContainText('64.13 tokens/s');
+  await expect(performance).toContainText('612,907');
+  const performanceDetails = page.locator('details.performance-details');
+  await performanceDetails.getByText('View latency and output details', { exact: true }).click();
+  await expect(performanceDetails).toContainText('43.95 s');
+  await expect(performanceDetails).toContainText('41.80 s');
+  await expect(performanceDetails).toContainText('72.49 s');
+  await expect(performanceDetails).toContainText('2,818 tokens');
+  await expect(performanceDetails).toContainText('Time to first token');
   await expect(page.getByText(/do not support a protocol-matched delta/i)).toBeVisible();
   for (const model of [
     'Claude Sonnet 4',
@@ -159,19 +192,21 @@ test('frontier explorer keeps source order, labels, and evidence details without
 }) => {
   await page.goto(routeUrl('/dashboard/'));
   const explorer = page.locator('[data-gpqa-explorer]');
-  await expect(explorer.getByRole('radio', { name: 'Curated overview' })).toBeChecked();
+  const view = explorer.getByLabel('Show');
+  const family = explorer.getByLabel('Models');
+  await expect(view).toHaveValue('overview');
+  await expect(explorer.getByText('all GPT reports and one independent Epoch score', { exact: false })).toBeVisible();
+  await expect(explorer).toContainText('Scan every reported score on one 0–100 scale.');
+  await expect(explorer).toContainText('Splash stays pinned as the local reference');
   await expect(explorer.getByRole('listitem')).toHaveCount(13);
-  await expect(explorer.getByText('Showing 13 of 21 observations.', { exact: false })).toBeVisible();
+  await expect(explorer.getByText('Showing 13 of 21.', { exact: false })).toBeVisible();
 
-  const curated = explorer.getByRole('radio', { name: 'Curated overview' });
-  await curated.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(explorer.getByRole('radio', { name: 'All published observations' })).toBeChecked();
+  await view.selectOption('all');
   await expect(explorer.getByRole('listitem')).toHaveCount(21);
 
-  await explorer.getByRole('radio', { name: 'GPT', exact: true }).check();
+  await family.selectOption('gpt');
   await expect(explorer.getByRole('listitem')).toHaveCount(5);
-  await explorer.getByRole('radio', { name: 'All models' }).check();
+  await family.selectOption('all');
   const observation = explorer.getByRole('button', {
     name: /Claude Opus 4\.7 · Epoch independent: 90%/,
   });
@@ -179,11 +214,25 @@ test('frontier explorer keeps source order, labels, and evidence details without
   const detail = explorer.locator('[data-explorer-detail]');
   await expect(detail).toContainText('Epoch independent');
   await expect(detail).toContainText('Directional context—not protocol matched');
+  await expect(detail.getByText('90%', { exact: true })).toBeVisible();
   await expect(detail.getByRole('link', { name: 'Open the cited source' })).toHaveAttribute(
     'href',
     /epoch\.ai\/models\/claude-opus-4-7/,
   );
   await expect(page.getByText(/rows are not ranked/i)).toBeVisible();
+
+  const list = explorer.locator('.explorer-list');
+  await list.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  const [listBox, localBox] = await Promise.all([
+    list.boundingBox(),
+    list.locator('.local-reference').boundingBox(),
+  ]);
+  expect(listBox).not.toBeNull();
+  expect(localBox).not.toBeNull();
+  expect(localBox.y).toBeGreaterThanOrEqual(listBox.y - 1);
+  expect(localBox.y).toBeLessThanOrEqual(listBox.y + 2);
 });
 
 test('frontier comparison remains complete when JavaScript is unavailable', async ({
@@ -194,8 +243,11 @@ test('frontier comparison remains complete when JavaScript is unavailable', asyn
   const page = await context.newPage();
   await page.goto(routeUrl('/dashboard/'));
   await expect(page.locator('[data-explorer-controls]')).toBeHidden();
-  await expect(page.getByText('The complete source-labeled comparison is available', { exact: false })).toBeVisible();
-  const comparison = page.locator('section[aria-label="Benchmark comparison"] table');
+  await expect(page.getByText('expandable source table below', { exact: false })).toBeVisible();
+  const record = page.locator('details.comparison-record');
+  await expect(record).not.toHaveAttribute('open', '');
+  await record.getByText('View the complete 21-row source table', { exact: true }).click();
+  const comparison = record.locator('table');
   await expect(comparison.getByRole('row')).toHaveCount(22);
   await context.close();
 });
@@ -206,12 +258,60 @@ test('operations explains the local model alias and trust boundary without a mai
   await page.goto(routeUrl('/operations/'));
   const diagram = page.locator('.system-boundary');
   await expect(diagram.getByRole('listitem')).toHaveCount(4);
+  const steps = diagram.locator('[data-flow-trigger]');
+  await expect(steps).toHaveCount(4);
+  await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'true');
+  await expect(steps.nth(1)).toHaveAttribute('aria-expanded', 'false');
+  await expect(diagram.locator('#flow-detail-1')).toBeVisible();
+  await expect(diagram.locator('#flow-detail-2')).toBeHidden();
+  await steps.nth(2).click();
+  await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'false');
+  await expect(steps.nth(2)).toHaveAttribute('aria-expanded', 'true');
+  await expect(diagram.locator('#flow-detail-3')).toBeVisible();
+  await diagram.getByRole('button', { name: 'Reset' }).click();
+  await expect(steps.nth(0)).toBeFocused();
+  await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'true');
   await expect(diagram.locator('.evidence-destination')).toHaveCount(3);
   await expect(diagram).toContainText('Allowlist + review gate');
   await expect(diagram).toContainText('has no route back to this Mac');
+  await expect(diagram).toContainText(
+    'selected-instance check determines whether execution qualifies as local',
+  );
+  await expect(diagram).not.toContainText('keeps model traffic on this computer');
   await expect(page.getByRole('code').filter({ hasText: /^qwen3\.8-27b-splash$/ }).first()).toBeVisible();
   await expect(page.getByText('racecraft-splash-local', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Review before publishing' })).toHaveCount(0);
+});
+
+test('operations flow remains compact and continuous at tablet width', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto(routeUrl('/operations/'));
+  const boxes = await page.locator('.system-flow > li').evaluateAll((steps) =>
+    steps.map((step) => {
+      const box = step.getBoundingClientRect();
+      return { x: box.x, y: box.y };
+    }),
+  );
+  expect(boxes).toHaveLength(4);
+  for (let index = 1; index < boxes.length; index += 1) {
+    expect(boxes[index].y).toBeCloseTo(boxes[0].y, 0);
+    expect(boxes[index].x).toBeGreaterThan(boxes[index - 1].x);
+  }
+});
+
+test('operations architecture remains fully readable without JavaScript', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto(routeUrl('/operations/'));
+  await expect(page.locator('[data-flow-controls]')).toBeHidden();
+  await expect(page.locator('[data-flow-detail]')).toHaveCount(4);
+  for (const detail of await page.locator('[data-flow-detail]').all()) {
+    await expect(detail).toBeVisible();
+  }
+  await context.close();
 });
 
 test('sources present evidence as a concise map instead of duplicated score tables', async ({ page }) => {
@@ -263,6 +363,7 @@ test('light and dark preserve SVG lockups, lab texture, section rhythm, and them
     await expect(page.locator('.identity img:visible')).toHaveCount(1);
     await expect(page.locator('.footer-identity img:visible')).toHaveCount(1);
     await expect(page.getByRole('img', { name: 'Splash Evals' })).toHaveCount(2);
+    await expect(page.getByText('Local tests. Clear evidence. Stated limits.')).toHaveCount(0);
     const [headerLockup, footerLockup] = await page
       .getByRole('img', { name: 'Splash Evals' })
       .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width));
@@ -324,6 +425,7 @@ test('results hero metadata stays inside its card at the desktop-tablet seam', a
 test('wide result table scrolls independently and remains keyboard accessible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(routeUrl('/dashboard/'));
+  await page.getByText('View the complete 21-row source table', { exact: true }).click();
   const table = page.getByRole('region', { name: 'Data table with horizontal scrolling' }).first();
   await expect(page.getByText('More columns to the right:', { exact: false }).first()).toBeVisible();
   await table.focus();
@@ -347,7 +449,9 @@ test('search finds GPQA Diamond and opens the result', async ({ page }) => {
   await expect(result).toBeVisible();
   await result.click();
   await expect(page).toHaveURL(/\/splash-evals\/dashboard\/(?:#.*)?$/);
-  await expect(page.getByText('GPQA Diamond', { exact: true }).first()).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Splash scored 54.55% on GPQA Diamond', exact: true }),
+  ).toBeVisible();
 });
 
 test('reader text and links meet AA contrast on both themed section surfaces', async ({ page }) => {
@@ -419,4 +523,11 @@ test('reduced motion disables link transitions without hiding result content', a
   await expect(page.locator('.document-sheet a').first()).toHaveCSS('transition-duration', '0s');
   await expect(page.locator('.explorer-score-dot').first()).toHaveCSS('transition-duration', '0s');
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
+
+  await page.goto(routeUrl('/operations/'));
+  const diagram = page.locator('.system-boundary');
+  await expect(diagram.locator('.flow-trigger').first()).toHaveCSS('transition-duration', '0s');
+  await diagram.getByRole('button', { name: 'Play request' }).click();
+  await expect(diagram.locator('[data-flow-status]')).toContainText('Request path complete');
+  await expect(diagram.locator('[data-flow-trigger]').nth(3)).toHaveAttribute('aria-expanded', 'true');
 });

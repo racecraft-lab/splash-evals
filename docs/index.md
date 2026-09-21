@@ -2,9 +2,18 @@
 
 <section class="reader-section" aria-label="The result in plain English">
 
-## One public benchmark, one concrete answer
+## What Splash is—and what we tested
 
-We ran the complete **198-question GPQA Diamond** benchmark against Splash / Qwen3.8 on this Mac through LM Studio. The local model scored **54.55% accuracy** (**54.6% rounded**). All 198 requests completed.
+Splash is not the model itself. It is the software that runs the model quickly on a Mac. Here is how the pieces connect:
+
+<ol class="relationship-flow">
+  <li><span>Model</span><strong>Qwen3.8-27B</strong><p>The <a href="https://github.com/QwenLM/Qwen3.8">Qwen Team</a> develops the underlying 27-billion-parameter open model.</p></li>
+  <li><span>Engine + package</span><strong>Inco AI · Splash</strong><p><a href="https://inco.ai/blog/splash/">Inco AI</a> builds the open-source Splash engine and its model-specific package: 4-bit Qwen weights plus a DFlash 2 draft.</p></li>
+  <li><span>Local host</span><strong>LM Studio</strong><p>LM Studio integrates Splash as a runtime, loads that package on this Mac, and exposes the local API used for the test.</p></li>
+  <li><span>Independent test</span><strong>Racecraft Lab</strong><p>Racecraft Lab, the technical innovation lab of Racecraft Systems, sends GPQA questions through EvalScope and publishes the reviewed result.</p></li>
+</ol>
+
+We ran the complete **198-question GPQA Diamond** benchmark against this exact local setup. It scored **54.55% accuracy** (**54.6% rounded**), and all 198 requests completed.
 
 That is a real capability result for one difficult science-reasoning benchmark. It is not a general intelligence score, and it does not prove that Splash is equivalent to a frontier model.
 
@@ -59,7 +68,7 @@ So this site labels every external number by source and condition and presents i
 ## Key terms
 
 <dl class="project-definitions" id="key-terms">
-<div><dt>Splash / Qwen3.8</dt><dd>The exact local model deployment tested here. The result does not automatically apply to every quantization, runtime, or configuration of the model family.</dd></div>
+<div><dt>Splash / Qwen3.8</dt><dd>Short for the Qwen3.8-27B model served through Inco AI's Splash runtime in LM Studio. The result applies to this exact setup, not every Qwen model or runtime configuration.</dd></div>
 <div><dt>GPQA Diamond</dt><dd>A difficult multiple-choice benchmark written by domain experts in biology, chemistry, and physics.</dd></div>
 <div><dt>Directional comparison</dt><dd>Useful context from a published score whose full testing conditions do not match or are not completely disclosed.</dd></div>
 </dl>

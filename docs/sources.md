@@ -14,6 +14,7 @@ See who measured each result, where it was published, and what was different abo
     <ul>
       <li><a href="https://github.com/racecraft-lab/splash-evals/blob/main/results/public/gpqa-diamond-splash-local-2026-09-20.json">Reviewed public result</a></li>
       <li><a href="https://evalscope.readthedocs.io/en/latest/get_started/supported_dataset/llm.html">EvalScope GPQA documentation</a></li>
+      <li><a href="https://inco.ai/blog/splash/">Inco AI's Splash overview</a> and the <a href="https://github.com/QwenLM/Qwen3.8">Qwen3.8 model repository</a></li>
     </ul>
     <p class="source-limit"><strong>Limit:</strong> one public benchmark and one exact local condition.</p>
   </article>

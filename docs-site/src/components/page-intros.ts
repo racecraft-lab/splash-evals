@@ -25,14 +25,33 @@ type Intro = IntroBase & (
         status: string;
       };
     }
+  | {
+      variant: 'overview';
+      study: {
+        model: string;
+        foundation: string;
+        score: string;
+        benchmark: string;
+        referenceCount: string;
+        referenceLabel: string;
+      };
+    }
 );
 
 /** Reader-facing context, not additional evaluation evidence. */
 export const pageIntros: Record<string, Intro> = {
   '': {
-    summary: 'How close can local AI come to the frontier? We measure practical ability, compare like-for-like evidence, and show where the gaps remain.',
-    caption: 'From an instruction to inspectable evidence.',
-    steps: [['Task', 'Give the model clear instructions'], ['Local model', 'Run it through LM Studio'], ['Answer check', 'Record what passed—and what it means']],
+    summary: 'Splash is Inco AI’s local inference engine. Here it runs the Qwen Team’s Qwen3.8-27B model through LM Studio on a Mac, while Racecraft Lab independently measures the result.',
+    variant: 'overview',
+    caption: 'One measured local result, shown beside source-labeled frontier context.',
+    study: {
+      model: 'Splash + Qwen3.8-27B',
+      foundation: 'Inco AI runtime · Qwen Team model · LM Studio',
+      score: '54.55%',
+      benchmark: 'GPQA Diamond accuracy',
+      referenceCount: '20',
+      referenceLabel: 'published frontier observations · directional',
+    },
   },
   dashboard: {
     summary: 'Splash scored 54.55% accuracy on the full 198-question GPQA Diamond benchmark. All 198 questions completed with no execution errors.',

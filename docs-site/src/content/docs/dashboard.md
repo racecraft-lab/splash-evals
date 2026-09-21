@@ -22,17 +22,39 @@ The local Splash / Qwen3.8 deployment completed **198 of 198** questions with **
 
 ## Evaluation card
 
-| Field | Reviewed public record |
-|---|---|
-| Model under test | Splash / Qwen3.8, served locally by LM Studio as `racecraft-splash-local` |
-| Benchmark | GPQA Diamond, EvalScope built-in adapter, evaluation version `v1.0` |
-| Scope | Full 198-question `train` split, `default` subset, zero-shot |
-| Result | **54.55% accuracy** (54.6% rounded to one decimal place) |
-| Execution | 198 requested, 198 succeeded, 0 errored |
-| Reasoning condition | OpenAI-compatible `reasoning_effort: medium` |
-| Generation | Maximum 4,096 output tokens, batch size 1, retries 0 |
-| Runner | EvalScope 1.12.0 through LM Studio's local OpenAI-compatible endpoint |
-| Public evidence | Aggregate result and provenance hashes only; no prompts, responses, or reasoning traces |
+The essentials are up front. Open the run details when you need to inspect the exact test condition.
+
+<dl class="evaluation-summary">
+  <div>
+    <dt>System tested</dt>
+    <dd><strong>Splash / Qwen3.8</strong><span>Local LM Studio alias: <code>racecraft-splash-local</code></span></dd>
+  </div>
+  <div>
+    <dt>Benchmark</dt>
+    <dd><strong>GPQA Diamond</strong><span>Full 198-question evaluation</span></dd>
+  </div>
+  <div class="primary-metric">
+    <dt>Accuracy</dt>
+    <dd><strong>54.55%</strong><span>54.6% rounded to one decimal</span></dd>
+  </div>
+  <div>
+    <dt>Completion</dt>
+    <dd><strong>198 / 198</strong><span>198 requested, 198 succeeded, 0 errored</span></dd>
+  </div>
+</dl>
+
+<details class="evaluation-details">
+<summary>View run configuration and evidence boundary</summary>
+
+<dl class="evaluation-metadata">
+  <div><dt>Dataset and scope</dt><dd>GPQA Diamond via EvalScope's built-in adapter, evaluation version <code>v1.0</code>; <code>train</code> split, <code>default</code> subset, zero-shot.</dd></div>
+  <div><dt>Reasoning condition</dt><dd>OpenAI-compatible <code>reasoning_effort: medium</code>.</dd></div>
+  <div><dt>Generation</dt><dd>Maximum 4,096 output tokens, batch size 1, retries 0.</dd></div>
+  <div><dt>Runner</dt><dd>EvalScope 1.12.0 through LM Studio's local OpenAI-compatible endpoint.</dd></div>
+  <div><dt>Public evidence</dt><dd>Aggregate result and provenance hashes only; no prompts, responses, or reasoning traces.</dd></div>
+</dl>
+
+</details>
 
 [Read the complete method](/splash-evals/methodology/)
 
@@ -57,14 +79,17 @@ Do not subtract, average, or order these values to claim an exact gap or ranking
   <div class="explorer-heading">
     <p class="explorer-eyebrow">Interactive evidence view</p>
     <h3 id="gpqa-explorer-title">Explore the reported scores</h3>
-    <p id="gpqa-explorer-context">Compare where each reported score sits on the same 0–100 scale. Model order follows the evidence record—not score rank—and every external value remains directional context rather than a protocol-matched result.</p>
+    <p id="gpqa-explorer-context">Scan every reported score on one 0–100 scale. Splash stays pinned as the local reference while the filters change which source-labeled observations appear.</p>
   </div>
   <div class="explorer-controls" data-explorer-controls hidden></div>
   <div class="explorer-plot" data-explorer-plot>
-    <p>The complete source-labeled comparison is available in the table below.</p>
+    <p>The complete source-labeled comparison is available in the expandable source table below.</p>
   </div>
   <div class="explorer-detail" data-explorer-detail hidden aria-live="polite"></div>
 </div>
+
+<details class="comparison-record">
+<summary>View the complete 21-row source table</summary>
 
 <p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
 
@@ -98,6 +123,8 @@ Do not subtract, average, or order these values to claim an exact gap or ranking
 
 Repeated model names are separate observations under different conditions. They demonstrate why this is a source-labeled comparison board rather than a ranking.
 
+</details>
+
 [Inspect the primary sources and transcription status](/splash-evals/sources/)
 
 </section>
@@ -108,17 +135,25 @@ Repeated model names are separate observations under different conditions. They 
 
 Performance describes this local run, not model quality.
 
-| Measure | Result |
-|---|---:|
-| Total wall-clock time | 2 h 25 m 16 s |
-| Average request latency | 43.95 s |
-| Median request latency | 41.80 s |
-| 90th percentile latency | 72.49 s |
-| Average output throughput | 64.13 tokens/s |
-| Average output length | 2,818 tokens |
-| Total tokens processed | 612,907 |
+<dl class="performance-summary">
+  <div><dt>Wall-clock time</dt><dd><strong>2 h 25 m 16 s</strong><span>Complete 198-question run</span></dd></div>
+  <div class="primary-metric"><dt>Output throughput</dt><dd><strong>64.13 tokens/s</strong><span>Average across the run</span></dd></div>
+  <div><dt>Tokens processed</dt><dd><strong>612,907</strong><span>Total input and output volume</span></dd></div>
+</dl>
+
+<details class="performance-details">
+<summary>View latency and output details</summary>
+
+<dl class="performance-metadata">
+  <div><dt>Average request latency</dt><dd>43.95 s</dd></div>
+  <div><dt>Median request latency</dt><dd>41.80 s</dd></div>
+  <div><dt>90th percentile latency</dt><dd>72.49 s</dd></div>
+  <div><dt>Average output length</dt><dd>2,818 tokens</dd></div>
+</dl>
 
 Time to first token and time per output token were not available from this compatible endpoint, so they are not estimated here.
+
+</details>
 
 </section>
 

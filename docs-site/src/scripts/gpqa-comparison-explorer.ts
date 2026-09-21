@@ -69,34 +69,28 @@ function readObservations(root: HTMLElement): Observation[] {
     .filter((record): record is Observation => record !== null);
 }
 
-function addRadioGroup(
+function addSelect(
   controls: HTMLElement,
   name: string,
-  legendText: string,
+  labelText: string,
   options: Array<[string, string]>,
   selected: string,
 ): void {
-  const fieldset = document.createElement('fieldset');
-  fieldset.className = 'explorer-filter';
-  const legend = document.createElement('legend');
-  legend.textContent = legendText;
-  fieldset.append(legend);
-  const choices = document.createElement('div');
-  choices.className = 'explorer-choices';
-  for (const [value, labelText] of options) {
-    const label = document.createElement('label');
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = name;
-    input.value = value;
-    input.checked = value === selected;
-    const labelCopy = document.createElement('span');
-    labelCopy.textContent = labelText;
-    label.append(input, labelCopy);
-    choices.append(label);
+  const label = document.createElement('label');
+  label.className = 'explorer-filter';
+  const labelCopy = document.createElement('span');
+  labelCopy.textContent = labelText;
+  const select = document.createElement('select');
+  select.name = name;
+  for (const [value, optionText] of options) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = optionText;
+    option.selected = value === selected;
+    select.append(option);
   }
-  fieldset.append(choices);
-  controls.append(fieldset);
+  label.append(labelCopy, select);
+  controls.append(label);
 }
 
 function detailItem(term: string, description: string): HTMLDivElement {
@@ -117,23 +111,26 @@ function showDetail(detail: HTMLElement, record: Observation): void {
   eyebrow.textContent = 'Selected observation';
   const title = document.createElement('h4');
   title.textContent = record.condition;
+  const score = document.createElement('strong');
+  score.className = 'explorer-detail-score';
+  score.textContent = record.scoreLabel;
+  score.setAttribute('aria-label', `Reported score ${record.scoreLabel}`);
   const facts = document.createElement('dl');
   facts.append(
-    detailItem('Reported score', record.scoreLabel),
-    detailItem('Evidence class', SOURCE_LABELS[record.sourceClass]),
+    detailItem('Evidence', SOURCE_LABELS[record.sourceClass]),
+    detailItem('Published condition', record.evidence),
     detailItem(
-      'Comparison status',
+      'Comparison',
       record.sourceClass === 'measured'
         ? 'Measured locally here; external protocols are not matched.'
         : 'Directional context—not protocol matched to the local run.',
     ),
-    detailItem('Published condition', record.evidence),
   );
   const link = document.createElement('a');
   link.href = record.sourceUrl;
   link.textContent = record.sourceClass === 'measured' ? 'Review the evidence record' : 'Open the cited source';
   if (/^https?:/.test(record.sourceUrl)) link.rel = 'noreferrer';
-  detail.append(eyebrow, title, facts, link);
+  detail.append(eyebrow, title, score, facts, link);
 }
 
 function initializeExplorer(root: HTMLElement): void {
@@ -146,20 +143,20 @@ function initializeExplorer(root: HTMLElement): void {
 
   root.dataset.enhanced = 'true';
   controls.replaceChildren();
-  addRadioGroup(
+  addSelect(
     controls,
     'gpqa-view',
-    'Evidence view',
+    'Show',
     [
-      ['overview', 'Curated overview'],
+      ['overview', 'All GPT + independent Claude'],
       ['all', 'All published observations'],
     ],
     'overview',
   );
-  addRadioGroup(
+  addSelect(
     controls,
     'gpqa-family',
-    'Model family',
+    'Models',
     [
       ['all', 'All models'],
       ['claude', 'Claude'],
@@ -188,8 +185,8 @@ function initializeExplorer(root: HTMLElement): void {
   let selectedId = observations[0].id;
 
   const render = (): void => {
-    const view = controls.querySelector<HTMLInputElement>('input[name="gpqa-view"]:checked')?.value;
-    const family = controls.querySelector<HTMLInputElement>('input[name="gpqa-family"]:checked')?.value;
+    const view = controls.querySelector<HTMLSelectElement>('select[name="gpqa-view"]')?.value;
+    const family = controls.querySelector<HTMLSelectElement>('select[name="gpqa-family"]')?.value;
     const visible = observations.filter((record) => {
       const overview =
         view === 'all' ||
@@ -200,12 +197,17 @@ function initializeExplorer(root: HTMLElement): void {
       return overview && inFamily;
     });
     if (!visible.some((record) => record.id === selectedId)) selectedId = visible[0]?.id ?? '';
-    status.textContent = `Showing ${visible.length} of ${observations.length} observations. Splash remains visible as the local reference; rows are not ranked.`;
+    const scope =
+      view === 'all'
+        ? 'Every source-labeled observation is shown.'
+        : 'This view shows all GPT reports and one independent Epoch score for each Claude model.';
+    status.textContent = `${scope} Showing ${visible.length} of ${observations.length}. Splash remains pinned; rows are not ranked.`;
     list.replaceChildren();
 
     for (const record of visible) {
       const item = document.createElement('li');
       item.dataset.sourceClass = record.sourceClass;
+      if (record.sourceClass === 'measured') item.className = 'local-reference';
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'explorer-observation';
