@@ -25,7 +25,7 @@ hero:
 
 ## One public benchmark, one concrete answer
 
-We ran the complete **198-question GPQA Diamond** benchmark against Splash / Qwen3.8 on this Mac through LM Studio. The local model scored **54.6% accuracy**. All 198 requests completed.
+We ran the complete **198-question GPQA Diamond** benchmark against Splash / Qwen3.8 on this Mac through LM Studio. The local model scored **54.55% accuracy** (**54.6% rounded**). All 198 requests completed.
 
 That is a real capability result for one difficult science-reasoning benchmark. It is not a general intelligence score, and it does not prove that Splash is equivalent to a frontier model.
 
@@ -40,7 +40,7 @@ That is a real capability result for one difficult science-reasoning benchmark. 
 <div class="reader-columns">
 <div>
 
-### 54.6%
+### 54.55%
 
 Accuracy on the full GPQA Diamond set used by EvalScope 1.12.0.
 
@@ -67,9 +67,9 @@ Average output generation speed. The average request took 43.95 seconds.
 
 ## What the frontier numbers tell us
 
-OpenAI reports GPQA Diamond scores above 92% for GPT-5.5 and the GPT-5.6 family. Those figures show the scale of current frontier performance, but they were produced under publisher-controlled conditions that do not disclose every field needed for a matched comparison.
+Published and independently reproduced GPQA figures place the requested GPT-5.5, GPT-5.6, and Claude 4/5 roster well above the measured local result. Those figures show the scale of current frontier performance, but their prompts, reasoning budgets, sampling, answer extraction, and repetition policies differ.
 
-So this site shows them as **directional context**, not as a head-to-head ranking or an exact performance gap. Claude Sonnet 5 and Opus 5 remain in the requested comparison roster, but no GPQA Diamond score was identified in the official release pages reviewed for this project.
+So this site labels every external number by source and condition and presents it as **directional context**, not as a head-to-head ranking or an exact performance gap. A provider figure and an independent Epoch AI figure may differ for the same model without either being a transcription error.
 
 [Read the comparison table](/splash-evals/dashboard/#benchmark-comparison)
 
