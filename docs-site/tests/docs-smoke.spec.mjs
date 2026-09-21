@@ -13,6 +13,7 @@ const ROUTES = [
   ['/historical-frontier-comparison/', 'How close is Splash to the frontier?'],
   ['/frontier-catalog/', 'Guide to the historical catalog'],
   ['/frontier-verification/', 'Were the source numbers copied correctly?'],
+  ['/capability-readiness/', 'Capability-run readiness'],
   ['/glossary/', 'A short guide to the terms'],
 ];
 const routeUrl = (path) => path === '/' ? './' : `.${path}`;
@@ -84,6 +85,17 @@ test('novice journey keeps setup validation under methodology, not capability re
   await page.keyboard.press('Enter');
   await expect(page.locator('details')).toHaveAttribute('open', '');
   await expect(page.locator('details')).toContainText('72.2%–100.0%');
+});
+
+test('readiness record distinguishes preparation from approval, execution, and results', async ({ page }) => {
+  await page.goto(routeUrl('/capability-readiness/'));
+  await expect(page.locator('input[type="checkbox"]:checked')).toHaveCount(13);
+  await expect(page.locator('input[type="checkbox"]:not(:checked)')).toHaveCount(3);
+  await expect(page.getByText('Approve the held-out launch explicitly.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Execute once under the frozen contract.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Prepare and review the public export.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No held-out request has been sent.')).toBeVisible();
+  await expect(page.getByText('Capability results and supported practical-task claims remain unavailable')).toBeVisible();
 });
 
 test('results distinguish requested frontier targets from historical scores and unmeasured benchmarks', async ({ page }) => {
