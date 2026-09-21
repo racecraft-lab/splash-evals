@@ -272,6 +272,7 @@ test('operations explains the local model alias and trust boundary without a mai
   await expect(steps.nth(0)).toBeFocused();
   await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'true');
   await expect(diagram.locator('.evidence-destination')).toHaveCount(3);
+  await diagram.locator('.boundary-disclosure summary').click();
   await expect(diagram).toContainText('Allowlist + review gate');
   await expect(diagram).toContainText('has no route back to this Mac');
   await expect(diagram).toContainText(
@@ -293,10 +294,12 @@ test('operations flow remains compact and continuous at tablet width', async ({ 
     }),
   );
   expect(boxes).toHaveLength(4);
-  for (let index = 1; index < boxes.length; index += 1) {
-    expect(boxes[index].y).toBeCloseTo(boxes[0].y, 0);
-    expect(boxes[index].x).toBeGreaterThan(boxes[index - 1].x);
-  }
+  expect(boxes[1].y).toBeCloseTo(boxes[0].y, 0);
+  expect(boxes[1].x).toBeGreaterThan(boxes[0].x);
+  expect(boxes[2].x).toBeCloseTo(boxes[1].x, 0);
+  expect(boxes[2].y).toBeGreaterThan(boxes[1].y);
+  expect(boxes[3].y).toBeCloseTo(boxes[2].y, 0);
+  expect(boxes[3].x).toBeCloseTo(boxes[0].x, 0);
 });
 
 test('operations architecture remains fully readable without JavaScript', async ({
@@ -518,6 +521,7 @@ test('reader text and links meet AA contrast on both themed section surfaces', a
 });
 
 test('reduced motion disables link transitions without hiding result content', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-09-21T10:00:00Z') });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(routeUrl('/dashboard/'));
   await expect(page.locator('.document-sheet a').first()).toHaveCSS('transition-duration', '0s');
@@ -525,9 +529,13 @@ test('reduced motion disables link transitions without hiding result content', a
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
 
   await page.goto(routeUrl('/operations/'));
+  await page.clock.pauseAt(new Date('2026-09-21T10:01:00Z'));
   const diagram = page.locator('.system-boundary');
   await expect(diagram.locator('.flow-trigger').first()).toHaveCSS('transition-duration', '0s');
   await diagram.getByRole('button', { name: 'Play request' }).click();
-  await expect(diagram.locator('[data-flow-status]')).toContainText('Request path complete');
+  await expect(diagram.locator('[data-flow-trigger]').first()).toHaveAttribute('aria-expanded', 'true');
+  await expect(diagram.locator('.route-packet').first()).toHaveCSS('animation-name', 'none');
+  await page.clock.runFor(32_000);
+  await expect(diagram.locator('[data-flow-status]')).toContainText('Sequence complete');
   await expect(diagram.locator('[data-flow-trigger]').nth(3)).toHaveAttribute('aria-expanded', 'true');
 });

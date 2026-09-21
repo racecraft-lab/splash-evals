@@ -1,0 +1,116 @@
+/* Keep the infographic's spacing independent of Markdown sibling margins. */
+.sl-markdown-content .system-boundary {
+  container: execution / inline-size;
+  margin: 1.5rem 0 0;
+  padding: clamp(.85rem, 2.5vw, 1.5rem);
+  border: 1px solid var(--reader-line);
+  border-top: 3px solid var(--reader-rule);
+  background: var(--reader-paper);
+  color: var(--sl-color-text);
+
+  * { box-sizing: border-box; margin: 0; min-width: 0; }
+  .boundary-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+  .boundary-eyebrow, .flow-kicker, .destination-label { color: var(--sl-color-text-accent); font: 700 .7rem/1.5 'Space Grotesk', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  h3 { margin-top: .3rem; font: 650 clamp(1.4rem, 3vw, 1.85rem)/1.2 'Space Grotesk', sans-serif; }
+  .boundary-description { margin-top: .5rem; color: var(--sl-color-gray-2); font-size: .9rem; line-height: 1.5; }
+  .boundary-status { flex-shrink: 0; border: 1px solid var(--reader-line); border-radius: 1rem; padding: .35rem .7rem; color: var(--sl-color-gray-2); font-size: .7rem; line-height: 1.5; }
+  .flow-controls { display: grid; gap: .65rem; margin-top: 1.25rem; }
+  .flow-controls[hidden] { display: none; }
+  .flow-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+  .flow-actions button { display: grid; place-items: center; min-height: 2.75rem; padding: .6rem .4rem; border: 1px solid var(--reader-line); border-radius: .3rem; background: var(--reader-paper); color: var(--sl-color-text); font: 650 .82rem/1.3 'Space Grotesk', sans-serif; cursor: pointer; transition: border-color 180ms ease; }
+  .flow-actions .flow-play { background: var(--sl-color-text-accent); border-color: var(--sl-color-text-accent); color: var(--sl-color-bg); }
+  .flow-actions button:hover { border-color: var(--sl-color-text-accent); background: var(--reader-cool); color: var(--sl-color-text); }
+  :is(button, summary):focus-visible { outline: 2px solid var(--sl-color-text-accent); outline-offset: 3px; }
+  .flow-status { min-height: 2.6em; color: var(--sl-color-gray-2); font-size: .78rem; line-height: 1.3; }
+  .local-boundary { margin-top: .75rem; padding: 1rem; border: 1px dashed var(--reader-line); border-radius: .5rem; background: var(--reader-cool); }
+  .boundary-label { display: flex; justify-content: space-between; gap: .75rem; font: 650 .78rem/1.4 'Space Grotesk', sans-serif; }
+  .boundary-label span { color: var(--sl-color-gray-2); font-weight: 400; text-align: right; }
+  .request-map { position: relative; margin-top: 1rem; }
+  .request-routes { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; }
+  .route-track { stroke: var(--reader-line); stroke-width: 1.5; vector-effect: non-scaling-stroke; marker-end: url(#request-arrow); }
+  .request-routes { color: var(--sl-color-text-accent); }
+  .route-packet { display: none; stroke: var(--sl-color-text-accent); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 7 93; vector-effect: non-scaling-stroke; animation: request-travel 8s linear infinite paused; }
+  .request-map-caption { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: max-content; max-width: 65%; padding: .3rem .6rem; border-radius: 1rem; background: var(--reader-cool); color: var(--sl-color-gray-2); font-size: .7rem; line-height: 1.3; text-align: center; }
+  .system-flow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 1fr 1fr; gap: 3rem 2.5rem; padding: 0; list-style: none; }
+  .system-flow li { position: relative; }
+  .system-flow li:nth-child(3) { grid-column: 2; grid-row: 2; }
+  .system-flow li:nth-child(4) { grid-column: 1; grid-row: 2; }
+  .flow-trigger { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; gap: .75rem; width: 100%; height: 100%; min-height: 6.5rem; padding: .85rem; border: 1px solid var(--reader-line); border-radius: .45rem; background: var(--reader-paper); color: inherit; text-align: left; cursor: pointer; transition: border-color 180ms ease, box-shadow 180ms ease; }
+  .flow-trigger:hover { border-color: var(--sl-color-text-accent); }
+  .flow-trigger { position: relative; }
+  .flow-trigger[aria-current='step']::after { content: ''; position: absolute; left: .85rem; right: .85rem; bottom: .3rem; height: 2px; border-radius: 1px; background: var(--sl-color-text-accent); transform-origin: left; animation: stage-progress 8s linear infinite paused; }
+  .flow-trigger[aria-current='step'] { border-color: var(--sl-color-text-accent); box-shadow: 0 0 0 2px var(--sl-color-text-accent); }
+  .flow-icon { display: block; width: 2.5rem; height: 2.5rem; fill: none; stroke: var(--sl-color-text-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .system-flow li:nth-child(3) .flow-icon { stroke: var(--reader-context); }
+  .flow-node-copy { display: grid; gap: .3rem; }
+  .flow-node-context { grid-row: 3; grid-column: 1; visibility: hidden; color: var(--sl-color-text-accent); font: 650 .74rem/1.4 'Space Grotesk', sans-serif; }
+  .flow-node-note { grid-row: 3; grid-column: 1; }
+  .flow-trigger[aria-current='step'] .flow-node-note { visibility: hidden; }
+  .flow-trigger[aria-current='step'] .flow-node-context { visibility: visible; animation: context-reveal 300ms ease-out both; }
+  .flow-trigger[aria-current='step'] .icon-action { stroke-dasharray: 1; animation: icon-draw 1.6s ease-out both; }
+  .flow-role { color: var(--sl-color-gray-2); font: 650 .68rem/1.35 'Space Grotesk', sans-serif; }
+  .flow-node-copy strong { font: 650 1rem/1.25 'Space Grotesk', sans-serif; }
+  .flow-node-note { color: var(--sl-color-gray-2); font: 400 .74rem/1.4 'Space Grotesk', sans-serif; }
+  .flow-console { margin-top: 1.25rem; border-top: 1px solid var(--reader-line); }
+  .flow-detail { display: grid; align-content: start; gap: 1rem; padding-top: 1rem; }
+  .flow-detail h4 { margin-top: .25rem; font: 650 1.05rem/1.4 'Space Grotesk', sans-serif; }
+  .flow-detail p:not(.flow-kicker) { margin-top: .35rem; font-size: .85rem; line-height: 1.55; color: var(--sl-color-gray-2); }
+  .flow-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .flow-facts > div { padding-top: .6rem; border-top: 2px solid var(--reader-line); }
+  .flow-facts dt { color: var(--sl-color-gray-2); font-size: .7rem; line-height: 1.4; }
+  .flow-facts dd { margin-top: .3rem; padding: 0; font-size: .82rem; line-height: 1.5; }
+  .flow-facts code { white-space: nowrap; font-size: .78rem; }
+  .boundary-disclosure { margin-top: 1rem; padding: 0; border: 0; background: none; }
+  .boundary-disclosure summary { padding: .7rem 0; min-height: 2.75rem; font-size: .85rem; line-height: 1.5; cursor: pointer; color: var(--sl-color-text-accent); }
+  .evidence-boundary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin-top: .5rem; }
+  .evidence-destination { padding: .85rem; border-top: 2px solid var(--sl-color-text-accent); background: var(--reader-cool); }
+  .evidence-destination h4 { margin-top: .35rem; font: 650 .9rem/1.4 'Space Grotesk', sans-serif; }
+  .evidence-destination p { margin-top: .35rem; font-size: .8rem; line-height: 1.5; color: var(--sl-color-gray-2); }
+  .remote-guard, .ci-boundary { margin-top: .75rem; padding: .75rem; border-left: 2px solid var(--reader-rule); font-size: .8rem; line-height: 1.55; }
+  figcaption { margin-top: .75rem; color: var(--sl-color-gray-2); font-size: .75rem; line-height: 1.5; }
+  &[data-enhanced='true'] .flow-console { display: grid; }
+  &[data-enhanced='true'] .flow-detail { grid-area: 1 / 1; }
+  &[data-enhanced='true'] .flow-detail[hidden] { display: grid; visibility: hidden; pointer-events: none; }
+  &[data-playing='true'] .route-packet { animation-play-state: running; }
+  &[data-playing='true'] .flow-trigger[aria-current='step']::after { animation-play-state: running; }
+  &[data-stage='0'] [data-flow-route='0'], &[data-stage='1'] [data-flow-route='1'],
+  &[data-stage='2'] [data-flow-route='2'], &[data-stage='3'] [data-flow-route='3'] { display: block; }
+}
+@keyframes request-travel { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
+@keyframes icon-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes context-reveal { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stage-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (max-width: 49.99rem) {
+  .sl-markdown-content .reader-section:has(> .system-boundary) { padding: 0; background: none; }
+}
+@container execution (max-width: 32rem) {
+  .sl-markdown-content .system-boundary {
+    .boundary-heading { flex-direction: column; }
+    .boundary-status { display: none; }
+    .system-flow { gap: 2.75rem 2rem; }
+    .flow-trigger { grid-template-columns: 1fr; gap: .6rem; padding: .8rem; }
+    .flow-facts { grid-template-columns: 1fr; gap: .5rem; }
+    .flow-facts > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: .75rem; border-top-width: 1px; align-items: baseline; }
+    .flow-facts dd { margin: 0; }
+    .evidence-boundary { grid-template-columns: 1fr; }
+  }
+}
+@container execution (max-width: 23rem) {
+  .sl-markdown-content .system-boundary {
+    .local-boundary { padding: .75rem; }
+    .system-flow { grid-template-columns: 1fr; grid-template-rows: none; gap: 1.75rem; }
+    .system-flow li:nth-child(n) { grid-column: auto; grid-row: auto; }
+    .flow-trigger { grid-template-columns: 2rem minmax(0, 1fr); min-height: 5.75rem; padding: .75rem; gap: .65rem; }
+    .flow-icon { width: 2rem; height: 2rem; }
+    .request-map-caption, [data-flow-track='3'], .request-routes [data-flow-route='3'] { display: none; }
+    .boundary-label { flex-direction: column; gap: .2rem; }
+    .boundary-label span { text-align: left; }
+    .flow-facts > div { grid-template-columns: 1fr; gap: .25rem; }
+    .flow-actions { gap: .35rem; }
+    .flow-actions button { font-size: .75rem; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-markdown-content .system-boundary *, .sl-markdown-content .system-boundary .flow-trigger::after { animation: none !important; transition: none !important; }
+  .sl-markdown-content .system-boundary .flow-trigger::after { display: none; }
+}
