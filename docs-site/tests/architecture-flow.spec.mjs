@@ -106,10 +106,16 @@ test('infographic components fit, stay balanced and keep a stable detail height 
         expect(geometry.height).toBeCloseTo(detailHeight, 0);
       }
       await diagram.locator('summary').click();
+      expect(await diagram.locator('summary').evaluate((el) => parseFloat(getComputedStyle(el).paddingRight))).toBeGreaterThanOrEqual(28);
       for (const card of await diagram.locator('.evidence-destination').all()) {
         expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       }
       await diagram.locator('summary').click();
+      const nav = await page.locator('.primary-nav a').evaluateAll((links) => links.map((link) => {
+        const box = link.getBoundingClientRect();
+        return { left: box.left, right: box.right };
+      }));
+      for (let index = 1; index < nav.length; index += 1) expect(nav[index].left - nav[index - 1].right).toBeGreaterThanOrEqual(6);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
   }

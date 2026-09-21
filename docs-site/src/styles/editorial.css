@@ -321,3 +321,7 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
   .evidence-track { grid-template-columns: 1fr; }
 }
 @media (max-width: 23rem) { .identity .project-name { display: none; } }
+@media (max-width: 30rem) {
+  .primary-nav { display: grid; grid-template-columns: repeat(5, minmax(min-content, 1fr)); gap: .4rem; }
+  .primary-nav a { display: flex; align-items: center; justify-content: center; min-height: 2.75rem; text-align: center; font-size: .75rem; line-height: 1.4; }
+}
