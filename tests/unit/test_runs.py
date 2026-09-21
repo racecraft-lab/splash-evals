@@ -619,6 +619,59 @@ def test_plan_records_native_runtime_reasoning_and_practical_identity(
     assert plan["historical_comparison_eligibility"]["eligible_for_frontier_deltas"] is False
 
 
+def test_openai_compatible_reasoning_evidence_separates_effort_from_native_mode() -> None:
+    evidence, blockers = runs._reasoning_evidence(
+        {
+            "reasoning_control": {
+                "mechanism": "openai-compatible-reasoning-effort",
+                "desired_mode": "on",
+                "desired_effort": "medium",
+                "transmitted": "medium",
+            }
+        },
+        {
+            "native_identity": {
+                "reasoning_allowed": ["off", "on"],
+                "reasoning_default": "on",
+            }
+        },
+    )
+
+    assert blockers == []
+    assert evidence == {
+        "requested": "medium",
+        "transmitted": "medium",
+        "supported_options": ["none", "minimal", "low", "medium", "high", "xhigh"],
+        "model_supported_modes": ["off", "on"],
+        "default": "on",
+        "effective_status": "not_attempted",
+    }
+
+
+def test_openai_core_transport_blocks_native_reasoning_contract_during_planning() -> None:
+    _evidence, blockers = runs._reasoning_evidence(
+        {
+            "reasoning_control": {
+                "mechanism": "native-v1",
+                "desired_mode": "on",
+                "desired_effort": None,
+                "transmitted": "on",
+            }
+        },
+        {
+            "native_identity": {
+                "reasoning_allowed": ["off", "on"],
+                "reasoning_default": "on",
+            }
+        },
+        transport="openai-compatible-reasoning-effort",
+    )
+
+    assert blockers == [
+        "Core EvalScope transport requires an OpenAI-compatible reasoning-effort contract."
+    ]
+
+
 def test_served_model_evidence_hashes_actual_response_instance() -> None:
     expected = "selected-instance"
     actual = "different-instance"
@@ -711,6 +764,7 @@ def test_core_plan_uses_sanitized_evalscope_readiness_without_synthetic_tasks(
         "blockers": [],
         "metadata": {
             "runner": "evalscope-1.12",
+            "evalscope_version": "1.12.0",
             "total_samples": 60,
             "manifest_set_sha256": "a" * 64,
         },
@@ -737,7 +791,7 @@ def test_core_plan_uses_sanitized_evalscope_readiness_without_synthetic_tasks(
     monkeypatch.setattr(
         runs,
         "_reasoning_evidence",
-        lambda *args: ({"transmitted": "off"}, []),
+        lambda *args, **kwargs: ({"transmitted": "medium"}, []),
     )
     monkeypatch.setattr(runs, "inspect_core_readiness", lambda *args, **kwargs: readiness)
     monkeypatch.setattr(
@@ -761,6 +815,15 @@ def test_core_plan_uses_sanitized_evalscope_readiness_without_synthetic_tasks(
     assert plan["selection_evidence"]["manifest_source"] == "external"
     assert plan["historical_protocol"]["sample_id_manifest"] == "a" * 64
     assert plan["historical_protocol"]["sample_count"] == 60
+    assert plan["runtime_evidence"] == {
+        "transport": "evalscope_openai_api",
+        "endpoint": "/v1/chat/completions",
+        "cli_version": None,
+        "app_version": None,
+        "engine": None,
+        "engine_version": None,
+        "evalscope_version": "1.12.0",
+    }
     assert plan["output_directory"].startswith("external-state://runs/")
     assert str(state) not in json.dumps(plan)
 

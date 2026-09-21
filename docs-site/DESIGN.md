@@ -1,6 +1,6 @@
 # Reader-first design contract
 
-The site answers, in order: what this project is, what actually ran, what we learned, and what remains unknown. Overview, Results, How we test, and Run it yourself are the primary destinations. Technical records are supporting evidence, not the first reading task.
+The site answers, in order: what this project is, what actually ran, what we learned, and what remains unknown. Overview, Results, How we tested, Run it yourself, and Sources are the five reader-facing destinations. Technical records are supporting repository evidence, not separate reading paths.
 
 ## Brand and color rhythm
 
@@ -18,13 +18,13 @@ Text must meet [WCAG 2.2 contrast minimums](https://www.w3.org/WAI/WCAG22/Unders
 
 ## Evidence presentation
 
-Page openings pair an editorial headline with a compact page-specific explanation. Process pages use a numbered path; Results separates reference review, unmeasured local runs, and unsupported gap claims; the setup-check report alone shows the qualification aggregate. These are static explanatory graphics, not simulated live instruments. The homepage concept's redundant icon column was omitted to keep the diagram readable at the narrower documentation width. All diagram copy is real accessible HTML, with no generated image used as UI. The compact Splash/Evals typographic lockup is secondary to the official Racecraft SVG; the SVG remains unchanged.
+Page openings pair an editorial headline with a compact page-specific explanation. Process pages use a numbered path; Results shows the measured 54.6% GPQA Diamond result, runtime performance, directional frontier context, and unsupported-claim boundary. These are static explanatory graphics, not simulated live instruments. The homepage concept's redundant icon column was omitted to keep the diagram readable at the narrower documentation width. All diagram copy is real accessible HTML, with no generated image used as UI. The compact Splash/Evals typographic lockup is secondary to the official Racecraft SVG; the SVG remains unchanged.
 
-The Results board follows [model-card reporting practice](https://huggingface.co/docs/hub/model-cards) and [HELM's multi-scenario reporting principles](https://crfm.stanford.edu/2022/11/17/helm.html), without claiming official certification or an overall model score. Historical scores are grouped by benchmark and metric. Unknown IFEval variants, unresolved GPQA splits, dates, extraction caveats, and Aider attempt semantics stay visible. Unmeasured local results are text, never zero-length bars. The historical tables are checked against all 15 source catalog records by `tests/unit/test_dashboard_references.py`.
+The Results board follows [model-card reporting practice](https://huggingface.co/docs/hub/model-cards) and [HELM's multi-scenario reporting principles](https://crfm.stanford.edu/2022/11/17/helm.html), without claiming official certification or an overall model score. Capability and runtime performance stay separate. Historical scores share a benchmark and metric family but remain directional until their full protocols align. Unknown values are text, never zero-length bars.
 
-`docs/qualification-summary.json` is the single presentation record for the already reviewed aggregate. It is not a new raw-data export. The generator inserts a shared finding, count table, and technical classification into canonical Markdown markers. Its validator rejects missing counts, contradictory classifications, and incompatible success wording. Keep the adjacent capability and historical-comparison caveats visible.
+`results/public/gpqa-diamond-splash-local-2026-09-20.json` is the reviewed presentation record. It contains aggregates and provenance hashes only. Its validator rejects missing values, raw/private field names, and local absolute paths.
 
-Do not turn planned task ceilings into completed coverage. Do not rank models, show comparative bars, or infer per-task outcomes from this aggregate. Preserve all existing page URLs. Source-number verification means accurate transcription, not independent reproduction or comparable testing.
+Do not turn one benchmark into broad capability coverage. Do not rank models, show comparative bars, or infer equivalence or exact gaps from publisher-reported context. Retired reader URLs redirect to the closest retained section. Source-number verification means accurate transcription, not independent reproduction or comparable testing.
 
 ## Section hierarchy and feedback
 

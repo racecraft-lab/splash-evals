@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "result_id": "gpqa-diamond-splash-local-2026-09-20",
+  "purpose": "public_capability_result",
+  "benchmark": {
+    "name": "GPQA Diamond",
+    "adapter": "gpqa_diamond",
+    "dataset_hub": "modelscope",
+    "dataset_id": "AI-ModelScope/gpqa_diamond",
+    "dataset_revision": null,
+    "evaluation_version": "v1.0",
+    "split": "train",
+    "subset": "default",
+    "few_shot_examples": 0,
+    "requested_cases": 198,
+    "succeeded_cases": 198,
+    "errored_cases": 0,
+    "metric": "accuracy",
+    "score": 0.5455
+  },
+  "evaluation": {
+    "framework": "EvalScope",
+    "framework_version": "1.12.0",
+    "reasoning_effort": "medium",
+    "batch_size": 1,
+    "retries": 0,
+    "max_output_tokens": 4096,
+    "stream": false,
+    "seed": 42
+  },
+  "model": {
+    "public_label": "Splash / Qwen3.8",
+    "evaluation_alias": "racecraft-splash-local"
+  },
+  "runtime": {
+    "provider": "LM Studio",
+    "location": "local",
+    "interface": "OpenAI-compatible",
+    "duration_seconds": 8716
+  },
+  "performance": {
+    "latency_seconds": {
+      "average": 43.950018,
+      "standard_deviation": 22.289392,
+      "minimum": 8.581749,
+      "p25": 21.242902,
+      "median": 41.800779,
+      "p75": 65.588142,
+      "p90": 72.486143,
+      "p99": 76.502371,
+      "maximum": 89.420508
+    },
+    "average_output_tokens_per_second": 64.13,
+    "average_requests_per_second": 0.0228,
+    "average_input_tokens": 277,
+    "average_output_tokens": 2818.489899,
+    "total_input_tokens": 54846,
+    "total_output_tokens": 558061,
+    "total_tokens": 612907,
+    "output_token_cap": {
+      "limit": 4096,
+      "cases_at_limit": 81,
+      "total_cases": 198
+    },
+    "time_to_first_token": "unavailable",
+    "time_per_output_token": "unavailable"
+  },
+  "provenance": {
+    "report_sha256": "5863ba54c2ec07cb1e508585d8e2129e863e1573fda2a23cf2aae241bec5e56a",
+    "task_config_sha256": "f69e7d5ccead9ed80ebcf77eb26f7e5cdfe3e24c3483b9d06db5ef30863420e2",
+    "progress_sha256": "f71604e1b66511b152428fb49e07334602309aaa70afe233b49347ec4f542c69"
+  },
+  "public_evidence_boundary": {
+    "included": "Reviewed aggregate benchmark, execution, performance, and provenance metadata only.",
+    "excluded": [
+      "raw prompts",
+      "raw responses",
+      "reasoning traces",
+      "local paths",
+      "private runtime identifiers"
+    ]
+  },
+  "limitations": [
+    "The upstream dataset revision was not recorded by the resolved adapter.",
+    "81 of 198 cases reached the 4096-token output cap.",
+    "Time to first token and time per output token were unavailable from the compatible endpoint.",
+    "Publisher-reported comparison scores may use protocols that are not identical to this evaluation."
+  ]
+}

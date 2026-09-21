@@ -40,14 +40,15 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .site-utilities { grid-column: 2; grid-row: 1; gap: .75rem; }
 .github-link { font-size: .875rem; color: var(--sl-color-text); }
 .site-utilities site-search button { max-width: 13rem; }
-.page-intro { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.5rem, 4vw, 3rem); padding: clamp(1.3rem, 4vw, 3rem); border-top: 3px solid #dc143c; background: var(--reader-paper); }
+.page-intro { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.5rem, 4vw, 3rem); padding: clamp(1.3rem, 4vw, 3rem); border-top: 3px solid #dc143c; background: var(--reader-paper); box-sizing: border-box; }
+.page-intro > * { min-width: 0; }
 :root[data-has-hero] .page-intro.hero { background: var(--reader-paper); background-image: none; border: 0; border-top: 3px solid #dc143c; border-radius: 0; margin-bottom: 2rem; padding: clamp(1.3rem, 4vw, 3rem); }
 .page-intro h1 { margin: 0; font-size: clamp(2rem, 3.5vw, 3.3rem); line-height: 1.1; letter-spacing: -.04em; text-wrap: balance; }
 .page-intro.home-intro h1 { font-size: clamp(2.3rem, 4.25vw, 3.9rem); }
 .intro-summary { max-width: 48ch; margin-top: 1.35rem; font-size: clamp(1.05rem, 1.65vw, 1.2rem); line-height: 1.65; color: var(--sl-color-gray-2); }
 .intro-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.75rem; }
 .intro-actions .sl-link-button { border-radius: .3rem; font-size: 1rem; }
-.intro-visual { margin: 0; background: var(--reader-cool); padding: clamp(1.25rem, 2.5vw, 2rem); border: 1px solid var(--sl-color-hairline); }
+.intro-visual { margin: 0; background: var(--reader-cool); padding: clamp(1.25rem, 2.5vw, 2rem); border: 1px solid var(--sl-color-hairline); box-sizing: border-box; }
 .intro-visual figcaption { font-size: .85rem; line-height: 1.55; color: var(--sl-color-gray-2); border-top: 1px solid var(--sl-color-hairline); margin-top: 1.4rem; padding-top: 1rem; }
 .intro-steps { list-style: none; padding: 0; margin: 0; counter-reset: intro-step; }
 .intro-steps li { position: relative; display: grid; grid-template-columns: 2rem 1fr; column-gap: .85rem; padding-bottom: 1.6rem; counter-increment: intro-step; }
@@ -168,7 +169,8 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
   .reader-footer { flex-direction: column; gap: 1rem; }
   .table-hint { display: block; }
   .page-intro { grid-template-columns: 1fr; }
-  .intro-visual { max-width: 100%; }
+  .intro-visual { width: 100%; max-width: 100%; }
+  .intro-count { flex-wrap: wrap; }
   .evidence-track { grid-template-columns: 1fr; }
 }
 @media (max-width: 23rem) { .project-name { display: none; } }

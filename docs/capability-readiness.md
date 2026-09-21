@@ -1,6 +1,10 @@
 # Capability-run readiness
 
-This page is the tracked go/no-go record for the first advertised Splash capability run. A
+> **Archived planning record.** This private 60-case, multi-benchmark study was not completed
+> and is no longer a reader-facing site page. It was superseded by the full public GPQA Diamond
+> run documented in [What we found](dashboard.md). The record remains here for protocol history.
+
+This page is the tracked go/no-go record for the planned private Splash capability run. A
 checked repository gate does not substitute for unfinished research preparation, and the
 published post-hoc qualification aggregate is not capability evidence.
 
@@ -52,23 +56,45 @@ which reviewed packet is awaiting approval; it does not disclose or validate the
 6. [x] **Keep coding outside this run.** The initial 60-case study contains no coding tasks.
    Coding remains disabled until the disposable sandbox receives a separate attestation for
    networking, mounts, Docker access, resource bounds, controlled inputs, and teardown.
-7. [x] **Run a controlled qualification smoke check.** Reused, non-held-out cases confirmed the
-   local request and scorer path. The exact headless instance was then requalified for model
-   attribution, local-device evidence, context capacity, single-request execution, and zero
-   retries. This is setup evidence, not a capability result.
-8. [x] **Complete the core dry-run.** Review the full plan without inference: exact manifests,
-   counts, budgets, settings, output location, capability labels, stop conditions, and publication
-   blockers. Any unresolved or inferred field blocks launch.
-9. [ ] **Approve the held-out launch explicitly.** A human operator must review the frozen packet,
-   confirm that held-out items remain unseen and unused for tuning, authorize the bounded request
-   and time budget, and record the approval privately.
-10. [ ] **Execute once under the frozen contract.** Do not tune on held-out outcomes, silently
-    retry, replace failed tasks, or change the scorer or model condition mid-run. A changed
-    condition is a new experiment.
+7. [x] **Run controlled qualification checks.** Reused, non-held-out cases confirmed the local
+   request and scorer path. A separate synthetic case then exercised the exact EvalScope to
+   OpenAI-compatible `/v1/chat/completions` path with the explicit `medium` reasoning effort. The
+   request was accepted and returned a response with zero retries. These checks qualify the
+   transport only; neither is capability evidence.
+8. [x] **Complete the corrected core dry-run.** Review the full plan without inference: exact
+   manifests, counts, budgets, settings, output location, capability labels, stop conditions, and
+   publication blockers. The corrected plan has a new experiment identifier, keeps the frozen
+   sample and scorer digest, and names `medium` as its OpenAI-compatible reasoning effort. Any
+   unresolved or inferred field blocks launch.
+9. [ ] **Renew approval for the corrected held-out launch.** A human operator must review the
+   corrected condition, confirm that held-out items remain unseen and unused for tuning,
+   acknowledge the aborted request described below, authorize the bounded request and time
+   budget, and record a new approval privately. The approval for the aborted experiment is not
+   reused.
+10. [ ] **Execute the new experiment once under its frozen contract.** Do not tune on held-out
+    outcomes, silently retry, replace failed tasks, or change the scorer or model condition
+    mid-run. A changed condition is another new experiment.
 11. [ ] **Prepare and review the public export.** Export only allowlisted aggregates and generic
     public condition labels, rerun the privacy and publication gates, review the exact files, and
     state limitations. Do not claim a frontier delta while direct historical coverage is
     unavailable.
+
+</section>
+
+<section class="reader-section warm" aria-label="Aborted launch record">
+
+## Aborted launch: no capability result
+
+One authorized launch attempt reached LM Studio, but the OpenAI-compatible endpoint rejected the
+native value `on` before inference because it is not a valid `reasoning_effort` value. That attempt
+produced no model response, completion tokens, score, prediction file, report, or capability
+manifest. Its private evidence is preserved as an aborted protocol-invalid experiment; it is not
+resumable and is not published as a result.
+
+The correction does not silently reinterpret `on`. It defines a new experiment whose transport
+condition is the explicit OpenAI-compatible effort `medium`. A synthetic, non-held-out request
+qualified that exact transport. The corrected experiment still requires renewed approval before
+any held-out request is sent.
 
 </section>
 
@@ -93,6 +119,11 @@ The study contract is:
 - selected API instance: `racecraft-splash-local`;
 - context length: 32,768 tokens;
 - batch size and maximum in-flight request count: 1;
+- core transport: EvalScope through the OpenAI-compatible `/v1/chat/completions` endpoint;
+- transmitted OpenAI-compatible reasoning effort: `medium`;
+- native model intent: reasoning enabled; `medium` is a newly named transport condition and is
+  not claimed to be equivalent to native `on`;
+- effective reasoning setting: transmitted but not read back by the compatible endpoint;
 - transport retries: 0;
 - response caching: disabled;
 - no JIT substitution, cloud fallback, or automatic replacement with another loaded model.
@@ -123,10 +154,10 @@ Official LM Studio references:
 
 ## Current conclusion
 
-The workbench is ready to start the frozen 60-case capability run once a human operator completes
-gate 9. No held-out request has been sent. The qualification aggregate still proves only that a
-bounded local request-and-scorer path worked on reused cases. Capability results and supported
-practical-task claims remain unavailable until gates 10 and 11 complete, and direct comparison
-with dated frontier records remains unavailable until an exact historical protocol match exists.
+No successful result exists **under this private 60-case contract**. One request was rejected
+before inference, and the later malformed launch did not bind to the frozen sample, so the study
+was stopped and not published as capability evidence. The separate full public GPQA Diamond run
+is reported on the Results page. It does not complete this private study or create a
+protocol-matched frontier delta.
 
 </section>

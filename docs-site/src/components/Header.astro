@@ -5,19 +5,19 @@ import ThemeSelect from './ThemeSelect.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const current = Astro.url.pathname.replace(/\/$/, '');
 const items = [
-  { label: 'Overview', route: '', children: [] },
-  { label: 'Results', route: '/dashboard', children: ['/local-pilot-results', '/historical-frontier-comparison', '/sources', '/frontier-catalog', '/frontier-verification'] },
-  { label: 'How we test', route: '/methodology', children: ['/benchmark-tasks', '/privacy', '/glossary'] },
-  { label: 'Run it yourself', route: '/operations', children: ['/architecture'] },
+  { label: 'Overview', route: '' },
+  { label: 'Results', route: '/dashboard' },
+  { label: 'How we tested', route: '/methodology' },
+  { label: 'Run it yourself', route: '/operations' },
+  { label: 'Sources', route: '/sources' },
 ];
 ---
 <div class="site-header">
   <div class="identity"><SiteTitle /><span class="project-name" aria-label="Splash Evals"><strong>Splash</strong><span>Evals</span></span></div>
   <nav aria-label="Main navigation" class="primary-nav">
-    {items.map(({ label, route, children }) => {
+    {items.map(({ label, route }) => {
       const exact = current === `${base}${route}`;
-      const active = exact || children.some((child) => current === `${base}${child}`);
-      return <a href={`${base}${route}/`} aria-current={exact ? 'page' : active ? 'true' : undefined}>{label}</a>;
+      return <a href={`${base}${route}/`} aria-current={exact ? 'page' : undefined}>{label}</a>;
     })}
   </nav>
   <div class="site-utilities"><Search /><ThemeSelect /><a class="github-link" href="https://github.com/racecraft-lab/splash-evals">GitHub</a></div>

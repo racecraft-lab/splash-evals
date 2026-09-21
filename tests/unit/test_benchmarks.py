@@ -642,7 +642,7 @@ def test_all_commands_pin_exact_selection_generation_and_adapter_contract(tmp_pa
     work_root = state / "command-contract"
     work_root.mkdir()
     calls = [
-        benchmarks._family_command(prepared, family, work_root / family.name, "off")
+        benchmarks._family_command(prepared, family, work_root / family.name, "medium")
         for family in prepared.families
     ]
     assert [command[command.index("--datasets") + 1] for command in calls] == [
@@ -666,7 +666,7 @@ def test_all_commands_pin_exact_selection_generation_and_adapter_contract(tmp_pa
         assert "--limit" not in command
         assert json.loads(command[command.index("--generation-config") + 1]) == {
             "max_tokens": 4096,
-            "reasoning_effort": "off",
+            "reasoning_effort": "medium",
             "retries": 0,
             "stream": False,
         }
@@ -700,11 +700,40 @@ def test_mock_executable_accepts_each_builtin_family_command(tmp_path: Path) -> 
         evalscope_version="1.12.0",
     )
     for family in prepared.families[:3]:
-        command = benchmarks._family_command(prepared, family, state / "work" / family.name, "off")
+        command = benchmarks._family_command(
+            prepared, family, state / "work" / family.name, "medium"
+        )
         completed = subprocess.run(  # noqa: S603 - absolute fixture executable, no shell
             command, capture_output=True, text=True, check=False
         )
         assert completed.returncode == 0
+
+
+@pytest.mark.parametrize("reasoning_mode", [None, "off", "on"])
+def test_core_execution_rejects_native_reasoning_modes_before_runner(
+    tmp_path: Path, reasoning_mode: str | None
+) -> None:
+    profile, repo, state, executable = _fixture(tmp_path)
+    called = False
+
+    def runner(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        nonlocal called
+        called = True
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+    with pytest.raises(CoreBenchmarkError, match="OpenAI-compatible reasoning effort"):
+        execute_evalscope_core(
+            profile,
+            repo=repo,
+            state=state,
+            server_origin="http://127.0.0.1:1234/v1",
+            evalscope_executable=str(executable),
+            evalscope_version="1.12.0",
+            reasoning_mode=reasoning_mode,
+            runner=runner,
+        )
+
+    assert called is False
 
 
 def test_core_execution_invokes_all_five_qualified_families(tmp_path: Path) -> None:
@@ -724,7 +753,7 @@ def test_core_execution_invokes_all_five_qualified_families(tmp_path: Path) -> N
         server_origin="http://127.0.0.1:1234/v1",
         evalscope_executable=str(executable),
         evalscope_version="1.12.0",
-        reasoning_mode="off",
+        reasoning_mode="medium",
         runner=runner,
     )
 
@@ -741,7 +770,7 @@ def test_core_execution_invokes_all_five_qualified_families(tmp_path: Path) -> N
     )
     assert [family["family"] for family in result["family_results"]] == list(FAMILY_COUNTS)
     assert result["model_alias"] == "racecraft-splash-local"
-    assert result["reasoning_mode"] == "off"
+    assert result["reasoning_mode"] == "medium"
     assert result["runtime_evidence"] == {
         "transport": "evalscope_openai_api",
         "endpoint": "/v1/chat/completions",
@@ -785,7 +814,7 @@ def test_core_execution_rejects_unqualified_aggregate_artifact(tmp_path: Path, m
             server_origin="http://127.0.0.1:1234/v1",
             evalscope_executable=str(executable),
             evalscope_version="1.12.0",
-            reasoning_mode="off",
+            reasoning_mode="medium",
             runner=runner,
         )
 
@@ -810,7 +839,7 @@ def test_execute_raises_value_error_subclass_before_runner_on_invalid_input(
             server_origin="http://127.0.0.1:1234/v1",
             evalscope_executable=str(executable),
             evalscope_version="1.12.0",
-            reasoning_mode="off",
+            reasoning_mode="medium",
             runner=runner,
         )
 

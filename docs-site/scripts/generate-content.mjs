@@ -2,7 +2,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { qualificationContent } from './qualification-content.mjs';
 import { wrapWideTables } from './table-content.mjs';
 
 const SCRIPT_PATH = 'docs-site/scripts/generate-content.mjs';
@@ -16,17 +15,8 @@ const PAGES = [
   ['docs/index.md', 'index.md'],
   ['docs/dashboard.md', 'dashboard.md'],
   ['docs/methodology.md', 'methodology.md'],
-  ['docs/benchmark-tasks.md', 'benchmark-tasks.md'],
-  ['docs/local-pilot-results.md', 'local-pilot-results.md'],
-  ['docs/architecture.md', 'architecture.md'],
-  ['docs/privacy.md', 'privacy.md'],
   ['docs/operations.md', 'operations.md'],
-  ['docs/capability-readiness.md', 'capability-readiness.md'],
-  ['docs/glossary.md', 'glossary.md'],
   ['docs/sources.md', 'sources.md'],
-  ['docs/historical-frontier-comparison.md', 'historical-frontier-comparison.md'],
-  ['references/frontier/README.md', 'frontier-catalog.md'],
-  ['references/frontier/VERIFICATION.md', 'frontier-verification.md'],
 ];
 
 const routes = new Map(
@@ -55,12 +45,11 @@ function rewriteLink(sourcePath, target) {
   return `${route}${fragment}`;
 }
 
-function renderPage(sourcePath, text, qualification) {
+function renderPage(sourcePath, text) {
   const heading = text.match(/^#\s+(.+)$/m);
   if (!heading) throw new Error(`Missing level-one heading in ${sourcePath}`);
   const title = heading[1].trim();
   const body = wrapWideTables(text
-    .replace(/<!-- qualification-(finding|table|technical) -->/g, (_match, part) => qualification[part])
     .replace(/^#\s+.+\r?\n(?:\r?\n)?/, '')
     .replace(/^- \[GitHub feature audit\]\(github-feature-audit\.md\)\r?\n?/m, '')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, target) => {
@@ -93,11 +82,10 @@ hero:
 
 async function expectedPages() {
   const expected = new Map();
-  const qualification = qualificationContent(JSON.parse(await fs.readFile(path.join(REPO_ROOT, 'docs/qualification-summary.json'), 'utf8')));
   for (const [sourcePath, outputName] of PAGES) {
     const source = path.join(REPO_ROOT, sourcePath);
     const text = await fs.readFile(source, 'utf8');
-    expected.set(outputName, renderPage(sourcePath, text, qualification));
+    expected.set(outputName, renderPage(sourcePath, text));
   }
   return expected;
 }

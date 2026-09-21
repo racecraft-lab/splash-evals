@@ -26,6 +26,7 @@ __all__ = ["CoreBenchmarkError", "execute_evalscope_core", "inspect_core_readine
 
 EVALSCOPE_VERSION = "1.12.0"
 MODEL_ALIAS = "racecraft-splash-local"
+OPENAI_REASONING_EFFORTS = frozenset({"none", "minimal", "low", "medium", "high", "xhigh"})
 FAMILY_REQUIREMENTS: tuple[tuple[str, int], ...] = (
     ("gpqa_diamond", 12),
     ("ifeval", 16),
@@ -1155,8 +1156,10 @@ def execute_evalscope_core(
     """Run qualified core families sequentially and retain all evidence externally."""
 
     checked_profile = _call_arguments_valid(profile, repo, state, server_origin)
-    if reasoning_mode not in {"off", "on", "low", "medium", "high"}:
-        raise CoreBenchmarkError("core execution requires an explicit supported reasoning mode")
+    if reasoning_mode not in OPENAI_REASONING_EFFORTS:
+        raise CoreBenchmarkError(
+            "core execution requires an explicit OpenAI-compatible reasoning effort"
+        )
     prepared = _prepare(
         checked_profile,
         repo=repo,

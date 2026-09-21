@@ -783,23 +783,63 @@ def _selection_evidence(profile: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _openai_reasoning_evidence(
+    control: dict[str, Any],
+    native: dict[str, Any],
+    model_supported: list[str],
+) -> tuple[dict[str, Any], list[str]]:
+    transport_supported = ["none", "minimal", "low", "medium", "high", "xhigh"]
+    transmitted = control.get("transmitted")
+    desired_mode = control.get("desired_mode")
+    desired_effort = control.get("desired_effort")
+    blockers: list[str] = []
+    if transmitted not in transport_supported or desired_effort != transmitted:
+        blockers.append("An explicit OpenAI-compatible reasoning effort is required.")
+        transmitted = None
+    if desired_mode not in {"off", "on"}:
+        blockers.append("An explicit native model reasoning intent is required.")
+    elif model_supported and desired_mode not in model_supported:
+        blockers.append("The requested reasoning mode is not exposed by the selected model.")
+    evidence = {
+        "requested": desired_effort,
+        "transmitted": transmitted,
+        "supported_options": transport_supported,
+        "model_supported_modes": model_supported,
+        "default": native.get("reasoning_default"),
+        "effective_status": "not_attempted",
+    }
+    return evidence, blockers
+
+
 def _reasoning_evidence(
-    config: dict[str, Any], model_instance_evidence: dict[str, Any]
+    config: dict[str, Any],
+    model_instance_evidence: dict[str, Any],
+    *,
+    transport: str = "native-v1",
 ) -> tuple[dict[str, Any], list[str]]:
     control = config.get("reasoning_control") or {}
-    transmitted = control.get("transmitted")
+    mechanism = control.get("mechanism")
+    native = model_instance_evidence.get("native_identity") or {}
+    model_supported = native.get("reasoning_allowed") or []
+    if mechanism == "openai-compatible-reasoning-effort":
+        return _openai_reasoning_evidence(control, native, model_supported)
+
     blockers: list[str] = []
+    if transport == "openai-compatible-reasoning-effort":
+        blockers.append(
+            "Core EvalScope transport requires an OpenAI-compatible reasoning-effort contract."
+        )
+
+    transmitted = control.get("transmitted")
     if transmitted not in {"off", "low", "medium", "high", "on"}:
         blockers.append("An explicit native-v1 reasoning setting is required.")
         transmitted = None
-    native = model_instance_evidence.get("native_identity") or {}
-    supported = native.get("reasoning_allowed") or []
-    if transmitted is not None and supported and transmitted not in supported:
+    if transmitted is not None and model_supported and transmitted not in model_supported:
         blockers.append("The requested reasoning setting is not exposed by the selected model.")
     return {
         "requested": control.get("desired_effort") or control.get("desired_mode"),
         "transmitted": transmitted,
-        "supported_options": supported,
+        "supported_options": model_supported,
         "default": native.get("reasoning_default"),
         "effective_status": "not_attempted",
     }, blockers
@@ -931,7 +971,11 @@ def build_plan(
     token_allowance = request_count * output_per_request
     output_root = get_state_dir(repo, create=False) / "runs"
     public_tasks = [task.public_manifest() for task in tasks]
-    reasoning_evidence, reasoning_blockers = _reasoning_evidence(config, model_instance_evidence)
+    reasoning_evidence, reasoning_blockers = _reasoning_evidence(
+        config,
+        model_instance_evidence,
+        transport=("openai-compatible-reasoning-effort" if suite == "core" else "native-v1"),
+    )
     blockers.extend(reasoning_blockers)
     protocol = {
         "suite": suite,
@@ -1097,13 +1141,19 @@ def _core_plan_updates(
         "selection_evidence": selection,
         "calibration_heldout_separation": "held_out" if ready else "unverified",
         "selection_hash": metadata["selection_hash"],
+        **comparison,
+        "runtime_evidence": {
+            **plan["runtime_evidence"],
+            "transport": "evalscope_openai_api",
+            "endpoint": "/v1/chat/completions",
+            "evalscope_version": readiness_metadata.get("evalscope_version"),
+        },
         "primary_objective_status_if_run": (
             "answered_with_stated_scope"
             if ready and plan["model_is_splash"] and not blockers
             else "blocked"
         ),
         "limitations": [*plan.get("limitations", []), _CORE_EVIDENCE_LIMITATION],
-        **comparison,
     }
 
 
