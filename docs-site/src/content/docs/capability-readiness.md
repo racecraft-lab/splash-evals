@@ -14,6 +14,8 @@ This page is the tracked go/no-go record for the first advertised Splash capabil
 checked repository gate does not substitute for unfinished research preparation, and the
 published post-hoc qualification aggregate is not capability evidence.
 
+<section class="reader-section cool" aria-label="Completed safeguards">
+
 ## Completed gates
 
 - [x] Public CI is confined to GitHub-hosted runners, mock or synthetic inputs, and static
@@ -28,33 +30,43 @@ published post-hoc qualification aggregate is not capability evidence.
   context only; direct historical-comparison coverage remains unavailable.
 - [x] The public export path fails closed, strips raw evidence, and requires explicit review.
 
+</section>
+
+<section class="reader-section warm" aria-label="Capability launch checklist">
+
 ## Required before a capability run
 
 Complete these items in order. Evidence containing licensed tasks, prompts, expected answers, or
 runtime details belongs in private state, not this checklist.
 
-1. [ ] **Confirm official GPQA access and terms.** Record the authorized source, applicable
-   license or terms, permitted local use, redistribution limits, exact split, and retrieval
-   revision. Do not copy restricted questions into Git.
-2. [ ] **Freeze private manifests before looking at results.** Seal the ordered task IDs,
+The private preparation packet was revalidated on 2026-09-20 against public commit `af53cd7`.
+Its frozen manifest-set digest is
+`1b16102c4c515dab6fe51e51f5f2515e5dfadc5bfb16eae71f4adeff6129508f`. The digest establishes
+which reviewed packet is awaiting approval; it does not disclose or validate the private tasks.
+
+1. [x] **Confirm official GPQA access and terms.** The private source record captures the
+   authorized source, applicable terms, permitted local use, redistribution limits, exact split,
+   and retrieval revision. Restricted questions remain outside Git.
+2. [x] **Freeze private manifests before looking at results.** Seal the ordered task IDs,
    family membership, split, prompt/template revision, scorer revision, attempt policy, and
    selection hash for calibration and held-out sets. Prove that the sets are disjoint.
-3. [ ] **Pin IFEval and MMLU-Pro inputs.** Record their exact upstream repository or dataset
+3. [x] **Pin IFEval and MMLU-Pro inputs.** Record their exact upstream repository or dataset
    revisions, configurations and splits, ordered sample IDs, and ordered-content hashes. A title
    such as “IFEval” or “MMLU-Pro” is not a revision.
-4. [ ] **Finish private practical-task sets.** Review and freeze the tool/JSON and context tasks,
+4. [x] **Finish private practical-task sets.** Review and freeze the tool/JSON and context tasks,
    expected outcomes, rubrics, failure categories, ordering, and hashes. Publish only task-family
    descriptions and reviewed aggregates.
-5. [ ] **Qualify every scorer.** Use synthetic positive, negative, malformed, refusal, timeout,
+5. [x] **Qualify every scorer.** Use synthetic positive, negative, malformed, refusal, timeout,
    and output-limit fixtures for each task family. Pin scorer versions and keep the qualification
    report private until its sanitized summary passes publication review.
-6. [ ] **Attest the coding sandbox.** Demonstrate a disposable sandbox with networking disabled,
-   no host-home mount, no Docker socket, bounded CPU/memory/time, controlled inputs, and complete
-   teardown. Coding tasks remain disabled until this attestation passes.
-7. [ ] **Run a controlled smoke check.** Use the exact headless instance and frozen runtime
-   settings below. Confirm model attribution, local-device evidence, accepted reasoning behavior,
-   context capacity, single-request execution, zero retries, scorer operation, and restoration.
-8. [ ] **Complete the core dry-run.** Review the full plan without inference: exact manifests,
+6. [x] **Keep coding outside this run.** The initial 60-case study contains no coding tasks.
+   Coding remains disabled until the disposable sandbox receives a separate attestation for
+   networking, mounts, Docker access, resource bounds, controlled inputs, and teardown.
+7. [x] **Run a controlled qualification smoke check.** Reused, non-held-out cases confirmed the
+   local request and scorer path. The exact headless instance was then requalified for model
+   attribution, local-device evidence, context capacity, single-request execution, and zero
+   retries. This is setup evidence, not a capability result.
+8. [x] **Complete the core dry-run.** Review the full plan without inference: exact manifests,
    counts, budgets, settings, output location, capability labels, stop conditions, and publication
    blockers. Any unresolved or inferred field blocks launch.
 9. [ ] **Approve the held-out launch explicitly.** A human operator must review the frozen packet,
@@ -67,6 +79,10 @@ runtime details belongs in private state, not this checklist.
     public condition labels, rerun the privacy and publication gates, review the exact files, and
     state limitations. Do not claim a frontier delta while direct historical coverage is
     unavailable.
+
+</section>
+
+<section class="reader-section cool" aria-label="Frozen local runtime condition">
 
 ## Frozen headless LM Studio condition
 
@@ -111,11 +127,18 @@ Official LM Studio references:
 - [Add an LM Link device](https://lmstudio.ai/docs/lmlink/basics/add-device) — explains that
   linked remote models are device-associated and may be loaded separately from local models.
 
+</section>
+
+<section class="reader-section warm" aria-label="Current readiness conclusion">
+
 ## Current conclusion
 
-The workbench is ready for further controlled preparation, not an advertised capability run.
-The qualification aggregate proves only that a bounded local request-and-scorer path worked on
-reused cases. Capability results, supported practical-task claims, and direct comparison with
-dated frontier records remain unavailable until the unchecked gates above are completed.
+The workbench is ready to start the frozen 60-case capability run once a human operator completes
+gate 9. No held-out request has been sent. The qualification aggregate still proves only that a
+bounded local request-and-scorer path worked on reused cases. Capability results and supported
+practical-task claims remain unavailable until gates 10 and 11 complete, and direct comparison
+with dated frontier records remains unavailable until an exact historical protocol match exists.
+
+</section>
 
 </div>

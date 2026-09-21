@@ -47,6 +47,11 @@ export const pageIntros: Record<string, Intro> = {
     caption: 'Work through the prerequisites before running commands.',
     steps: [['Prepare', 'Set up the workspace and private state'], ['Connect locally', 'Check LM Studio and the chosen model'], ['Run and review', 'Inspect evidence before sharing anything']],
   },
+  'capability-readiness': {
+    summary: 'The 60-case study is frozen and technically ready. See which safeguards passed, what the operator must approve, and why no capability result exists yet.',
+    caption: 'Preparation is complete. Approval, execution, and publication remain separate gates.',
+    steps: [['Prepared', 'Frozen tasks, scorers, budget, and local runtime'], ['Awaiting approval', 'Human confirmation that held-out cases stayed unseen'], ['After the run', 'Review and publish only safe aggregate evidence']],
+  },
   sources: {
     summary: 'Older leading-model reports provide context. Their dates, task versions, and scoring conditions determine how useful that context is.',
     caption: 'A reported number needs its original conditions.',
