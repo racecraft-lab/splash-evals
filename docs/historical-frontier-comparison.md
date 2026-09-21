@@ -1,6 +1,6 @@
 # Historical frontier comparison
 
-> **Consolidated reader content.** The current public comparison is on [Results](dashboard.md#benchmark-comparison), with source and protocol notes on [Sources](sources.md#comparison-roster-source-classes). The old public URL redirects there.
+> **Consolidated reader content.** The current public comparison is on [Results](dashboard.md#benchmark-comparison), with source and protocol notes on [Sources](sources.md#where-the-numbers-come-from). The old public URL redirects there.
 
 ## Current status
 

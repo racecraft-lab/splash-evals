@@ -1,0 +1,11 @@
+---
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+---
+<span class:list={['project-name', { compact }]} role="img" aria-label="Splash Evals">
+  <strong aria-hidden="true">Splash</strong>
+  <span aria-hidden="true">Evals</span>
+</span>

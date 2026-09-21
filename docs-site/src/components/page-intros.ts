@@ -11,9 +11,18 @@ type Intro = IntroBase & (
   | {
       variant: 'results';
       result: {
-    score: string;
-    metric: string;
-    completion: string;
+        score: string;
+        metric: string;
+        completion: string;
+      };
+    }
+  | {
+      variant: 'sources';
+      sourceRecord: {
+        score: string;
+        benchmark: string;
+        measuredBy: string;
+        status: string;
       };
     }
 );
@@ -46,8 +55,14 @@ export const pageIntros: Record<string, Intro> = {
     steps: [['Prepare', 'Set up the workspace and private state'], ['Connect locally', 'Check LM Studio and the chosen model'], ['Run and review', 'Inspect evidence before sharing anything']],
   },
   sources: {
-    summary: 'Trace the local result and frontier context to their original records. Dates, task versions, and scoring conditions determine what can be compared.',
-    caption: 'A reported number needs its original conditions.',
-    steps: [['Original source', 'Find the paper or model report'], ['Dated record', 'Keep the task and scoring details'], ['Comparison check', 'Ask whether the conditions match']],
+    summary: 'See where each score came from, who measured it, and which test details matter before you compare models.',
+    variant: 'sources',
+    caption: 'The score, source, and test condition stay together.',
+    sourceRecord: {
+      score: '54.55%',
+      benchmark: 'GPQA Diamond',
+      measuredBy: 'Racecraft local run',
+      status: 'Reviewed local result',
+    },
   },
 };

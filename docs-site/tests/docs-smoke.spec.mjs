@@ -12,8 +12,8 @@ const RETIRED_ROUTES = [
   ['/benchmark-tasks/', '/methodology/#benchmark-and-sample', 'Benchmark and sample'],
   [
     '/local-pilot-results/',
-    '/methodology/#transport-and-scorer-qualification',
-    'Transport and scorer qualification',
+    '/methodology/#the-evaluated-condition',
+    'The evaluated condition',
   ],
   ['/architecture/', '/operations/#local-system-boundary', 'Local system boundary'],
   ['/privacy/', '/methodology/#privacy-and-public-evidence', 'Privacy and public evidence'],
@@ -27,8 +27,16 @@ const RETIRED_ROUTES = [
     '/dashboard/#benchmark-comparison',
     'Benchmark comparison',
   ],
-  ['/frontier-catalog/', '/sources/#catalog-semantics', 'Catalog semantics'],
-  ['/frontier-verification/', '/sources/#transcription-checks', 'Transcription checks'],
+  [
+    '/frontier-catalog/',
+    '/sources/#how-the-evidence-catalog-works',
+    'How the evidence catalog works',
+  ],
+  [
+    '/frontier-verification/',
+    '/sources/#how-the-numbers-were-checked',
+    'How the numbers were checked',
+  ],
   ['/glossary/', '/#key-terms', 'Key terms'],
 ];
 
@@ -146,6 +154,94 @@ test('results expose the reviewed GPQA result, runtime performance, and comparis
   await expect(page.getByRole('heading', { name: 'Sources and evidence', exact: true })).toBeVisible();
 });
 
+test('frontier explorer keeps source order, labels, and evidence details without ranking', async ({
+  page,
+}) => {
+  await page.goto(routeUrl('/dashboard/'));
+  const explorer = page.locator('[data-gpqa-explorer]');
+  await expect(explorer.getByRole('radio', { name: 'Curated overview' })).toBeChecked();
+  await expect(explorer.getByRole('listitem')).toHaveCount(13);
+  await expect(explorer.getByText('Showing 13 of 21 observations.', { exact: false })).toBeVisible();
+
+  const curated = explorer.getByRole('radio', { name: 'Curated overview' });
+  await curated.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(explorer.getByRole('radio', { name: 'All published observations' })).toBeChecked();
+  await expect(explorer.getByRole('listitem')).toHaveCount(21);
+
+  await explorer.getByRole('radio', { name: 'GPT', exact: true }).check();
+  await expect(explorer.getByRole('listitem')).toHaveCount(5);
+  await explorer.getByRole('radio', { name: 'All models' }).check();
+  const observation = explorer.getByRole('button', {
+    name: /Claude Opus 4\.7 · Epoch independent: 90%/,
+  });
+  await observation.focus();
+  const detail = explorer.locator('[data-explorer-detail]');
+  await expect(detail).toContainText('Epoch independent');
+  await expect(detail).toContainText('Directional context—not protocol matched');
+  await expect(detail.getByRole('link', { name: 'Open the cited source' })).toHaveAttribute(
+    'href',
+    /epoch\.ai\/models\/claude-opus-4-7/,
+  );
+  await expect(page.getByText(/rows are not ranked/i)).toBeVisible();
+});
+
+test('frontier comparison remains complete when JavaScript is unavailable', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto(routeUrl('/dashboard/'));
+  await expect(page.locator('[data-explorer-controls]')).toBeHidden();
+  await expect(page.getByText('The complete source-labeled comparison is available', { exact: false })).toBeVisible();
+  const comparison = page.locator('section[aria-label="Benchmark comparison"] table');
+  await expect(comparison.getByRole('row')).toHaveCount(22);
+  await context.close();
+});
+
+test('operations explains the local model alias and trust boundary without a maintainer checklist', async ({
+  page,
+}) => {
+  await page.goto(routeUrl('/operations/'));
+  const diagram = page.locator('.system-boundary');
+  await expect(diagram.getByRole('listitem')).toHaveCount(4);
+  await expect(diagram.locator('.evidence-destination')).toHaveCount(3);
+  await expect(diagram).toContainText('Allowlist + review gate');
+  await expect(diagram).toContainText('has no route back to this Mac');
+  await expect(page.getByRole('code').filter({ hasText: /^qwen3\.8-27b-splash$/ }).first()).toBeVisible();
+  await expect(page.getByText('racecraft-splash-local', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Review before publishing' })).toHaveCount(0);
+});
+
+test('sources present evidence as a concise map instead of duplicated score tables', async ({ page }) => {
+  await page.goto(routeUrl('/sources/'));
+  const sourceRecord = page.locator('.intro-source-record');
+  await expect(sourceRecord).toContainText('54.55%');
+  await expect(sourceRecord).toContainText('GPQA Diamond');
+  await expect(sourceRecord).toContainText('Racecraft local run');
+  await expect(sourceRecord).toContainText('Reviewed local result');
+  const sourceVisual = page.locator('.intro-sources');
+  for (const child of await sourceRecord.locator(':scope > *').all()) {
+    const [visualBox, childBox] = await Promise.all([
+      sourceVisual.boundingBox(),
+      child.boundingBox(),
+    ]);
+    expect(visualBox).not.toBeNull();
+    expect(childBox).not.toBeNull();
+    expect(childBox.x).toBeGreaterThanOrEqual(visualBox.x - 1);
+    expect(childBox.x + childBox.width).toBeLessThanOrEqual(visualBox.x + visualBox.width + 1);
+  }
+  await expect(page.getByText('Original source', { exact: true })).toHaveCount(0);
+  await expect(page.locator('.source-card')).toHaveCount(4);
+  await expect(page.locator('.evidence-principles > div')).toHaveCount(3);
+  await expect(page.locator('.verification-summary > div')).toHaveCount(3);
+  await expect(page.getByRole('heading', { name: 'Comparison roster source classes' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Catalog semantics' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Comparison status' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Review the checked-in verification record' })).toBeVisible();
+});
+
 for (const [retired, destination, heading] of RETIRED_ROUTES) {
   test(`${retired} redirects to retained reader content`, async ({ page }) => {
     await page.goto(routeUrl(retired));
@@ -166,6 +262,11 @@ test('light and dark preserve SVG lockups, lab texture, section rhythm, and them
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await expect(page.locator('.identity img:visible')).toHaveCount(1);
     await expect(page.locator('.footer-identity img:visible')).toHaveCount(1);
+    await expect(page.getByRole('img', { name: 'Splash Evals' })).toHaveCount(2);
+    const [headerLockup, footerLockup] = await page
+      .getByRole('img', { name: 'Splash Evals' })
+      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width));
+    expect(footerLockup).toBeLessThan(headerLockup);
     await expect(page.locator('.hero img')).toHaveCount(0);
     await expect(page.locator('body')).toHaveCSS(
       'background-size',
@@ -193,6 +294,28 @@ test('320px reflow retains controls and readable GPQA result', async ({ page }) 
   await expect(page.getByRole('button', { name: /Search/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Run it yourself', exact: true })).toBeVisible();
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.footer-identity').getByRole('img', { name: 'Splash Evals' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
+});
+
+test('results hero metadata stays inside its card at the desktop-tablet seam', async ({ page }) => {
+  await page.setViewportSize({ width: 1246, height: 568 });
+  await page.goto(routeUrl('/dashboard/'));
+  const contained = await page.locator('.intro-visual').evaluate((card) => {
+    const outer = card.getBoundingClientRect();
+    return [...card.querySelectorAll('.intro-count > *')].every((node) => {
+      const inner = node.getBoundingClientRect();
+      return (
+        inner.left >= outer.left - 1 &&
+        inner.right <= outer.right + 1 &&
+        inner.top >= outer.top - 1 &&
+        inner.bottom <= outer.bottom + 1
+      );
+    });
+  });
+  expect(contained).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
   );
@@ -249,7 +372,7 @@ test('reader text and links meet AA contrast on both themed section surfaces', a
           (Math.min(luminance(a), luminance(b)) + 0.05);
         const failures = [];
         for (const node of document.querySelectorAll(
-          '.primary-nav a, .github-link, .reader-footer nav a, .reader-footer p, .reader-footer span, .page-intro h1, .intro-summary, .intro-visual strong, .intro-visual span, .intro-visual figcaption, .hero .sl-link-button, .finding h2, .finding p, .reader-section h2, .reader-section h3, .reader-section p, .reader-section a, .process strong, .process span, .document-sheet dt, .document-sheet dd, .document-sheet summary, .document-sheet td, .document-sheet th',
+          '.primary-nav a, .github-link, .reader-footer nav a, .reader-footer p, .reader-footer span, .project-name strong, .page-intro h1, .intro-summary, .intro-visual strong, .intro-visual span, .intro-visual figcaption, .hero .sl-link-button, .finding h2, .finding p, .reader-section h2, .reader-section h3, .reader-section h4, .reader-section p, .reader-section a, .reader-section span, .reader-section button, .process strong, .process span, .document-sheet dt, .document-sheet dd, .document-sheet summary, .document-sheet td, .document-sheet th',
         )) {
           if (!node.textContent.trim() || !node.getClientRects().length) continue;
           const style = getComputedStyle(node);
@@ -294,5 +417,6 @@ test('reduced motion disables link transitions without hiding result content', a
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(routeUrl('/dashboard/'));
   await expect(page.locator('.document-sheet a').first()).toHaveCSS('transition-duration', '0s');
+  await expect(page.locator('.explorer-score-dot').first()).toHaveCSS('transition-duration', '0s');
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
 });

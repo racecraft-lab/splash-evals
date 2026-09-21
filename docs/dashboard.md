@@ -43,29 +43,42 @@ Source labels matter:
 
 Do not subtract, average, or order these values to claim an exact gap or ranking.
 
+<div class="frontier-explorer" data-gpqa-explorer data-sources-url="../sources/#where-the-numbers-come-from" aria-labelledby="gpqa-explorer-title" aria-describedby="gpqa-explorer-context">
+  <div class="explorer-heading">
+    <p class="explorer-eyebrow">Interactive evidence view</p>
+    <h3 id="gpqa-explorer-title">Explore the reported scores</h3>
+    <p id="gpqa-explorer-context">Compare where each reported score sits on the same 0–100 scale. Model order follows the evidence record—not score rank—and every external value remains directional context rather than a protocol-matched result.</p>
+  </div>
+  <div class="explorer-controls" data-explorer-controls hidden></div>
+  <div class="explorer-plot" data-explorer-plot>
+    <p>The complete source-labeled comparison is available in the table below.</p>
+  </div>
+  <div class="explorer-detail" data-explorer-detail hidden aria-live="polite"></div>
+</div>
+
 | Model / condition | GPQA Diamond | Evidence status |
 |---|---:|---|
 | **Splash / Qwen3.8 · local LM Studio · medium effort** | **54.6%** | Measured here; 198/198 completed |
-| GPT-5.6 Sol | 94.6% | OpenAI-reported, directional |
-| GPT-5.6 Terra | 92.9% | OpenAI-reported, directional |
-| GPT-5.6 Luna | 92.3% | OpenAI-reported, directional |
-| GPT-5.5 | 93.6% | OpenAI-reported, directional |
-| Claude Sonnet 4 · Anthropic provider | 70.0% | Without extended thinking; provider-reported, directional |
-| Claude Sonnet 4 · Epoch independent | 78% | Direct model scorecard, rounded; directional |
-| Claude Opus 4 · Anthropic provider | 74.9% | Without extended thinking; provider-reported, directional |
-| Claude Opus 4 · Epoch independent | 76% | Direct model scorecard, rounded; directional |
-| Claude Sonnet 4.6 · Epoch independent | 87% | Direct model scorecard, rounded; directional |
-| Claude Sonnet 4.6 · Anthropic provider | 89.9% | Adaptive thinking at max effort, 10-trial average; directional |
-| Claude Opus 4.6 · Epoch independent | 91% | Direct model scorecard, rounded; directional |
-| Claude Opus 4.6 · Anthropic provider | 91.3% | Adaptive-thinking/max-effort comparison condition; directional |
-| Claude Opus 4.7 · Anthropic provider | 94.2% | Provider-reported, directional |
-| Claude Opus 4.7 · Epoch independent | 90% | Direct model scorecard, rounded; directional |
-| Claude Opus 4.8 · Epoch independent | 91% | Direct model scorecard, rounded; directional |
-| Claude Opus 4.8 · Anthropic provider | 93.6% | 25-trial average; provider-reported, directional |
-| Claude Opus 4.8 · OpenAI cross-provider | 92.0% | OpenAI comparison table, directional |
-| Claude Sonnet 5 · Epoch independent | 91% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
-| Claude Opus 5 · Epoch independent | 94% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
-| Claude Opus 5 · OpenAI cross-provider | 93.7% | Anthropic's release page does not publish a GPQA figure |
+| [GPT-5.6 Sol](https://openai.com/index/gpt-5-6/) | 94.6% | OpenAI-reported, directional |
+| [GPT-5.6 Terra](https://openai.com/index/gpt-5-6/) | 92.9% | OpenAI-reported, directional |
+| [GPT-5.6 Luna](https://openai.com/index/gpt-5-6/) | 92.3% | OpenAI-reported, directional |
+| [GPT-5.5](https://openai.com/index/introducing-gpt-5-5/) | 93.6% | OpenAI-reported, directional |
+| [Claude Sonnet 4 · Anthropic provider](https://www.anthropic.com/news/claude-4) | 70.0% | Without extended thinking; provider-reported, directional |
+| [Claude Sonnet 4 · Epoch independent](https://epoch.ai/models/claude-sonnet-4) | 78% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4 · Anthropic provider](https://www.anthropic.com/news/claude-4) | 74.9% | Without extended thinking; provider-reported, directional |
+| [Claude Opus 4 · Epoch independent](https://epoch.ai/models/claude-opus-4) | 76% | Direct model scorecard, rounded; directional |
+| [Claude Sonnet 4.6 · Epoch independent](https://epoch.ai/models/claude-sonnet-4-6) | 87% | Direct model scorecard, rounded; directional |
+| [Claude Sonnet 4.6 · Anthropic provider](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 89.9% | Adaptive thinking at max effort, 10-trial average; directional |
+| [Claude Opus 4.6 · Epoch independent](https://epoch.ai/models/claude-opus-4-6) | 91% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4.6 · Anthropic provider](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 91.3% | Adaptive-thinking/max-effort comparison condition; directional |
+| [Claude Opus 4.7 · Anthropic provider](https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf) | 94.2% | Provider-reported, directional |
+| [Claude Opus 4.7 · Epoch independent](https://epoch.ai/models/claude-opus-4-7) | 90% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4.8 · Epoch independent](https://epoch.ai/models/claude-opus-4-8) | 91% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4.8 · Anthropic provider](https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf) | 93.6% | 25-trial average; provider-reported, directional |
+| [Claude Opus 4.8 · OpenAI cross-provider](https://openai.com/index/gpt-5-6/) | 92.0% | OpenAI comparison table, directional |
+| [Claude Sonnet 5 · Epoch independent](https://epoch.ai/models/claude-sonnet-5) | 91% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
+| [Claude Opus 5 · Epoch independent](https://epoch.ai/models/claude-opus-5) | 94% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
+| [Claude Opus 5 · OpenAI cross-provider](https://openai.com/index/gpt-6-astra/) | 93.7% | Anthropic's release page does not publish a GPQA figure |
 
 Repeated model names are separate observations under different conditions. They demonstrate why this is a source-labeled comparison board rather than a ranking.
 
@@ -103,12 +116,6 @@ Time to first token and time per output token were not available from this compa
 - **No protocol-matched frontier delta:** Publisher figures remain directional until the dataset revision, item manifest, prompt, attempts, reasoning budget, and scorer are aligned.
 - **No raw evidence published:** Benchmark prompts, responses, reasoning, local paths, and runtime identifiers remain outside Git.
 
-Public provenance digests:
-
-| Artifact | SHA-256 |
-|---|---|
-| EvalScope report | `5863ba54c2ec07cb1e508585d8e2129e863e1573fda2a23cf2aae241bec5e56a` |
-| Task configuration | `f69e7d5ccead9ed80ebcf77eb26f7e5cdfe3e24c3483b9d06db5ef30863420e2` |
-| Progress record | `f71604e1b66511b152428fb49e07334602309aaa70afe233b49347ec4f542c69` |
+[Inspect the reviewed public result and provenance hashes](https://github.com/racecraft-lab/splash-evals/blob/main/results/public/gpqa-diamond-splash-local-2026-09-20.json)
 
 </section>
