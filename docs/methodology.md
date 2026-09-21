@@ -1,120 +1,69 @@
-# How we test
+# How we tested
 
-We want to know which practical tasks this local setup can handle reliably, and how close it comes to current and previous-generation frontier models. To answer that fairly, we must separate **checking the testing setup** from **measuring ability on unfamiliar tasks**.
+This page separates what was measured, how it was measured, and what the result can support.
 
-<section class="reader-section cool" aria-label="The testing sequence">
+<section class="reader-section cool" aria-label="Benchmark and sample">
 
-## The method in plain English
+## Benchmark and sample
 
-1. **Choose the question and tasks first.** Define what counts as success before seeing answers.
-2. **Check the setup.** Confirm the model runs locally and the answer checker behaves correctly.
-3. **Keep a separate test set.** Do not use the final test cases to tune the setup.
-4. **Run and count everything.** Keep failed requests in the overall result, not just successful answers.
-5. **Explain the limits.** Describe the conditions, uncertainty, and any comparisons that are not justified.
+GPQA Diamond is the most difficult subset of Graduate-Level Google-Proof Q&A, a multiple-choice science benchmark written and validated by domain experts. EvalScope 1.12.0 resolved its built-in `gpqa_diamond` adapter to the `default` subset of the `train` split.
+
+The run used all **198 questions**. It was zero-shot: no worked examples were added to the prompt. The adapter asked the model to reason step by step and end with `ANSWER: [LETTER]`. Accuracy was the mean of exact answer-letter matches.
+
+The benchmark is public and widely studied. It is useful for comparison, but it is not a private held-out set and cannot eliminate training-data contamination.
 
 </section>
 
-<section class="reader-section warm" aria-label="Fair comparison">
+<section class="reader-section warm" aria-label="Evaluated condition">
+
+## The evaluated condition
+
+| Setting | Value |
+|---|---|
+| Public model label | Splash / Qwen3.8 |
+| API model alias | `racecraft-splash-local` |
+| Runtime | LM Studio on this Mac, OpenAI-compatible local endpoint |
+| Eval runner | EvalScope 1.12.0, native backend |
+| Reasoning effort | `medium` |
+| Batch / concurrency | 1 |
+| Retries | 0 |
+| Maximum output | 4,096 tokens |
+| Random seed | 42 |
+| Metric | Accuracy, mean aggregation |
+| Denominator | All 198 requested questions |
+
+All requests completed, so no transport failures had to be scored or excluded. A future run under a different model file, quantization, context length, runtime, reasoning effort, prompt, token limit, or scorer is a different condition.
+
+</section>
+
+<section class="reader-section cool" aria-label="Transport and scorer qualification">
+
+## Transport and scorer qualification
+
+Before the capability run, the workbench checked that the selected model was loaded locally, the loopback endpoint responded, and the scorer could parse the expected answer format. Earlier reused-case checks remain engineering evidence only; they are not included in the 54.6% result and no longer have a separate reader-facing results page.
+
+The successful GPQA run used the public EvalScope adapter directly. The report recorded 198 requested, 198 succeeded, and 0 errored requests.
+
+</section>
+
+<section class="reader-section warm" aria-label="How to read the comparison">
 
 ## What makes a fair comparison?
 
-Two exam scores are not comparable if the exams contain different questions or allow different numbers of attempts. The same applies here: we need aligned tasks, instructions, tools, answer checks, and counting rules. A shared benchmark name alone is not enough.
+Two scores are directly comparable only when the important conditions align: benchmark and dataset revision, exact item set, prompt, tools, attempts, reasoning budget, answer extraction, scorer, denominator, and failure treatment.
 
-[Planned task families](benchmark-tasks.md) · [Historical comparison limits](historical-frontier-comparison.md) · [Glossary](glossary.md)
-
-</section>
-
-<section class="reader-section cool" aria-label="Test-system validation">
-
-## Test-system validation
-
-Before measuring model ability, we check that requests reach the local model and that the answer checker works. The published setup check completed on a small set of reused cases. This is engineering evidence about the testing path, **not a score for Splash's intelligence, general reliability, or closeness to frontier models**.
-
-It is useful for troubleshooting and understanding how the testing system was checked. It does not qualify every future benchmark adapter or replace independent scorer validation and a frozen capability study.
-
-[Read the setup-check report](local-pilot-results.md) for the counts, checking method, and limitations. Its original URL and reviewed aggregate remain available; it is not included as a capability result.
+The current frontier-model sources do not disclose every one of those fields. Their scores are therefore shown as directional context. This project does not combine them into a leaderboard, an “AI score,” a percent-of-frontier badge, or an exact performance gap.
 
 </section>
 
-<details>
-<summary>Technical research protocol and comparison requirements</summary>
+<section class="reader-section cool" aria-label="Privacy and public evidence">
 
-## Research question
+## Privacy and public evidence
 
-How capable and practically useful is the exact Splash/Qwen3.8 deployment served by local
-LM Studio relative to dated current and previous-generation frontier-model evidence, and which tasks can it handle
-reliably with stated verification requirements?
+The public repository contains source code, configuration templates, factual references, and a reviewed aggregate result. It excludes raw benchmark prompts, model responses, reasoning traces, credentials, private runtime identifiers, local filesystem paths, and detailed execution logs.
 
-Model identity, runtime reliability, speed, and capability are reported separately.
-Changing backend, quantization, reasoning policy, tools, or agent scaffolding changes the
-condition and must be labeled.
+That boundary protects private local state and restricted evidence, but it also limits independent review: readers can inspect the method and aggregate, but cannot regrade the run from this site. Public GitHub Actions builds static documentation with mock or synthetic data and has no connection to this Mac or LM Studio.
 
-## Evidence classes
+[Review the result](dashboard.md) · [Inspect the sources](sources.md)
 
-1. `local_measurement`: newly generated through a verified local LM Studio instance.
-2. `archived_response_reanalysis`: lawfully available historical responses rescored on
-   aligned task IDs; not a new historical-model run.
-3. `published_historical_reference`: an aggregate from a primary publisher or benchmark
-   operator, with its original protocol limitations.
-4. `context_only_incompatible_reference`: useful context with a materially different dataset,
-   revision, split, metric, attempts, scaffold, or insufficient protocol information.
-
-Comparability is `matched`, `partially_matched`, `incompatible`, or `unknown`. A shared
-benchmark title is insufficient. Direct deltas and paired statistics are refused unless
-the evidence supports them. Null is never rendered as zero.
-
-## Direct-comparison contract
-
-A direct difference requires the same benchmark version, dataset revision, split, exact sample
-manifest, prompt/template, tool and scaffold policy, attempts, scorer/extractor, denominator,
-failure treatment, and aggregation. Each model and runtime condition must be completely
-identified, but the compared models are expected to differ. Missing facts remain `null`; they
-are never inferred from a benchmark title or publication date.
-
-Local binary rates are stored as proportions in `[0, 1]`. Historical percentages are normalized
-to proportions only when their units are explicit. A permitted result is reported as a
-percentage-point difference, never as “percent improvement.” The practical pilot uses one model
-attempt per base task; transport failures remain in the end-to-end denominator, while the
-conditional-capability denominator is reported separately.
-
-For local Splash evidence, the gate additionally requires verified physical locality, exact
-loaded-instance attribution, an explicit transmitted reasoning setting, and recorded LM
-Studio/runtime versions. Native LM Studio pilot evidence must also return a matching response
-instance identifier and an accepted reasoning setting. EvalScope core runs use LM Studio's
-OpenAI-compatible endpoint, whose response exposes only the configured model alias: the core
-manifest therefore preserves the verified exact-local request binding but leaves response
-instance identity and match as `null`. The core manifest likewise records the reasoning setting
-as transmitted but not read back, rather than claiming runtime acceptance. Mock, calibration,
-post-hoc, or attribution-provisional runs cannot produce a frontier delta.
-
-EvalScope commands enable its progress tracker for local dashboard visibility. That progress
-record does not strengthen model-attribution or effective-settings evidence and contains no
-public benchmark inputs or responses.
-
-## Frozen sequence
-
-1. Freeze the dated reference cohort and map benchmark intersections before seeing Splash
-   scores.
-2. Snapshot the as-found LM Studio/model state and verify local execution.
-3. Qualify transport and scorers with synthetic fixtures.
-4. Separate calibration tasks from held-out pilot tasks.
-5. Run the baseline, evaluate at most three bounded tuning candidates on calibration data,
-   freeze one candidate, then run held-out validation.
-6. Restore temporary settings without overwriting intervening user changes.
-7. Export only reviewed aggregates through a fresh allowlist.
-
-The initial pilot is diagnostic: at most 12 GPQA, 16 IFEval, 14 MMLU-Pro, 10 tool/JSON,
-8 context, and—only after sandbox verification—10 coding cases. It is not a full benchmark
-estimate. The session-wide caps are 45 minutes, 250,000 generated tokens, 250 live requests,
-one in-flight request, and three candidates beyond baseline. Expanded work requires an
-explicit launch and budget.
-
-## Reporting
-
-Reports lead with a capability profile. For every task family they state the local score,
-denominator and interval; dated historical reference; evidence class; comparability reason;
-limitations; and supported work. The primary-objective status is exactly one of
-`not_started`, `blocked`, `pilot_only`, `partially_answered`, or
-`answered_with_stated_scope`.
-
-</details>
+</section>

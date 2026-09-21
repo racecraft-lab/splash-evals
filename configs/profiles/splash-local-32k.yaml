@@ -25,10 +25,10 @@ operation_requested:
   max_output_tokens: 4096
   stream: false
 reasoning_control:
-  mechanism: native-v1
+  mechanism: openai-compatible-reasoning-effort
   desired_mode: "on"
-  desired_effort: null
-  transmitted: "on"
+  desired_effort: "medium"
+  transmitted: "medium"
   verified_effect: accepted_by_runtime_not_read_back
 metadata:
   load_effective: verified_from_loaded_instance

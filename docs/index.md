@@ -1,58 +1,69 @@
 # How well does Splash work on a local computer?
 
-<section class="reader-section" aria-label="The research question and current evidence">
+<section class="reader-section" aria-label="The result in plain English">
+
+## One public benchmark, one concrete answer
+
+We ran the complete **198-question GPQA Diamond** benchmark against Splash / Qwen3.8 on this Mac through LM Studio. The local model scored **54.6% accuracy**. All 198 requests completed.
+
+That is a real capability result for one difficult science-reasoning benchmark. It is not a general intelligence score, and it does not prove that Splash is equivalent to a frontier model.
+
+[Explore the result](dashboard.md) · [See exactly how we tested](methodology.md)
+
+</section>
+
+<section class="reader-section cool" aria-label="Result summary">
+
+## The run at a glance
+
 <div class="reader-columns">
 <div>
 
-## The question
+### 54.6%
 
-How close can local Splash / Qwen3.8 come to current and previous-generation frontier models on useful tasks? We want to measure the gap, not assume a win.
-
-</div>
-<div>
-
-## What we know
-
-**Capability results: not yet measured.** Published reference scores provide context, but there is no eligible local benchmark result or supported frontier comparison yet.
+Accuracy on the full GPQA Diamond set used by EvalScope 1.12.0.
 
 </div>
 <div>
 
-## What comes next
+### 198 of 198
 
-Freeze the tasks, scoring rules, and comparison conditions; run the local study; then publish the results and their limits. [Review every remaining launch gate](capability-readiness.md) or [see the comparison coverage](dashboard.md#benchmark-comparison-board).
+Every benchmark request completed; none was dropped from the denominator.
+
+</div>
+<div>
+
+### 64.13 tok/s
+
+Average output generation speed. The average request took 43.95 seconds.
 
 </div>
 </div>
-</section>
-
-<section class="reader-section cool" aria-label="The evaluation process">
-
-## From a task to a result
-
-An evaluation is a test with a recorded outcome. This project keeps the task, the answer check, and the interpretation separate.
-
-<ol class="process">
-<li><strong>Task</strong><span>Give the model an instruction with a defined way to check its answer.</span></li>
-<li><strong>Local model</strong><span>Run the task on the local deployment through LM Studio.</span></li>
-<li><strong>Answer check</strong><span>Check the response against the task's criteria.</span></li>
-<li><strong>Report</strong><span>Record what happened, what it means, and what it does not prove.</span></li>
-</ol>
-
-[See how we test](methodology.md)
 
 </section>
 
-<section class="reader-section warm" aria-label="Project definitions">
+<section class="reader-section warm" aria-label="Why the comparison needs care">
 
-## Understand the project
+## What the frontier numbers tell us
 
-<dl class="project-definitions">
-<div><dt>Splash / Qwen3.8</dt><dd>The public label for the local model deployment being studied. Results describe that tested setup, not every deployment of a model family.</dd></div>
-<div><dt>LM Studio</dt><dd>The application serving the model locally. This website is a static report; it cannot send requests to the model or access the test computer.</dd></div>
-<div><dt>This repository</dt><dd>The source code, test tools, dated reference records, and reviewed public summaries. Raw prompts, responses, and private runtime records stay outside it.</dd></div>
+OpenAI reports GPQA Diamond scores above 92% for GPT-5.5 and the GPT-5.6 family. Those figures show the scale of current frontier performance, but they were produced under publisher-controlled conditions that do not disclose every field needed for a matched comparison.
+
+So this site shows them as **directional context**, not as a head-to-head ranking or an exact performance gap. Claude Sonnet 5 and Opus 5 remain in the requested comparison roster, but no GPQA Diamond score was identified in the official release pages reviewed for this project.
+
+[Read the comparison table](dashboard.md#benchmark-comparison)
+
+</section>
+
+<section class="reader-section cool" aria-label="Key terms">
+
+## Key terms
+
+<dl class="project-definitions" id="key-terms">
+<div><dt>Splash / Qwen3.8</dt><dd>The exact local model deployment tested here. The result does not automatically apply to every quantization, runtime, or configuration of the model family.</dd></div>
+<div><dt>GPQA Diamond</dt><dd>A difficult multiple-choice benchmark written by domain experts in biology, chemistry, and physics.</dd></div>
+<div><dt>Directional comparison</dt><dd>Useful context from a published score whose full testing conditions do not match or are not completely disclosed.</dd></div>
 </dl>
 
-[Read the glossary](glossary.md) · [Explore the source code](https://github.com/racecraft-lab/splash-evals)
+[Run the workbench yourself](operations.md) · [Inspect the sources](sources.md)
 
 </section>

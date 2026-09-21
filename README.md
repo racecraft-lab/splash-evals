@@ -29,9 +29,9 @@ served model is verified as Splash.
 - Generated code is never executed on the host. Coding evaluation requires a separately
   verified disposable sandbox with no network, host-home mount, or Docker socket.
 
-See [methodology](docs/methodology.md), [privacy](docs/privacy.md),
-[operations](docs/operations.md), the tracked [capability-run readiness checklist](docs/capability-readiness.md),
-and the [historical catalog](references/frontier/README.md).
+See the [measured result](docs/dashboard.md), [methodology](docs/methodology.md),
+[operations guide](docs/operations.md), [source record](docs/sources.md), and the
+[historical catalog](references/frontier/README.md).
 The same public material is available in the
 [Starlight documentation site](https://racecraft-lab.github.io/splash-evals/).
 
@@ -57,21 +57,16 @@ The smoke suite uses synthetic tasks. Live evaluation requires a verified local 
 instance and writes evidence outside the checkout. Expanded studies require explicit
 `--allow-expanded` authorization.
 
-## Current delivery status
+## Current public result
 
-Repository, workbench, and research readiness are reported independently. The checked-in
-feature audit intentionally begins with `actual: not-yet-applied`; GitHub settings are not
-claimed until their API/UI read-back and a safe test pull request verify them. No public
-result is implied by the presence of `published/`.
+Splash / Qwen3.8 scored **54.6% accuracy** on the complete 198-question GPQA Diamond
+benchmark through local LM Studio. All 198 requests completed. The reviewed public record
+includes aggregate accuracy, execution counts, performance, configuration, limitations, and
+provenance hashes; raw prompts, responses, reasoning, local paths, and private runtime
+identifiers remain outside Git.
 
-## Local pilot result
-
-The reviewed local aggregate is a post-hoc runtime/scorer qualification on reused cases. Its
-publication purpose is `post_hoc_runtime_scorer_qualification` and `capability_evidence` is
-`false`. It cannot establish model capability, improvement, equivalence, ranking, or a frontier
-delta. Historical direct-comparison coverage remains unavailable. See the
-[sanitized qualification result](docs/local-pilot-results.md) and the
-[remaining capability-run gates](docs/capability-readiness.md).
+Publisher-reported frontier scores are directional context, not a protocol-matched ranking or
+exact delta. See [What we found](docs/dashboard.md) and [How we tested](docs/methodology.md).
 
 ## License and upstream rights
 

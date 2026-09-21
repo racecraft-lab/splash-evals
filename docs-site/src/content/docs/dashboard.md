@@ -10,170 +10,103 @@ next: false
 
 <div class="document-sheet">
 
-**How close is Splash to the frontier? Not yet measured.** This page tracks the comparisons we want to make, the evidence available, and the gaps still to fill. No capability score or frontier ranking is available yet.
+<div class="finding" role="region" aria-label="Primary GPQA Diamond finding">
 
-<section class="reader-section cool" aria-label="Local model evaluation card">
+## Splash scored 54.6% on GPQA Diamond
 
-## Splash / Qwen3.8 at a glance
+The local Splash / Qwen3.8 deployment completed **198 of 198** questions with **0 request errors**. This is the first public capability result from this repository.
 
-This evaluation card describes **the local deployment under study**, not a complete upstream model card. It keeps identity, measurement status, and limitations together. It is not a certification or an overall model rating.
+</div>
 
-| Field | Public record |
+<section class="reader-section cool" aria-label="Model card summary">
+
+## Evaluation card
+
+| Field | Reviewed public record |
 |---|---|
-| Deployment under study | Splash / Qwen3.8 through local LM Studio |
-| Research objective | Measure the gap to current and previous-generation frontier models, task by task |
-| Capability evidence | Not yet measured on a held-out, qualified test set |
-| Exact artifact and runtime configuration | Required in an eligible capability report; the display name alone is not a reproducible model identity |
-| Speed and resource use | Not yet reported as approved public measurements |
-| Direct comparison | Not yet available; matching benchmark and scoring conditions are required |
-| Unsupported claims | A frontier-model ranking, broad ability claim, or claim of improvement |
+| Model under test | Splash / Qwen3.8, served locally by LM Studio as `racecraft-splash-local` |
+| Benchmark | GPQA Diamond, EvalScope built-in adapter, evaluation version `v1.0` |
+| Scope | Full 198-question `train` split, `default` subset, zero-shot |
+| Result | **54.6% accuracy** |
+| Execution | 198 requested, 198 succeeded, 0 errored |
+| Reasoning condition | OpenAI-compatible `reasoning_effort: medium` |
+| Generation | Maximum 4,096 output tokens, batch size 1, retries 0 |
+| Runner | EvalScope 1.12.0 through LM Studio's local OpenAI-compatible endpoint |
+| Public evidence | Aggregate result and provenance hashes only; no prompts, responses, or reasoning traces |
 
-[Understand the test method](/splash-evals/methodology/)
+[Read the complete method](/splash-evals/methodology/)
 
 </section>
 
-## Benchmark comparison board
+<section class="reader-section warm" aria-label="Benchmark comparison">
 
-### Current and previous-generation targets
+## Benchmark comparison
 
-Roster checked **2026-09-20**. These are planned comparisons, not completed runs or verified benchmark-score records. The primary target is the requested Sonnet, Opus, and GPT group; original Claude 4 releases remain additional historical anchors.
+These are reported **GPQA Diamond accuracy** figures. The Splash row was measured by this project. The other numeric rows are publisher-reported context; their prompt, sampling, answer extraction, reasoning budget, dataset revision, or exact item manifest may differ. They do not support a protocol-matched delta.
 
 <p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
 
 <div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
 
-| Family | Newer requested model | Previous-generation anchor | Splash gap |
-|---|---|---|---|
-| Claude Sonnet | [Sonnet 5](https://www.anthropic.com/news/claude-sonnet-5) | Sonnet 4.6; original Sonnet 4 as older context | Not yet measured |
-| Claude Opus | [Opus 5](https://www.anthropic.com/news/claude-opus-5) | Opus 4.8; original Opus 4 as older context | Not yet measured |
-| OpenAI GPT | [GPT‑5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol) | [GPT‑5.5](https://developers.openai.com/api/docs/models/gpt-5.5) | Not yet measured |
-| OpenAI GPT | [GPT‑5.6 Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra) | Not selected for this variant | Not yet measured |
-| OpenAI GPT | [GPT‑5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna) | Not selected for this variant | Not yet measured |
+| Model / condition | GPQA Diamond | Evidence status |
+|---|---:|---|
+| **Splash / Qwen3.8 · local LM Studio · medium effort** | **54.6%** | Measured here; 198/198 completed |
+| GPT-5.6 Sol | 94.6% | OpenAI-reported, directional |
+| GPT-5.6 Terra | 92.9% | OpenAI-reported, directional |
+| GPT-5.6 Luna | 92.3% | OpenAI-reported, directional |
+| GPT-5.5 | 93.6% | OpenAI-reported, directional |
+| Claude Opus 4.8 | 92.0% | Reported in OpenAI's comparison table; directional |
+| Claude Sonnet 5 | Not reported | No GPQA Diamond value identified in the reviewed official release page |
+| Claude Opus 5 | Not reported | No GPQA Diamond value identified in the reviewed official release page |
+| Claude Sonnet 4 / 4.6 | Not established | No protocol-aligned value in the reviewed project catalog |
+| Claude Opus 4 | Not established | No protocol-aligned value in the reviewed project catalog |
 
 </div>
 
-The Claude release sources identify 4.6 and 4.8 as the immediate predecessors. **GPT‑5.6 Sol, Terra, and Luna are separate targets**, not interchangeable names or one combined score. Each needs its own model identifier, reasoning settings, test conditions, and results. Previous-generation anchors for Terra and Luna have not been selected. This requested group is **not the entire current frontier**: [OpenAI's catalog](https://developers.openai.com/api/docs/models) also lists GPT‑6 Astra, and the [Opus 5 release](https://www.anthropic.com/news/claude-opus-5) discusses Fable 5. Broader-frontier coverage still needs evidence review.
+“Not reported” and “not established” do not mean zero. They mean the reviewed source set does not support a number for that row.
 
-[What must happen before we can measure the gap](/splash-evals/historical-frontier-comparison/#the-next-study)
-
-### Measurement status
-
-**Splash benchmark scores are not yet measured.** The historical columns below show previously published reference numbers, not evaluations this project ran. No local score difference, ranking, or combined “AI score” is available.
-
-<div class="evidence-track" role="group" aria-label="Comparison evidence status">
-<div><strong>Requested frontier cohort</strong><span>Score and protocol review pending</span></div>
-<div><strong>Local benchmark runs</strong><span>Not yet measured</span></div>
-<div><strong>Fair comparison</strong><span>Not yet available</span></div>
-</div>
-
-Read each benchmark on its own. Different tasks, scoring methods, model versions, and reasoning settings must not be merged into one ranking. **Not yet measured is not zero.** “Not reported” means the source does not supply a field; “not comparable” means the test conditions do not support a score-to-score claim.
-
-### Older reference archive
-
-The following records predate the requested cohort. They remain useful historical context, but do not answer today's frontier-comparison question.
-
-<section class="reader-section cool" aria-label="Reasoning benchmark references">
-
-### Scientific reasoning · GPQA Diamond
-
-Reported accuracy (%). These OpenAI appendix values are historical context only. Exact test metadata is incomplete, and the publisher's model-based answer extraction affects interpretation.
-
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
-
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
-
-| Model / condition | Reported score | Source date and identity | Matched Splash / Qwen3.8 score |
-|---|---:|---|---|
-| GPT-4o | 46.0% | [2025-04-14 appendix](https://openai.com/index/gpt-4-1/); snapshot 2024-11-20 | Not yet measured |
-| GPT-4.1 | 66.3% | [2025-04-14 appendix](https://openai.com/index/gpt-4-1/); exact snapshot not reported | Not yet measured |
-| OpenAI o1 (high) | 75.7% | [2025-04-14 appendix](https://openai.com/index/gpt-4-1/); exact snapshot and reasoning budget not reported | Not yet measured |
-
-</div>
-
-**GPT-4o extraction caveat:** the source footnote describes a change from approximately 46% to 54% with model-based extraction. The catalog preserves the table's 46.0%; neither value supports a local delta here. Source publication dates are not measurement dates.
-
-**Separate, unresolved split:** Claude 3.5 Sonnet (June 2024) has a [reported GPQA value of 59.4%](https://www.anthropic.com/news/the-case-for-targeted-regulation), but the catalog does not establish GPQA versus GPQA Diamond or the full protocol. It is deliberately excluded from the Diamond table.
+[Inspect the primary sources and transcription status](/splash-evals/sources/)
 
 </section>
 
-<section class="reader-section warm" aria-label="Instruction following benchmark references">
+<section class="reader-section cool" aria-label="Runtime performance">
 
-### Instruction following · IFEval
+## Runtime performance
 
-Publisher-reported percentages. IFEval has multiple scoring variants; this source does not identify which variant these values use. Do not treat them as strict prompt-level accuracy or compare them with a local metric until that is resolved.
+Performance describes this local run, not model quality.
 
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+| Measure | Result |
+|---|---:|
+| Total wall-clock time | 2 h 25 m 16 s |
+| Average request latency | 43.95 s |
+| Median request latency | 41.80 s |
+| 90th percentile latency | 72.49 s |
+| Average output throughput | 64.13 tokens/s |
+| Average output length | 2,818 tokens |
+| Total tokens processed | 612,907 |
 
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
-
-| Model / condition | Reported score | Source date and identity | Matched Splash / Qwen3.8 score |
-|---|---:|---|---|
-| GPT-4o | 81.0% | [2025-04-14 appendix](https://openai.com/index/gpt-4-1/); snapshot 2024-11-20 | Not yet measured |
-| GPT-4.1 | 87.4% | [2025-04-14 appendix](https://openai.com/index/gpt-4-1/); exact snapshot not reported | Not yet measured |
-| OpenAI o1 (high) | 92.2% | [2025-04-14 appendix](https://openai.com/index/gpt-4-1/); exact snapshot and reasoning budget not reported | Not yet measured |
-
-</div>
-
-</section>
-
-<section class="reader-section cool" aria-label="Coding benchmark references">
-
-### Coding · Aider polyglot
-
-Reported success rates on the 225-case, six-language suite. **First attempt** and **after a permitted repair** are different metrics. The latter is not independent-sample pass@2. Rows are grouped by model and condition, not ranked; Aider versions and edit formats also differ.
-
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
-
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
-
-| Model / condition | First attempt | After permitted repair | Recorded measurement date | Matched Splash / Qwen3.8 score |
-|---|---:|---:|---|---|
-| Claude 3.5 Sonnet · 2024-10-22 | 22.2% | 51.6% | 2025-01-17 | Not yet measured |
-| Claude 3.7 Sonnet · 2025-02-19 · no thinking | 24.4% | 60.4% | 2025-02-24 | Not yet measured |
-| Claude 3.7 Sonnet · 2025-02-19 · 32K thinking | 29.3% | 64.9% | 2025-02-24 | Not yet measured |
-| Gemini 2.5 Pro Preview 03-25 | 40.9% | 72.9% | 2025-04-12 | Not yet measured |
-
-</div>
-
-Source: [Aider polyglot leaderboard](https://aider.chat/docs/leaderboards/). These are the dated records in this repository, not a claim about today's leaderboard. The small local setup check is incompatible with this full coding suite. An isolated coding environment and aligned task/scoring conditions are still required.
+Time to first token and time per output token were not available from this compatible endpoint, so they are not estimated here.
 
 </section>
 
-### Practical local work
+<section class="reader-section warm" aria-label="Run record and limitations">
 
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+## Run record and limitations
 
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+- **Public, not private held-out:** GPQA Diamond is a widely available benchmark. This run measures the local system on that public set; it cannot rule out training-data contamination.
+- **Output cap:** 81 of 198 responses reached the 4,096-token output ceiling. This may have affected some answers and is part of the tested condition.
+- **One benchmark:** The result says nothing by itself about coding, instruction following, tool use, long context, safety, or general reliability.
+- **No protocol-matched frontier delta:** Publisher figures remain directional until the dataset revision, item manifest, prompt, attempts, reasoning budget, and scorer are aligned.
+- **No raw evidence published:** Benchmark prompts, responses, reasoning, local paths, and runtime identifiers remain outside Git.
 
-| Area | Splash / Qwen3.8 result | Historical counterpart |
-|---|---|---|
-| Structured output and native tools | Not yet measured as capability evidence | No aligned dated reference in this catalog |
-| Long context | Not yet measured as capability evidence | No aligned dated reference in this catalog |
-| Repository engineering | Not yet measured as capability evidence | No aligned dated reference in this catalog |
-| Speed and resource use | Not yet reported | No aligned local/historical measurement pair |
+Public provenance digests:
 
-</div>
-
-Before a Splash score appears, the public report must identify the model artifact and configuration, benchmark revision and split, sample count, scoring method, execution conditions, and uncertainty where applicable. A direct comparison additionally needs a documented protocol match. [Comparison requirements and limits](/splash-evals/historical-frontier-comparison/).
-
-The numbers above come from the [checked-in historical catalog](/splash-evals/frontier-catalog/) and its [source-number checks](/splash-evals/frontier-verification/). The presentation draws on [model-card reporting practice](https://huggingface.co/docs/hub/model-cards) and [HELM's separation of scenarios, metrics, and evaluation conditions](https://crfm.stanford.edu/2022/11/17/helm.html); it is not an official HELM or Hugging Face evaluation.
-
-<section class="reader-section cool" aria-label="Open research questions">
-
-## What is still unanswered?
-
-- **Can it handle unfamiliar practical tasks?** We need a separate test set chosen before results are seen.
-- **How close is it to current and previous-generation frontier models?** The requested target group is identified, but score/protocol review and matching local runs remain outstanding.
-- **How fast or resource-efficient is it?** This public report does not include approved timing or memory measurements.
-
-[Explore the historical comparison limits](/splash-evals/historical-frontier-comparison/) · [See the planned task families](/splash-evals/benchmark-tasks/)
+| Artifact | SHA-256 |
+|---|---|
+| EvalScope report | `5863ba54c2ec07cb1e508585d8e2129e863e1573fda2a23cf2aae241bec5e56a` |
+| Task configuration | `f69e7d5ccead9ed80ebcf77eb26f7e5cdfe3e24c3483b9d06db5ef30863420e2` |
+| Progress record | `f71604e1b66511b152428fb49e07334602309aaa70afe233b49347ec4f542c69` |
 
 </section>
-
-## How to read a result
-
-Completion tells you whether a test ran. Its purpose tells you what was being checked. Comparability tells you whether two scores can fairly be contrasted. These are separate questions: a completed run is not automatically capability evidence. Engineering checks are documented separately under [Methodology → Test-system validation](/splash-evals/methodology/#test-system-validation).
-
-This dashboard is a static public summary, not a live connection to LM Studio. [What we publish and keep private](/splash-evals/privacy/).
 
 </div>

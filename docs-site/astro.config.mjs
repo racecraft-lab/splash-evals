@@ -9,6 +9,17 @@ export default defineConfig({
   site: SITE,
   base: BASE,
   trailingSlash: 'always',
+  redirects: {
+    '/benchmark-tasks': `${BASE}/methodology/#benchmark-and-sample`,
+    '/local-pilot-results': `${BASE}/methodology/#transport-and-scorer-qualification`,
+    '/architecture': `${BASE}/operations/#local-system-boundary`,
+    '/privacy': `${BASE}/methodology/#privacy-and-public-evidence`,
+    '/capability-readiness': `${BASE}/dashboard/#run-record-and-limitations`,
+    '/historical-frontier-comparison': `${BASE}/dashboard/#benchmark-comparison`,
+    '/frontier-catalog': `${BASE}/sources/#catalog-semantics`,
+    '/frontier-verification': `${BASE}/sources/#transcription-checks`,
+    '/glossary': `${BASE}/#key-terms`,
+  },
   image: { service: passthroughImageService() },
   integrations: [
     starlight({
@@ -40,21 +51,8 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: 'Start here',
-          items: ['index', 'dashboard', 'methodology', 'benchmark-tasks', 'local-pilot-results'],
-        },
-        {
-          label: 'System',
-          items: ['architecture', 'privacy', 'operations'],
-        },
-        {
-          label: 'Evidence',
-          items: [
-            'sources',
-            'historical-frontier-comparison',
-            'frontier-catalog',
-            'frontier-verification',
-          ],
+          label: 'Splash Evals',
+          items: ['index', 'dashboard', 'methodology', 'operations', 'sources'],
         },
       ],
       social: [
