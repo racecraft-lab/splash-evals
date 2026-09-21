@@ -40,7 +40,7 @@ All requests completed, so no transport failures had to be scored or excluded. A
 
 ## Transport and scorer qualification
 
-Before the capability run, the workbench checked that the selected model was loaded locally, the loopback endpoint responded, and the scorer could parse the expected answer format. Earlier reused-case checks remain engineering evidence only; they are not included in the 54.6% result and no longer have a separate reader-facing results page.
+Before the capability run, the workbench checked that the selected model was loaded locally, the loopback endpoint responded, and the scorer could parse the expected answer format. Earlier reused-case checks remain engineering evidence only; they are not included in the 54.55% result and no longer have a separate reader-facing results page.
 
 The successful GPQA run used the public EvalScope adapter directly. The report recorded 198 requested, 198 succeeded, and 0 errored requests.
 

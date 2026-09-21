@@ -26,11 +26,11 @@ export const pageIntros: Record<string, Intro> = {
     steps: [['Task', 'Give the model clear instructions'], ['Local model', 'Run it through LM Studio'], ['Answer check', 'Record what passed—and what it means']],
   },
   dashboard: {
-    summary: 'Splash scored 54.6% accuracy on the full 198-question GPQA Diamond benchmark. All 198 questions completed with no execution errors.',
+    summary: 'Splash scored 54.55% accuracy on the full 198-question GPQA Diamond benchmark. All 198 questions completed with no execution errors.',
     variant: 'results',
     caption: 'A measured local result. Frontier scores are publisher-reported context, not a protocol-matched head-to-head.',
     result: {
-      score: '54.6%',
+      score: '54.55%',
       metric: 'GPQA Diamond accuracy',
       completion: '198 of 198 completed · 0 errors',
     },

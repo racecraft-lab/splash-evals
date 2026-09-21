@@ -1,0 +1,43 @@
+schema_version: 1
+reference_id: anthropic-claude-opus-4-2025-05-gpqa-diamond-epoch
+provider: Anthropic
+model_display_name: Claude Opus 4
+model_snapshot_id: null
+release_period: "2025-05"
+measurement_date: null
+source_publication_date: null
+source_url: "https://epoch.ai/models/claude-opus-4"
+source_locator: "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4 column (rounded whole-percent value)"
+source_revision_or_content_hash: "retrieved 2026-09-21; normalized URL|model|release date|benchmark|score|retrieval date tuple sha256:fecdf541f8eae11cab26bc9ec54829326acefbcbbe2dd811a76b8da8bc84010c"
+retrieved_on: "2026-09-21"
+evidence_class: context_only_incompatible_reference
+benchmark:
+  name: GPQA Diamond
+  version: null
+  split: Diamond
+  dataset_revision: null
+  sample_count: null
+  sample_id_manifest: null
+  metric_name: accuracy
+  metric_unit: percent
+  higher_is_better: true
+protocol:
+  few_shot: null
+  prompts_or_template_revision: null
+  reasoning_mode: null
+  output_budget: null
+  attempts_per_task: null
+  aggregation: null
+  tool_access: null
+  agent_scaffold_revision: null
+  scorer_revision: null
+  answer_extraction: null
+reported_score: 76
+reported_uncertainty: null
+comparability: incompatible
+comparability_notes:
+  - "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule."
+  - "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null."
+  - "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+rights_and_access_notes: "Brief factual aggregate from Epoch AI's public model page; no benchmark questions, responses, or logs redistributed."
+verification_status: source_verified

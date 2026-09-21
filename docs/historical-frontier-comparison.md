@@ -1,167 +1,36 @@
-# How close is Splash to the frontier?
+# Historical frontier comparison
 
-**Not yet measured.** The goal is to measure local Splash/Qwen3.8 against current and previous-generation frontier models, task by task. Older reference records provide context, not a ranking of Splash or coverage of the current frontier.
+> **Consolidated reader content.** The current public comparison is on [Results](dashboard.md#benchmark-comparison), with source and protocol notes on [Sources](sources.md#comparison-roster-source-classes). The old public URL redirects there.
 
-<section class="reader-section warm" aria-label="Frontier comparison study plan">
+## Current status
 
-## The next study
+- `primary_objective_status`: `partially_answered`
+- `local_capability_result`: `54.55%` GPQA Diamond accuracy
+- `execution`: 198 requested, 198 succeeded, 0 errors
+- `historical_comparison_status`: `directional_only`
 
-The [requested comparison group](dashboard.md#current-and-previous-generation-targets) is Sonnet 5/4.6, Opus 5/4.8, GPT‑5.6 Sol/5.5, and separate GPT‑5.6 Terra and Luna targets, with original Sonnet 4 and Opus 4 as additional older anchors. Terra and Luna need their own model identifiers, reasoning settings, test conditions, and results; their previous-generation anchors have not been selected. GPT‑6 Astra and Fable 5 belong in a separately labeled broader-frontier evidence review. This roster was checked on **2026-09-20**; refresh it when the study is frozen.
+The completed EvalScope 1.12.0 run establishes one local capability result for the exact Splash / Qwen3.8, LM Studio, zero-shot, `reasoning_effort: medium` condition. It replaces the earlier setup-only and unmeasured reader states.
 
-### Remaining work
+It does not establish a protocol-matched rank or exact gap to a frontier model. The external figures come from provider reports, cross-provider comparison tables, or independent Epoch AI evaluations with different prompts, reasoning settings, trial counts, sampling, answer extraction, or dataset metadata.
 
-- [x] Identify the requested model families and distinguish immediate predecessors from original Claude 4 releases.
-- [ ] Verify current scores from official model/system cards or benchmark operators. Record exact model identity, source locator, dates, benchmark revision/split, scorer, reasoning settings, tools, attempts, denominator, and uncertainty. A model's existence is not score verification.
-- [ ] Select a reproducible benchmark intersection. Candidate lanes include reasoning, instruction following, and coding; practical tasks also need their own aligned reference evidence before supporting a frontier gap. Record unavailable coverage and protocol mismatches.
-- [ ] Freeze task IDs/hashes, exposure history, local model artifact and quantization, runtime proof, scoring rules, failure handling, sample size, and stopping rule. Obtain required dataset permissions and expanded-run authorization with a concrete runtime budget.
-- [ ] Qualify each adapter and scorer on separate calibration cases. Verify disposable sandbox isolation before executing generated code. Do not tune on evaluation cases.
-- [ ] Run the frozen local study, retaining failed/unscorable cases in the declared denominator and private evidence outside Git. Restore temporary LM Studio configuration.
-- [ ] Publish reviewed aggregate results, uncertainty, and per-benchmark comparison eligibility. Replace unmeasured states only with admitted evidence.
+## Requested comparison roster
 
-### What “how close” means
+The reader-facing Results page now covers:
 
-Where protocols match, report **Splash's score minus the reference score in percentage points**, separately for each benchmark and model condition. Show local uncertainty and any reference uncertainty without inventing a paired interval from an aggregate. Define any practical-equivalence margin and statistical rule before seeing results; a small observed gap alone does not establish equivalence.
+- Claude Opus 4, Opus 4.6, Opus 4.7, Opus 4.8, and Opus 5;
+- Claude Sonnet 4, Sonnet 4.6, and Sonnet 5; and
+- GPT-5.5 plus GPT-5.6 Sol, Terra, and Luna.
 
-Keep capability, completion, latency, resource use, and cost separate. No blended intelligence score or percentage-of-frontier badge. If no reproducible intersection exists, publish local capability evidence and external context separately, with the limitation clearly stated.
+Where provider and independent figures both exist, both are shown with their source class. They are never averaged. Missing protocol fields remain unknown rather than being treated as matches.
 
-**The local-only boundary remains unchanged.** Published results or permitted archived responses can supply comparison evidence without remote inference. This plan does not authorize paid API runs, cloud graders, or uploading private tasks. New remote runs would need a separate scope, privacy, and spending decision. Public CI remains disconnected from the evaluation computer.
+## Why there is no leaderboard
 
-</section>
+A direct comparison requires the same benchmark revision and items, prompt, tools, attempts, reasoning budget, sampling, answer extraction, scorer, denominator, and failure treatment. The reviewed external sources do not establish all of those fields against the local run.
 
-<section class="reader-section cool" aria-label="Available historical context">
+The site therefore reports:
 
-## What evidence do we have?
+1. the measured local score and runtime performance;
+2. external scores as directional context with explicit source labels; and
+3. the protocol differences that prevent a head-to-head claim.
 
-The older catalog contains 19 records across OpenAI, Anthropic, and Google. These are different benchmark and testing conditions, **not 19 unique models**, and do not provide a fully aligned current-frontier cohort. Some records distinguish a first attempt from an answer repaired after feedback.
-
-| Models in the historical record | Tests represented | Matching local result |
-| --- | --- | --- |
-| GPT-4o (November 2024), GPT-4.1, o1 high | GPQA Diamond reasoning; IFEval instruction following | No matching local result |
-| Claude 3.5 Sonnet (June 2024) | GPQA reasoning, with split/protocol uncertainty | No matching local result |
-| Claude 3.5 Sonnet (October 2024), Claude 3.7 Sonnet, Gemini 2.5 Pro March variant | Aider polyglot coding, with distinct attempt and thinking conditions | No matching local result |
-
-</section>
-
-## First-party directional references
-
-The official GPT-5.6 announcement's Academic table adds four GPQA Diamond aggregate records,
-including GPT-5.5 alongside GPT-5.6 Sol, Terra, and Luna. They are
-directional context only: the published percentages do not disclose an immutable snapshot,
-benchmark version, dataset revision, sample manifest, prompt/template, reasoning condition,
-attempts, or scorer, so they do not support a local historical delta.
-
-| Record ID | Historical result | Local score | Status |
-|---|---:|---:|---|
-| `openai-gpt-5.5-2026-07-gpqa-diamond` | 93.6% | `null` | `partially_matched`, directional-only |
-| `openai-gpt-5.6-sol-2026-07-gpqa-diamond` | 94.6% | `null` | `partially_matched`, directional-only |
-| `openai-gpt-5.6-terra-2026-07-gpqa-diamond` | 92.9% | `null` | `partially_matched`, directional-only |
-| `openai-gpt-5.6-luna-2026-07-gpqa-diamond` | 92.3% | `null` | `partially_matched`, directional-only |
-
-The requested Claude Sonnet/Opus 4/5 roster remains context-only. GPT-5.5 now has a
-first-party directional GPQA Diamond record from the same Academic table, but it does not
-disclose a complete exact intersection with the local GPQA/IFEval/MMLU-Pro/Aider protocol.
-No invented numeric records are added for the remaining roster members.
-
-| Roster member | Official context | Limitation |
-|---|---|---|
-| Claude Sonnet 4 (`claude-sonnet-4-20250514`) and Claude Opus 4 (`claude-opus-4-20250514`) | [Claude 4 release](https://www.anthropic.com/news/claude-4), [system card](https://www-cdn.anthropic.com/4263b940cabb546aa0e3283f35b686f4f3b2ff47.pdf), [model IDs](https://platform.claude.com/docs/en/about-claude/model-deprecations) | Multiple snapshots and agentic scaffolds are evaluated; no exact local benchmark manifest/protocol intersection. |
-| Claude Sonnet 5 (`claude-sonnet-5`) | [Announcement](https://www.anthropic.com/news/claude-sonnet-5), [API overview](https://platform.claude.com/docs/en/models/sonnet-5/overview), [system-card index](https://www.anthropic.com/system-cards) | BrowseComp and OSWorld-Verified context is disclosed, but not the complete local manifest/scorer/attempt protocol. |
-| Claude Opus 5 (`claude-opus-5`) | [Announcement](https://www.anthropic.com/news/claude-opus-5), [API overview](https://platform.claude.com/docs/en/models/opus-5/overview), [system-card index](https://www.anthropic.com/system-cards) | Frontier-Bench, CursorBench, OSWorld, GDPval-AA, and other context is disclosed, but not an exact local intersection. |
-| GPT-5.5 (`gpt-5.5`; immutable snapshot `gpt-5.5-2026-04-23`) | [Announcement](https://openai.com/index/introducing-gpt-5-5/), [system card](https://openai.com/index/gpt-5-5-system-card/), [API model page](https://developers.openai.com/api/docs/models/gpt-5.5) | Published coding/agentic aggregates do not provide the complete local manifest/protocol; GPT-5.5 Pro is separate. |
-
-## Why not put the scores side by side?
-
-The local run checked the setup using reused cases. The historical studies used different tasks and conditions. Comparing their percentages would imply a fair contest that never happened.
-
-There is a second limitation: the historical sources do not specify all the task-version and scoring details needed by this project's direct-comparison rules. More local testing alone will not fill those gaps.
-
-<section class="reader-section warm" aria-label="Requirements for future comparisons">
-
-## What would make a comparison possible?
-
-A separately authorized study needs a frozen task set, matching task and scoring rules, verified local execution, and complete records of model settings and attempts. Any remaining mismatch must stay visible. Until then, there is no supported “better,” “worse,” or “equivalent” claim.
-
-[Read the local setup-check report](local-pilot-results.md) · [Understand the comparison rules](methodology.md)
-
-</section>
-
-## Inspect the historical evidence
-
-- [Sources and coverage](sources.md): where the dated results came from.
-- [Catalog guide](../references/frontier/README.md): what a record means and which conditions remain separate.
-- [Source-number checks](../references/frontier/VERIFICATION.md): whether the recorded numbers match their source, not whether tests are comparable.
-
-<details>
-<summary>Detailed comparison record and protocol limitations</summary>
-
-This is the public, evidence-bounded comparison report for the current Splash evaluation
-workspace. It uses only the dated records in `references/frontier/`; it does not run remote
-models, copy benchmark questions, or infer a local score that was not measured.
-
-## Status
-
-- `primary_objective_status`: `blocked` for capability measurement
-- `historical_comparison_status`: `blocked`
-
-The local LM Studio evidence is a bounded synthetic/practical pilot. It does not contain an
-aligned GPQA Diamond, IFEval, or Aider polyglot run with a benchmark sample manifest and the
-required scorer/protocol fields. Therefore every local score in the record table below is
-explicitly `null`, and no historical delta is reported.
-
-The exact-intersection gate also remains closed for the historical catalog. The Aider records
-have enough dated model/provider breadth for a candidate intersection, but their exact
-benchmark version and dataset revision are `null`. GPQA and IFEval likewise lack the required
-version/revision facts and do not provide a two-provider intersection. The four GPT-5.5/GPT-5.6
-GPQA Diamond records add first-party directional context, but their exact snapshot,
-benchmark version, dataset revision, sample manifest, and protocol fields remain `null`.
-Unknown fields are not treated as compatible coverage.
-
-The catalog provider allowlist is exactly OpenAI, Anthropic, and Google. The original catalog's
-source review found no record from those providers with all immutable sample, prompt, scorer, and
-sampling facts required for reproduction. The records therefore remain historical context even
-after the local runtime evidence is strengthened.
-
-## Record-level comparison ledger
-
-`historical result` is the value already recorded from the cited primary source. `local score`
-is intentionally `null`; it is not a zero and is not a placeholder for an unrun benchmark.
-`catalog comparability` is the current record classification. The reason is summarized from
-the record's `comparability_notes`.
-
-| Record ID | Evidence class | Historical result | Local score | Catalog comparability | Comparability reason |
-|---|---|---:|---:|---|---|
-| `anthropic-claude-3.5-sonnet-2024-06-gpqa` | `published_historical_reference` | 59.4% accuracy | `null` | `unknown` | Exact snapshot and protocol are not established; GPQA versus GPQA Diamond and answer extraction need verification. |
-| `aider-claude-3.5-sonnet-20241022-polyglot-pass1` | `published_historical_reference` | 22.2% first-attempt success | `null` | `incompatible` | Full 225-case six-language suite; local pilot is not the same suite and scorer/environment details are not fully paired. |
-| `aider-claude-3.5-sonnet-20241022-polyglot-pass2` | `published_historical_reference` | 51.6% success after permitted repair | `null` | `incompatible` | Repair-after-failure is not independent pass@2, and the local pilot is not the 225-case suite. |
-| `aider-claude-3.7-sonnet-20250219-no-thinking-polyglot-pass1` | `published_historical_reference` | 24.4% first-attempt success | `null` | `incompatible` | No-thinking is a distinct condition and the local pilot is not the full six-language suite. |
-| `aider-claude-3.7-sonnet-20250219-no-thinking-polyglot-pass2` | `published_historical_reference` | 60.4% success after permitted repair | `null` | `incompatible` | Repair-after-failure is not independent pass@2; no-thinking and thinking conditions must remain separate. |
-| `aider-claude-3.7-sonnet-20250219-thinking-32k-polyglot-pass1` | `published_historical_reference` | 29.3% first-attempt success | `null` | `incompatible` | The 32K thinking budget is a distinct condition and the local pilot is not the full suite. |
-| `aider-claude-3.7-sonnet-20250219-thinking-32k-polyglot-pass2` | `published_historical_reference` | 64.9% success after permitted repair | `null` | `incompatible` | Repair-after-failure is not independent pass@2; the 32K thinking condition is distinct. |
-| `aider-gemini-2.5-pro-preview-03-25-polyglot-pass1` | `published_historical_reference` | 40.9% first-attempt success | `null` | `incompatible` | March experimental/preview identity is distinct from later releases and the local pilot is not the full suite. |
-| `aider-gemini-2.5-pro-preview-03-25-polyglot-pass2` | `published_historical_reference` | 72.9% success after permitted repair | `null` | `incompatible` | Repair-after-failure is not independent pass@2; the March experimental/preview identity is distinct. |
-| `openai-gpt-4.1-2025-04-gpqa-diamond` | `published_historical_reference` | 66.3% accuracy | `null` | `partially_matched` | Exact API snapshot is undisclosed; publisher extraction and a bounded local subset prevent a direct delta. |
-| `openai-gpt-4.1-2025-04-ifeval` | `published_historical_reference` | 87.4% publisher-reported IFEval | `null` | `partially_matched` | Exact snapshot, IFEval metric variant, and full protocol are not identified. |
-| `openai-gpt-4o-2024-11-20-gpqa-diamond` | `published_historical_reference` | 46.0% accuracy | `null` | `partially_matched` | Source notes model-based extraction changes the result; the local pilot is only a subset unless separately aligned. |
-| `openai-gpt-4o-2024-11-20-ifeval` | `published_historical_reference` | 81.0% publisher-reported IFEval | `null` | `partially_matched` | IFEval metric variant, dataset revision, sample count, template, and scorer revision are unknown. |
-| `openai-o1-high-gpqa-diamond` | `published_historical_reference` | 75.7% accuracy | `null` | `partially_matched` | Exact o1 snapshot and reasoning budget are undisclosed; publisher extraction and a bounded subset prevent a direct delta. |
-| `openai-o1-high-ifeval` | `published_historical_reference` | 92.2% publisher-reported IFEval | `null` | `partially_matched` | Exact snapshot/reasoning budget, IFEval metric variant, and full protocol are not identified. |
-| `openai-gpt-5.5-2026-07-gpqa-diamond` | `published_historical_reference` | 93.6% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
-| `openai-gpt-5.6-sol-2026-07-gpqa-diamond` | `published_historical_reference` | 94.6% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
-| `openai-gpt-5.6-terra-2026-07-gpqa-diamond` | `published_historical_reference` | 92.9% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
-| `openai-gpt-5.6-luna-2026-07-gpqa-diamond` | `published_historical_reference` | 92.3% GPQA Diamond | `null` | `partially_matched` | First-party aggregate is directional only; exact snapshot, benchmark version, dataset revision, item manifest, reasoning condition, attempts, and scorer are unpublished. |
-
-## What this does and does not establish
-
-The records establish a dated, source-linked historical context and preserve the distinction
-between benchmark families, model snapshots, thinking modes, and repair semantics. They do not
-establish that Splash is above or below any historical model. No direct difference, ranking,
-paired statistic, or uncertainty transfer is valid from the current pilot.
-
-A future comparison requires a separately authorized run whose benchmark identity, exact
-version, dataset revision, sample IDs, prompt/template, metric and unit, scorer/extractor,
-reasoning mode, output budget, attempts, tool/scaffold policy, aggregation, model/runtime
-condition, failure treatment, and denominators are recorded alongside the local results. Until
-then, the supported conclusion is setup qualification only, with capability measurement and
-historical comparison blocked.
-
-</details>
+No percentage-point gap, ranking, equivalence claim, uncertainty transfer, or percent-of-frontier badge is supported.

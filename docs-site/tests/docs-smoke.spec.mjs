@@ -101,7 +101,7 @@ test('overview leads readers to the measured result without stale setup-check cl
   await page.goto('./');
   await expect(page.getByText('Capability results: not yet measured.', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/setup-check report/i)).toHaveCount(0);
-  await expect(page.getByText('54.6%', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('198 of 198', { exact: true })).toBeVisible();
   await expect(page.getByText('64.13 tok/s', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Explore the result', exact: true }).click();
@@ -122,6 +122,23 @@ test('results expose the reviewed GPQA result, runtime performance, and comparis
   await expect(page.getByRole('cell', { name: '43.95 s', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: '64.13 tokens/s', exact: true })).toBeVisible();
   await expect(page.getByText(/do not support a protocol-matched delta/i)).toBeVisible();
+  for (const model of [
+    'Claude Sonnet 4',
+    'Claude Opus 4',
+    'Claude Sonnet 4.6',
+    'Claude Opus 4.6',
+    'Claude Opus 4.7',
+    'Claude Opus 4.8',
+    'Claude Sonnet 5',
+    'Claude Opus 5',
+    'GPT-5.5',
+    'GPT-5.6 Sol',
+    'GPT-5.6 Terra',
+    'GPT-5.6 Luna',
+  ]) {
+    await expect(page.getByRole('row').filter({ hasText: model }).first()).toBeVisible();
+  }
+  await expect(page.getByText(/independently evaluated by Epoch AI/i)).toBeVisible();
   await page
     .getByRole('link', { name: 'Inspect the primary sources and transcription status', exact: true })
     .click();
@@ -175,7 +192,7 @@ test('320px reflow retains controls and readable GPQA result', async ({ page }) 
   await expect(page.getByLabel('Select theme')).toBeVisible();
   await expect(page.getByRole('button', { name: /Search/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Run it yourself', exact: true })).toBeVisible();
-  await expect(page.getByText('54.6%', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
   );
@@ -202,7 +219,7 @@ test('search finds GPQA Diamond and opens the result', async ({ page }) => {
   const result = page
     .getByRole('dialog')
     .getByRole('link')
-    .filter({ hasText: /What we found|Splash scored 54.6%/ })
+    .filter({ hasText: /What we found|Splash scored 54.55%/ })
     .first();
   await expect(result).toBeVisible();
   await result.click();
@@ -277,5 +294,5 @@ test('reduced motion disables link transitions without hiding result content', a
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(routeUrl('/dashboard/'));
   await expect(page.locator('.document-sheet a').first()).toHaveCSS('transition-duration', '0s');
-  await expect(page.getByText('54.6%', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
 });

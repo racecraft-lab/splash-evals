@@ -22,16 +22,54 @@ This page distinguishes three questions: where a number came from, whether it wa
 
 | Evidence | Primary source | What it supports | Important limit |
 |---|---|---|---|
-| Splash / Qwen3.8 GPQA result | Reviewed local EvalScope 1.12.0 aggregate in this repository | 54.6% accuracy; 198/198 completed; local runtime performance | One public benchmark and one exact local condition |
+| Splash / Qwen3.8 GPQA result | Reviewed local EvalScope 1.12.0 aggregate in this repository | 54.55% accuracy; 198/198 completed; local runtime performance | One public benchmark and one exact local condition |
 | GPQA Diamond benchmark | [EvalScope GPQA documentation](https://evalscope.readthedocs.io/en/latest/get_started/supported_dataset/llm.html) and the pinned built-in adapter | Benchmark identity and runner contract | Public dataset; contamination cannot be excluded |
 | GPT-5.6 Sol, Terra, Luna; GPT-5.5; Claude Opus 4.8 | [OpenAI GPT-5.6 announcement](https://openai.com/index/gpt-5-6/) | Publisher comparison-table percentages | Full protocol and immutable model snapshots are not disclosed for every row |
 | GPT-5.5 | [OpenAI GPT-5.5 announcement](https://openai.com/index/introducing-gpt-5-5/) | 93.6% publisher-reported GPQA Diamond context | Same protocol limitations; not a matched local run |
-| Claude Sonnet 5 | [Anthropic Sonnet 5 announcement](https://www.anthropic.com/news/claude-sonnet-5) | Model identity and release context | No GPQA Diamond value identified in the reviewed page |
-| Claude Opus 5 | [Anthropic Opus 5 announcement](https://www.anthropic.com/news/claude-opus-5) | Model identity and release context | No GPQA Diamond value identified in the reviewed page |
+| Claude 4 provider figures | [Anthropic Claude 4 announcement](https://www.anthropic.com/news/claude-4) | Sonnet 4 and Opus 4 GPQA figures without extended thinking | The headline benchmark uses extended thinking; this site uses the explicitly stated no-thinking values |
+| Claude Sonnet 4.6 and Opus 4.6 | [Anthropic Sonnet 4.6 system card](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 198-question GPQA Diamond comparison under adaptive-thinking/max-effort conditions | Ten-trial/provider conditions differ from the one-pass local run |
+| Claude Opus 4.7 | [Anthropic Opus 4.7 system card](https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf) | Anthropic-reported GPQA Diamond figure | Provider protocol differs from the local EvalScope condition |
+| Claude Opus 4.8 | [Anthropic Opus 4.8 system card](https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf) | 198-question, 25-trial-average GPQA Diamond figure | Trial count and model settings differ from the local run |
+| Claude Sonnet 5 | [Anthropic Sonnet 5 announcement](https://www.anthropic.com/news/claude-sonnet-5) and [Epoch AI model record](https://epoch.ai/models/claude-sonnet-5) | Model identity plus an independent GPQA evaluation | The Anthropic release page does not publish GPQA; Epoch's displayed result is rounded and independently run |
+| Claude Opus 5 | [Anthropic Opus 5 announcement](https://www.anthropic.com/news/claude-opus-5) and [OpenAI GPT-6 comparison](https://openai.com/index/gpt-6-astra/) | Model identity plus a cross-provider GPQA comparison figure | The Anthropic release page does not publish GPQA; the numeric result is not an Anthropic self-report |
+| Independent Claude scorecards | [Epoch AI model catalog](https://epoch.ai/models/search) and the eight model-specific records in the checked-in catalog | Rounded GPQA observations for every requested Claude model from Sonnet 4 through Opus 5 | Epoch does not expose a protocol-matched run record for the local EvalScope condition |
 | Older GPT-4o, GPT-4.1, and o1 context | [OpenAI GPT-4.1 appendix](https://openai.com/index/gpt-4-1/) | Dated GPQA and IFEval figures | Answer extraction materially affects the reported GPQA result |
 | LM Studio runtime | [Headless service guide](https://lmstudio.ai/docs/developer/core/headless) and [`lms load` reference](https://lmstudio.ai/docs/cli/load) | Headless service and model loading commands | Project locality rules add fail-closed checks beyond the docs |
 
 </div>
+
+</section>
+
+<section class="reader-section warm" aria-label="Comparison roster source classes">
+
+## Comparison roster source classes
+
+<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+
+<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+
+| Roster member | Figure shown on Results | Source class | Condition note |
+|---|---:|---|---|
+| Claude Sonnet 4 · Anthropic | 70.0% | Provider | No extended thinking |
+| Claude Sonnet 4 · Epoch | 78% | Independent | Direct model scorecard, rounded whole-percent display |
+| Claude Opus 4 · Anthropic | 74.9% | Provider | No extended thinking |
+| Claude Opus 4 · Epoch | 76% | Independent | Direct model scorecard, rounded whole-percent display |
+| Claude Sonnet 4.6 · Epoch | 87% | Independent | Direct model scorecard, rounded whole-percent display |
+| Claude Sonnet 4.6 · Anthropic | 89.9% | Provider | Adaptive thinking, max effort, ten-trial average |
+| Claude Opus 4.6 · Epoch | 91% | Independent | Direct model scorecard, rounded whole-percent display |
+| Claude Opus 4.6 · Anthropic | 91.3% | Provider comparison row | Adaptive-thinking/max-effort comparison condition |
+| Claude Opus 4.7 · Anthropic | 94.2% | Provider | Provider evaluation condition |
+| Claude Opus 4.7 · Epoch | 90% | Independent | Direct model scorecard, rounded whole-percent display |
+| Claude Opus 4.8 · Epoch | 91% | Independent | Direct model scorecard, rounded whole-percent display |
+| Claude Opus 4.8 · Anthropic | 93.6% | Provider | 25-trial average |
+| Claude Opus 4.8 · OpenAI | 92.0% | Cross-provider | OpenAI comparison condition |
+| Claude Sonnet 5 · Epoch | 91% | Independent | Direct model scorecard, rounded; no Anthropic GPQA figure |
+| Claude Opus 5 · Epoch | 94% | Independent | Direct model scorecard, rounded; no Anthropic GPQA figure |
+| Claude Opus 5 · OpenAI | 93.7% | Cross-provider | No GPQA figure in the reviewed Anthropic release page |
+
+</div>
+
+These rows are intentionally source-labeled. They are not catalog entries unless a separate checked-in frontier record exists, and they are not directly comparable with the local run.
 
 </section>
 
@@ -64,6 +102,14 @@ The checked-in verification ledger performs a second pass over recorded numerica
 | GPT-4.1 | 66.3% | Second-pass match |
 | GPT-4o (2024-11-20) | 46.0% | Second-pass match; extraction caveat applies |
 | OpenAI o1 (high) | 75.7% | Second-pass match |
+| Claude Sonnet 4 | 78% | Epoch scorecard second-pass match; rounded display |
+| Claude Opus 4 | 76% | Epoch scorecard second-pass match; rounded display |
+| Claude Sonnet 4.6 | 87% | Epoch scorecard second-pass match; rounded display |
+| Claude Opus 4.6 | 91% | Epoch scorecard second-pass match; rounded display |
+| Claude Opus 4.7 | 90% | Epoch scorecard second-pass match; rounded display |
+| Claude Opus 4.8 | 91% | Epoch scorecard second-pass match; rounded display |
+| Claude Sonnet 5 | 91% | Epoch scorecard second-pass match; rounded display |
+| Claude Opus 5 | 94% | Epoch scorecard second-pass match; rounded display |
 
 </div>
 
