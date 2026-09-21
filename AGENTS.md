@@ -25,3 +25,36 @@ These rules apply to every automated change in this repository.
    unless the organization has verified them.
 10. Preserve unrelated work. Do not weaken a failing privacy, locality, scientific, or
     release gate to make automation green.
+
+## Evidence interpretation
+
+- Qualification results, mocks, and passing harness tests do not establish model capability.
+- A shared benchmark name does not establish comparability. Require compatible versions,
+  datasets, protocols, scorers, budgets, attempt semantics, and denominators.
+- Loopback connectivity does not establish physical locality. Require the repository's
+  instance and execution evidence.
+
+## Working approach
+
+- Resolve discoverable questions from repository evidence. Ask only when different reasonable
+  interpretations would materially change the outcome; make routine decisions within scope.
+- Implement the smallest complete solution. Retain defensive checks at privacy, locality,
+  grading, and publication boundaries.
+- Report what changed, the relevant verification, and unresolved blockers. Broaden or repeat
+  checks only when a change, failure, or unresolved concern justifies it.
+
+## Read when relevant
+
+| Task | Source |
+| --- | --- |
+| Development and validation | `CONTRIBUTING.md` |
+| Runtime, locality, or grading | `docs/architecture.md`, `docs/operations.md`, and applicable files under `configs/` |
+| Results and historical comparisons | `docs/methodology.md`, reviewed public result records, and `references/frontier/VERIFICATION.md` |
+| Privacy, release, or publication | `docs/privacy.md` and the applicable workflow under `.github/workflows/` |
+| Website content | Canonical files under `docs/` and `docs-site/scripts/generate-content.mjs` |
+
+Files under `docs-site/src/content/docs/` are generated outputs. Edit their canonical `docs/`
+sources and regenerate them; do not edit generated pages directly.
+
+Keep this shared file under 100 lines and 6 KiB as a project editing budget. Keep changing
+scores, model guidance, and runtime limits in their existing authoritative sources.
