@@ -26,6 +26,8 @@ The Results board follows [model-card reporting practice](https://huggingface.co
 
 Do not turn one benchmark into broad capability coverage. Do not rank models, show comparative bars, or infer equivalence or exact gaps from publisher-reported context. Retired reader URLs redirect to the closest retained section. Source-number verification means accurate transcription, not independent reproduction or comparable testing.
 
+The Results explorer progressively enhances the source-labeled comparison table rather than creating a second data model. It uses one fixed 0–100 position scale, preserves editorial/source order, keeps evidence labels visible, and provides the entire table when JavaScript is unavailable. Filters reveal observations; they never calculate a rank or gap. The Operations boundary uses semantic HTML as both diagram and complete text equivalent: its ordered request path, local trust boundary, remote guard, and private/public evidence destinations remain readable in source order at every width.
+
 ## Section hierarchy and feedback
 
 The September 2026 refinement follows [NN/g's scanning research](https://www.nngroup.com/articles/layer-cake-pattern-scanning/): recognizable headings and meaningful groups let readers find a section before reading it. A short crimson heading rule provides orientation without adding another label or decoration-heavy card grid. Process steps have a connected numbered rail; definitions use semantic term/description rows; evidence tables use stronger headers, quiet row contrast, and generous cell spacing. Technical disclosures have a full-width control and a directional indicator. The opaque reading sheet and section palette remain shared across all pages.

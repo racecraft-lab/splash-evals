@@ -44,15 +44,7 @@ The benchmark is public and widely studied. It is useful for comparison, but it 
 
 All requests completed, so no transport failures had to be scored or excluded. A future run under a different model file, quantization, context length, runtime, reasoning effort, prompt, token limit, or scorer is a different condition.
 
-</section>
-
-<section class="reader-section cool" aria-label="Transport and scorer qualification">
-
-## Transport and scorer qualification
-
-Before the capability run, the workbench checked that the selected model was loaded locally, the loopback endpoint responded, and the scorer could parse the expected answer format. Earlier reused-case checks remain engineering evidence only; they are not included in the 54.55% result and no longer have a separate reader-facing results page.
-
-The successful GPQA run used the public EvalScope adapter directly. The report recorded 198 requested, 198 succeeded, and 0 errored requests.
+<aside class="method-note" role="note"><strong>Checks before the run:</strong> the workbench verified that the selected model was local, the loopback endpoint responded, and the scorer could parse the required answer format. Those engineering checks are separate from the 54.55% capability result.</aside>
 
 </section>
 

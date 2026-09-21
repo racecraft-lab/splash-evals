@@ -1,9 +1,12 @@
 ---
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import ProjectLockup from './ProjectLockup.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 <footer class="reader-footer">
-  <div class="footer-identity"><SiteTitle /><p>Splash Evals<br /><span>Local tests. Clear evidence. Stated limits.</span></p></div>
+  <div class="footer-identity">
+    <div class="footer-lockups"><SiteTitle /><ProjectLockup compact /></div>
+  </div>
   <nav aria-label="Further reading">
     <a href={`${base}/dashboard/`}>Results</a>
     <a href={`${base}/methodology/`}>How we tested</a>

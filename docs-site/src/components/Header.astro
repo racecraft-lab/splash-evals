@@ -1,6 +1,7 @@
 ---
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
 import Search from '@astrojs/starlight/components/Search.astro';
+import ProjectLockup from './ProjectLockup.astro';
 import ThemeSelect from './ThemeSelect.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const current = Astro.url.pathname.replace(/\/$/, '');
@@ -13,7 +14,7 @@ const items = [
 ];
 ---
 <div class="site-header">
-  <div class="identity"><SiteTitle /><span class="project-name" aria-label="Splash Evals"><strong>Splash</strong><span>Evals</span></span></div>
+  <div class="identity"><SiteTitle /><ProjectLockup /></div>
   <nav aria-label="Main navigation" class="primary-nav">
     {items.map(({ label, route }) => {
       const exact = current === `${base}${route}`;

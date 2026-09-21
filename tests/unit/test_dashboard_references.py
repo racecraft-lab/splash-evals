@@ -15,7 +15,11 @@ def _section(text: str, heading: str) -> str:
 
 
 def _row(block: str, label: str) -> list[str]:
-    line = next(line for line in block.splitlines() if line.startswith(f"| {label} |"))
+    line = next(
+        line
+        for line in block.splitlines()
+        if line.startswith("| ") and label in line.split("|", 2)[1]
+    )
     return [cell.strip() for cell in line.split("|")[1:-1]]
 
 
@@ -50,58 +54,49 @@ def test_dashboard_splash_row_matches_public_gpqa_result():
 
 
 @pytest.mark.parametrize(
-    ("record", "page", "section", "row_label"),
+    ("record", "row_label"),
     [
         (
             "openai-gpt-5.6-sol-2026-07-gpqa",
-            "dashboard.md",
-            "Benchmark comparison",
             "GPT-5.6 Sol",
         ),
         (
             "openai-gpt-5.6-terra-2026-07-gpqa",
-            "dashboard.md",
-            "Benchmark comparison",
             "GPT-5.6 Terra",
         ),
         (
             "openai-gpt-5.6-luna-2026-07-gpqa",
-            "dashboard.md",
-            "Benchmark comparison",
             "GPT-5.6 Luna",
         ),
         (
             "openai-gpt-5.5-2026-07-gpqa",
-            "dashboard.md",
-            "Benchmark comparison",
             "GPT-5.5",
-        ),
-        (
-            "gpt-4.1-2025-04-gpqa",
-            "sources.md",
-            "Transcription checks",
-            "GPT-4.1",
-        ),
-        (
-            "gpt-4o-2024-11-20-gpqa",
-            "sources.md",
-            "Transcription checks",
-            "GPT-4o (2024-11-20)",
-        ),
-        (
-            "openai-o1-high-gpqa",
-            "sources.md",
-            "Transcription checks",
-            "OpenAI o1 (high)",
         ),
     ],
 )
-def test_visible_historical_gpqa_scores_match_catalog(record, page, section, row_label):
+def test_visible_historical_gpqa_scores_match_catalog(record, row_label):
     data = yaml.safe_load((ROOT / f"references/frontier/{record}.yaml").read_text())
-    text = (ROOT / f"docs/{page}").read_text()
-    row = _row(_section(text, section), row_label)
+    text = (ROOT / "docs/dashboard.md").read_text()
+    row = _row(_section(text, "Benchmark comparison"), row_label)
 
     assert row[1] == f"{data['reported_score']:.1f}%"
+    assert data["source_url"] in (ROOT / "docs/sources.md").read_text()
+
+
+@pytest.mark.parametrize(
+    "record",
+    [
+        "gpt-4.1-2025-04-gpqa",
+        "gpt-4o-2024-11-20-gpqa",
+        "openai-o1-high-gpqa",
+    ],
+)
+def test_retired_context_records_remain_in_verification_ledger(record):
+    data = yaml.safe_load((ROOT / f"references/frontier/{record}.yaml").read_text())
+    ledger = (ROOT / "references/frontier/VERIFICATION.md").read_text()
+
+    assert f"`{data['reference_id']}`" in ledger
+    assert f"{data['reported_score']:.1f}%" in ledger
     assert data["source_url"] in (ROOT / "docs/sources.md").read_text()
 
 

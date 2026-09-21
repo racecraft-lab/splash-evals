@@ -12,8 +12,8 @@ const RETIRED_ROUTES = [
   ['/benchmark-tasks/', '/methodology/#benchmark-and-sample', 'Benchmark and sample'],
   [
     '/local-pilot-results/',
-    '/methodology/#transport-and-scorer-qualification',
-    'Transport and scorer qualification',
+    '/methodology/#the-evaluated-condition',
+    'The evaluated condition',
   ],
   ['/architecture/', '/operations/#local-system-boundary', 'Local system boundary'],
   ['/privacy/', '/methodology/#privacy-and-public-evidence', 'Privacy and public evidence'],
@@ -27,8 +27,16 @@ const RETIRED_ROUTES = [
     '/dashboard/#benchmark-comparison',
     'Benchmark comparison',
   ],
-  ['/frontier-catalog/', '/sources/#catalog-semantics', 'Catalog semantics'],
-  ['/frontier-verification/', '/sources/#transcription-checks', 'Transcription checks'],
+  [
+    '/frontier-catalog/',
+    '/sources/#how-the-evidence-catalog-works',
+    'How the evidence catalog works',
+  ],
+  [
+    '/frontier-verification/',
+    '/sources/#how-the-numbers-were-checked',
+    'How the numbers were checked',
+  ],
   ['/glossary/', '/#key-terms', 'Key terms'],
 ];
 
@@ -99,6 +107,18 @@ test('overview leads readers to the measured result without stale setup-check cl
   page,
 }) => {
   await page.goto('./');
+  const study = page.locator('.intro-study');
+  await expect(study).toContainText('Splash');
+  await expect(study).toContainText('Qwen3.8-27B');
+  await expect(study).toContainText('54.55%');
+  await expect(study).toContainText('20');
+  await expect(study).toContainText('directional');
+  const relationship = page.locator('.relationship-flow');
+  await expect(relationship.getByRole('listitem')).toHaveCount(4);
+  await expect(relationship).toContainText('Qwen Team');
+  await expect(relationship).toContainText('Inco AI');
+  await expect(relationship).toContainText('LM Studio');
+  await expect(relationship).toContainText('Racecraft Lab');
   await expect(page.getByText('Capability results: not yet measured.', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/setup-check report/i)).toHaveCount(0);
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
@@ -113,14 +133,35 @@ test('results expose the reviewed GPQA result, runtime performance, and comparis
   page,
 }) => {
   await page.goto(routeUrl('/dashboard/'));
+  const evaluation = page.locator('.evaluation-summary');
+  await expect(evaluation.locator(':scope > div')).toHaveCount(4);
+  await expect(evaluation).toContainText('Splash / Qwen3.8');
+  await expect(evaluation).toContainText('GPQA Diamond');
+  await expect(evaluation).toContainText('54.55%');
+  await expect(evaluation).toContainText('198 / 198');
+  const runDetails = page.locator('details.evaluation-details');
+  await expect(runDetails).not.toHaveAttribute('open', '');
+  await runDetails.getByText('View run configuration and evidence boundary', { exact: true }).click();
+  await expect(runDetails).toContainText('reasoning_effort: medium');
+  await expect(runDetails).toContainText('EvalScope 1.12.0');
+  await expect(runDetails).toContainText('no prompts, responses, or reasoning traces');
+  await page.getByText('View the complete 21-row source table', { exact: true }).click();
   const splashRow = page
     .getByRole('row')
     .filter({ has: page.getByText('Splash / Qwen3.8 · local LM Studio · medium effort') });
   await expect(splashRow).toContainText('54.6%');
   await expect(splashRow).toContainText('198/198 completed');
-  await expect(page.getByText('198 requested, 198 succeeded, 0 errored', { exact: true })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '43.95 s', exact: true })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '64.13 tokens/s', exact: true })).toBeVisible();
+  const performance = page.locator('.performance-summary');
+  await expect(performance).toContainText('2 h 25 m 16 s');
+  await expect(performance).toContainText('64.13 tokens/s');
+  await expect(performance).toContainText('612,907');
+  const performanceDetails = page.locator('details.performance-details');
+  await performanceDetails.getByText('View latency and output details', { exact: true }).click();
+  await expect(performanceDetails).toContainText('43.95 s');
+  await expect(performanceDetails).toContainText('41.80 s');
+  await expect(performanceDetails).toContainText('72.49 s');
+  await expect(performanceDetails).toContainText('2,818 tokens');
+  await expect(performanceDetails).toContainText('Time to first token');
   await expect(page.getByText(/do not support a protocol-matched delta/i)).toBeVisible();
   for (const model of [
     'Claude Sonnet 4',
@@ -146,6 +187,185 @@ test('results expose the reviewed GPQA result, runtime performance, and comparis
   await expect(page.getByRole('heading', { name: 'Sources and evidence', exact: true })).toBeVisible();
 });
 
+test('frontier explorer keeps source order, labels, and evidence details without ranking', async ({
+  page,
+}) => {
+  await page.goto(routeUrl('/dashboard/'));
+  const explorer = page.locator('[data-gpqa-explorer]');
+  const view = explorer.getByLabel('Show');
+  const family = explorer.getByLabel('Models');
+  await expect(explorer.getByRole('link', { name: 'See where the numbers come from' })).toHaveAttribute(
+    'href', '../sources/#where-the-numbers-come-from',
+  );
+  await expect(view).toHaveValue('overview');
+  await expect(explorer.getByText('all GPT reports and one independent Epoch score', { exact: false })).toBeVisible();
+  await expect(explorer).toContainText('Scan every reported score on one 0–100 scale.');
+  await expect(explorer).toContainText('Splash stays pinned as the local reference');
+  await expect(explorer.getByRole('listitem')).toHaveCount(13);
+  await expect(explorer.getByText('Showing 13 of 21.', { exact: false })).toBeVisible();
+
+  await view.selectOption('all');
+  await expect(explorer.getByRole('listitem')).toHaveCount(21);
+
+  await family.selectOption('gpt');
+  await expect(explorer.getByRole('listitem')).toHaveCount(5);
+  await family.selectOption('all');
+  const observation = explorer.getByRole('button', {
+    name: /Claude Opus 4\.7 · Epoch independent: 90%/,
+  });
+  await observation.focus();
+  const detail = explorer.locator('[data-explorer-detail]');
+  await expect(detail).toContainText('Epoch independent');
+  await expect(detail).toContainText('Directional context—not protocol matched');
+  await expect(detail.getByText('90%', { exact: true })).toBeVisible();
+  await expect(detail.getByRole('link', { name: 'Open the cited source' })).toHaveAttribute(
+    'href',
+    /epoch\.ai\/models\/claude-opus-4-7/,
+  );
+  await expect(page.getByText(/rows are not ranked/i)).toBeVisible();
+
+  const list = explorer.locator('.explorer-list');
+  await list.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  const [listBox, localBox] = await Promise.all([
+    list.boundingBox(),
+    list.locator('.local-reference').boundingBox(),
+  ]);
+  expect(listBox).not.toBeNull();
+  expect(localBox).not.toBeNull();
+  expect(localBox.y).toBeGreaterThanOrEqual(listBox.y - 1);
+  expect(localBox.y).toBeLessThanOrEqual(listBox.y + 2);
+});
+
+test('score list is compact while Splash stays pinned on desktop and mobile', async ({ page }) => {
+  await page.goto(routeUrl('/dashboard/'));
+  const list = page.locator('.explorer-list');
+  for (const viewport of [{ width: 929, height: 1324 }, { width: 390, height: 1000 }]) {
+    await page.setViewportSize(viewport);
+    const box = await list.boundingBox();
+    expect(box.height).toBeLessThanOrEqual(448);
+    expect(box.height).toBeGreaterThanOrEqual(300);
+    await list.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    const pinned = await list.locator('.local-reference').boundingBox();
+    expect(pinned.y).toBeGreaterThanOrEqual(box.y - 1);
+    expect(pinned.y).toBeLessThanOrEqual(box.y + 2);
+    await list.getByRole('button').last().focus();
+    await expect(page.locator('[data-explorer-detail]')).toContainText('Claude Opus 5');
+    expect(await list.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+});
+
+test('frontier comparison remains complete when JavaScript is unavailable', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto(routeUrl('/dashboard/'));
+  await expect(page.locator('[data-explorer-controls]')).toBeHidden();
+  await expect(page.getByText('expandable source table below', { exact: false })).toBeVisible();
+  const record = page.locator('details.comparison-record');
+  await expect(record).not.toHaveAttribute('open', '');
+  await record.getByText('View the complete 21-row source table', { exact: true }).click();
+  const comparison = record.locator('table');
+  await expect(comparison.getByRole('row')).toHaveCount(22);
+  await context.close();
+});
+
+test('operations explains the local model alias and trust boundary without a maintainer checklist', async ({
+  page,
+}) => {
+  await page.goto(routeUrl('/operations/'));
+  const diagram = page.locator('.system-boundary');
+  await expect(diagram.getByRole('listitem')).toHaveCount(4);
+  const steps = diagram.locator('[data-flow-trigger]');
+  await expect(steps).toHaveCount(4);
+  await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'true');
+  await expect(steps.nth(1)).toHaveAttribute('aria-expanded', 'false');
+  await expect(diagram.locator('#flow-detail-1')).toBeVisible();
+  await expect(diagram.locator('#flow-detail-2')).toBeHidden();
+  await steps.nth(2).click();
+  await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'false');
+  await expect(steps.nth(2)).toHaveAttribute('aria-expanded', 'true');
+  await expect(diagram.locator('#flow-detail-3')).toBeVisible();
+  await diagram.getByRole('button', { name: 'Reset' }).click();
+  await expect(steps.nth(0)).toBeFocused();
+  await expect(steps.nth(0)).toHaveAttribute('aria-expanded', 'true');
+  await expect(diagram.locator('.evidence-destination')).toHaveCount(3);
+  await diagram.locator('.boundary-disclosure summary').click();
+  await expect(diagram).toContainText('Allowlist + review gate');
+  await expect(diagram).toContainText('has no route back to this Mac');
+  await expect(diagram).toContainText(
+    'selected-instance check determines whether execution qualifies as local',
+  );
+  await expect(diagram).not.toContainText('keeps model traffic on this computer');
+  await expect(page.getByRole('code').filter({ hasText: /^qwen3\.8-27b-splash$/ }).first()).toBeVisible();
+  await expect(page.getByText('racecraft-splash-local', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Review before publishing' })).toHaveCount(0);
+});
+
+test('operations flow remains compact and continuous at tablet width', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto(routeUrl('/operations/'));
+  const boxes = await page.locator('.system-flow > li').evaluateAll((steps) =>
+    steps.map((step) => {
+      const box = step.getBoundingClientRect();
+      return { x: box.x, y: box.y };
+    }),
+  );
+  expect(boxes).toHaveLength(4);
+  expect(boxes[1].y).toBeCloseTo(boxes[0].y, 0);
+  expect(boxes[1].x).toBeGreaterThan(boxes[0].x);
+  expect(boxes[2].x).toBeCloseTo(boxes[1].x, 0);
+  expect(boxes[2].y).toBeGreaterThan(boxes[1].y);
+  expect(boxes[3].y).toBeCloseTo(boxes[2].y, 0);
+  expect(boxes[3].x).toBeCloseTo(boxes[0].x, 0);
+});
+
+test('operations architecture remains fully readable without JavaScript', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto(routeUrl('/operations/'));
+  await expect(page.locator('[data-flow-controls]')).toBeHidden();
+  await expect(page.locator('[data-flow-detail]')).toHaveCount(4);
+  for (const detail of await page.locator('[data-flow-detail]').all()) {
+    await expect(detail).toBeVisible();
+  }
+  await context.close();
+});
+
+test('sources present evidence as a concise map instead of duplicated score tables', async ({ page }) => {
+  await page.goto(routeUrl('/sources/'));
+  const sourceRecord = page.locator('.intro-source-record');
+  await expect(sourceRecord).toContainText('54.55%');
+  await expect(sourceRecord).toContainText('GPQA Diamond');
+  await expect(sourceRecord).toContainText('Racecraft local run');
+  await expect(sourceRecord).toContainText('Reviewed local result');
+  const sourceVisual = page.locator('.intro-sources');
+  for (const child of await sourceRecord.locator(':scope > *').all()) {
+    const [visualBox, childBox] = await Promise.all([
+      sourceVisual.boundingBox(),
+      child.boundingBox(),
+    ]);
+    expect(visualBox).not.toBeNull();
+    expect(childBox).not.toBeNull();
+    expect(childBox.x).toBeGreaterThanOrEqual(visualBox.x - 1);
+    expect(childBox.x + childBox.width).toBeLessThanOrEqual(visualBox.x + visualBox.width + 1);
+  }
+  await expect(page.getByText('Original source', { exact: true })).toHaveCount(0);
+  await expect(page.locator('.source-card')).toHaveCount(4);
+  await expect(page.locator('.evidence-principles > div')).toHaveCount(3);
+  await expect(page.locator('.verification-summary > div')).toHaveCount(3);
+  await expect(page.getByRole('heading', { name: 'Comparison roster source classes' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Catalog semantics' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Comparison status' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Review the checked-in verification record' })).toBeVisible();
+});
+
 for (const [retired, destination, heading] of RETIRED_ROUTES) {
   test(`${retired} redirects to retained reader content`, async ({ page }) => {
     await page.goto(routeUrl(retired));
@@ -166,6 +386,12 @@ test('light and dark preserve SVG lockups, lab texture, section rhythm, and them
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await expect(page.locator('.identity img:visible')).toHaveCount(1);
     await expect(page.locator('.footer-identity img:visible')).toHaveCount(1);
+    await expect(page.getByRole('img', { name: 'Splash Evals' })).toHaveCount(2);
+    await expect(page.getByText('Local tests. Clear evidence. Stated limits.')).toHaveCount(0);
+    const [headerLockup, footerLockup] = await page
+      .getByRole('img', { name: 'Splash Evals' })
+      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width));
+    expect(footerLockup).toBeLessThan(headerLockup);
     await expect(page.locator('.hero img')).toHaveCount(0);
     await expect(page.locator('body')).toHaveCSS(
       'background-size',
@@ -193,6 +419,28 @@ test('320px reflow retains controls and readable GPQA result', async ({ page }) 
   await expect(page.getByRole('button', { name: /Search/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Run it yourself', exact: true })).toBeVisible();
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.footer-identity').getByRole('img', { name: 'Splash Evals' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
+});
+
+test('results hero metadata stays inside its card at the desktop-tablet seam', async ({ page }) => {
+  await page.setViewportSize({ width: 1246, height: 568 });
+  await page.goto(routeUrl('/dashboard/'));
+  const contained = await page.locator('.intro-visual').evaluate((card) => {
+    const outer = card.getBoundingClientRect();
+    return [...card.querySelectorAll('.intro-count > *')].every((node) => {
+      const inner = node.getBoundingClientRect();
+      return (
+        inner.left >= outer.left - 1 &&
+        inner.right <= outer.right + 1 &&
+        inner.top >= outer.top - 1 &&
+        inner.bottom <= outer.bottom + 1
+      );
+    });
+  });
+  expect(contained).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
   );
@@ -201,6 +449,7 @@ test('320px reflow retains controls and readable GPQA result', async ({ page }) 
 test('wide result table scrolls independently and remains keyboard accessible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(routeUrl('/dashboard/'));
+  await page.getByText('View the complete 21-row source table', { exact: true }).click();
   const table = page.getByRole('region', { name: 'Data table with horizontal scrolling' }).first();
   await expect(page.getByText('More columns to the right:', { exact: false }).first()).toBeVisible();
   await table.focus();
@@ -224,7 +473,9 @@ test('search finds GPQA Diamond and opens the result', async ({ page }) => {
   await expect(result).toBeVisible();
   await result.click();
   await expect(page).toHaveURL(/\/splash-evals\/dashboard\/(?:#.*)?$/);
-  await expect(page.getByText('GPQA Diamond', { exact: true }).first()).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Splash scored 54.55% on GPQA Diamond', exact: true }),
+  ).toBeVisible();
 });
 
 test('reader text and links meet AA contrast on both themed section surfaces', async ({ page }) => {
@@ -249,7 +500,7 @@ test('reader text and links meet AA contrast on both themed section surfaces', a
           (Math.min(luminance(a), luminance(b)) + 0.05);
         const failures = [];
         for (const node of document.querySelectorAll(
-          '.primary-nav a, .github-link, .reader-footer nav a, .reader-footer p, .reader-footer span, .page-intro h1, .intro-summary, .intro-visual strong, .intro-visual span, .intro-visual figcaption, .hero .sl-link-button, .finding h2, .finding p, .reader-section h2, .reader-section h3, .reader-section p, .reader-section a, .process strong, .process span, .document-sheet dt, .document-sheet dd, .document-sheet summary, .document-sheet td, .document-sheet th',
+          '.primary-nav a, .github-link, .reader-footer nav a, .reader-footer p, .reader-footer span, .project-name strong, .page-intro h1, .intro-summary, .intro-visual strong, .intro-visual span, .intro-visual figcaption, .hero .sl-link-button, .finding h2, .finding p, .reader-section h2, .reader-section h3, .reader-section h4, .reader-section p, .reader-section a, .reader-section span, .reader-section button, .process strong, .process span, .document-sheet dt, .document-sheet dd, .document-sheet summary, .document-sheet td, .document-sheet th',
         )) {
           if (!node.textContent.trim() || !node.getClientRects().length) continue;
           const style = getComputedStyle(node);
@@ -291,8 +542,21 @@ test('reader text and links meet AA contrast on both themed section surfaces', a
 });
 
 test('reduced motion disables link transitions without hiding result content', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-09-21T10:00:00Z') });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(routeUrl('/dashboard/'));
   await expect(page.locator('.document-sheet a').first()).toHaveCSS('transition-duration', '0s');
+  await expect(page.locator('.explorer-score-dot').first()).toHaveCSS('transition-duration', '0s');
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
+
+  await page.goto(routeUrl('/operations/'));
+  await page.clock.pauseAt(new Date('2026-09-21T10:01:00Z'));
+  const diagram = page.locator('.system-boundary');
+  await expect(diagram.locator('.flow-trigger').first()).toHaveCSS('transition-duration', '0s');
+  await diagram.getByRole('button', { name: 'Play request' }).click();
+  await expect(diagram.locator('[data-flow-trigger]').first()).toHaveAttribute('aria-expanded', 'true');
+  await expect(diagram.locator('.route-packet').first()).toHaveCSS('animation-name', 'none');
+  await page.clock.runFor(32_000);
+  await expect(diagram.locator('[data-flow-status]')).toContainText('Sequence complete');
+  await expect(diagram.locator('[data-flow-trigger]').nth(3)).toHaveAttribute('aria-expanded', 'true');
 });

@@ -1,6 +1,8 @@
 ---
 import DefaultTitle from '@astrojs/starlight/components/PageTitle.astro';
 import { LinkButton } from '@astrojs/starlight/components';
+import GpqaExplorerBehavior from './GpqaExplorerBehavior.astro';
+import ArchitectureFlowBehavior from './ArchitectureFlowBehavior.astro';
 import { pageIntros } from './page-intros';
 
 const { id, entry } = Astro.locals.starlightRoute;
@@ -23,6 +25,34 @@ const actions = entry.data.hero?.actions ?? [];
           <strong>{intro.result.score}</strong>
           <span>{intro.result.metric}<br />{intro.result.completion}</span>
         </div>
+      ) : intro.variant === 'overview' ? (
+        <div class="intro-study">
+          <div class="study-subject">
+            <span>Local model under test</span>
+            <strong>{intro.study.model}</strong>
+            <small>{intro.study.foundation}</small>
+          </div>
+          <div class="study-metric">
+            <span>Measured result</span>
+            <strong>{intro.study.score}</strong>
+            <small>{intro.study.benchmark}</small>
+          </div>
+          <div class="study-metric context">
+            <span>Frontier context</span>
+            <strong>{intro.study.referenceCount}</strong>
+            <small>{intro.study.referenceLabel}</small>
+          </div>
+        </div>
+      ) : intro.variant === 'sources' ? (
+        <div class="intro-source-record">
+          <span class="intro-source-label">Measured result</span>
+          <strong>{intro.sourceRecord.score}</strong>
+          <dl>
+            <div><dt>Benchmark</dt><dd>{intro.sourceRecord.benchmark}</dd></div>
+            <div><dt>Measured by</dt><dd>{intro.sourceRecord.measuredBy}</dd></div>
+            <div><dt>Evidence</dt><dd>{intro.sourceRecord.status}</dd></div>
+          </dl>
+        </div>
       ) : (
         <ol class="intro-steps">{intro.steps.map(([title, detail]) => <li><strong>{title}</strong><span>{detail}</span></li>)}</ol>
       )}
@@ -30,3 +60,5 @@ const actions = entry.data.hero?.actions ?? [];
     </figure>
   </section>
 ) : <DefaultTitle><slot /></DefaultTitle>}
+{id === 'dashboard' && <GpqaExplorerBehavior />}
+{id === 'operations' && <ArchitectureFlowBehavior />}

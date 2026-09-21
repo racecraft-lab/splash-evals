@@ -16,21 +16,84 @@ This repository is a local evaluation workbench, not a hosted model service. The
 
 ## Local system boundary
 
-```text
-EvalScope CLI
-    |
-    | OpenAI-compatible requests to 127.0.0.1
-    v
-LM Studio / llmster on the operator's computer
-    |
-    v
-one explicitly selected local model
-
-private state outside Git: datasets, responses, logs, detailed reports
-public repository: source, synthetic tests, references, reviewed aggregates
-```
-
-LM Link may remain enabled, but the selected instance must be the local model. This project treats a non-null LM Studio `deviceIdentifier` as remote and blocks that condition for a local result.
+<figure class="system-boundary" data-architecture-flow aria-labelledby="local-boundary-title" aria-describedby="local-boundary-summary">
+  <div class="boundary-heading">
+    <div><p class="boundary-eyebrow">Local execution path</p><h3 id="local-boundary-title">From question to score</h3><p class="boundary-description">Follow one question through the local evaluation.</p></div>
+    <span class="boundary-status">Interactive illustration</span>
+  </div>
+  <div class="flow-controls" data-flow-controls hidden>
+    <div class="flow-actions">
+      <button type="button" class="flow-play" data-flow-play>Play request</button>
+      <button type="button" data-flow-next>Next step</button>
+      <button type="button" data-flow-reset>Reset</button>
+    </div>
+    <p class="flow-status" data-flow-status role="status">Select a stage, or play at 8 seconds per step.</p>
+  </div>
+  <div class="local-boundary" aria-label="Local execution boundary on the operator's Mac">
+    <p class="boundary-label">One Mac <span>Local execution boundary</span></p>
+    <div class="request-map">
+      <svg class="request-routes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs><marker id="request-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 7 4 1 7" fill="none" stroke="currentColor" stroke-width="1.4"/></marker></defs>
+        <path class="route-track" data-flow-track="0" d="M46 22 H54" />
+        <path class="route-track" data-flow-track="1" d="M75 43 V57" />
+        <path class="route-track" data-flow-track="2" d="M54 78 H46" />
+        <path class="route-track" data-flow-track="3" d="M25 57 V43" />
+        <path class="route-packet" data-flow-route="0" pathLength="100" d="M25 22 H75" />
+        <path class="route-packet" data-flow-route="1" pathLength="100" d="M75 22 V78" />
+        <path class="route-packet" data-flow-route="2" pathLength="100" d="M75 78 H25" />
+        <path class="route-packet" data-flow-route="3" pathLength="100" d="M25 78 V22" />
+      </svg>
+      <span class="request-map-caption" aria-hidden="true">One question at a time</span>
+      <ol class="system-flow">
+        <li data-flow-step><button type="button" class="flow-trigger" data-flow-trigger data-step-label="EvalScope prepares the task" aria-expanded="true" aria-controls="flow-detail-1">
+          <svg class="flow-icon" viewBox="0 0 40 40" aria-hidden="true"><path d="M11 5h13l6 6v24H11zM24 5v8h6"/><path class="icon-action" pathLength="1" d="M16 19h9M16 24h9M16 29h5" /></svg>
+          <span class="flow-node-copy"><span class="flow-role">01 · Prepare</span><strong>EvalScope</strong><span class="flow-node-note">Question + settings</span><span class="flow-node-context">4 choices · medium effort</span></span>
+        </button></li>
+        <li data-flow-step><button type="button" class="flow-trigger" data-flow-trigger data-step-label="The request crosses loopback" aria-expanded="true" aria-controls="flow-detail-2">
+          <svg class="flow-icon" viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="7" width="26" height="11" rx="3"/><rect x="7" y="23" width="26" height="11" rx="3"/><path d="M12 12h2m-2 16h2m10-16h4m-4 16h4"/><path class="icon-action" pathLength="1" d="M20 18v5M17 20l3 3 3-3"/></svg>
+          <span class="flow-node-copy"><span class="flow-role">02 · Send locally</span><strong>LM Studio</strong><span class="flow-node-note">Loopback API</span><span class="flow-node-context">JSON request · this Mac</span></span>
+        </button></li>
+        <li data-flow-step><button type="button" class="flow-trigger" data-flow-trigger data-step-label="LM Studio invokes Splash" aria-expanded="true" aria-controls="flow-detail-3">
+          <svg class="flow-icon" viewBox="0 0 40 40" aria-hidden="true"><rect x="10" y="10" width="20" height="20" rx="3"/><rect class="icon-action" pathLength="1" x="16" y="16" width="8" height="8" rx="1"/><path d="M15 4v6m10-6v6M15 30v6m10-6v6M4 15h6m-6 10h6m20-10h6m-6 10h6"/></svg>
+          <span class="flow-node-copy"><span class="flow-role">03 · Generate</span><strong>Splash + Qwen</strong><span class="flow-node-note">Inference on Apple silicon</span><span class="flow-node-context">Qwen3.8 · 27B parameters</span></span>
+        </button></li>
+        <li data-flow-step><button type="button" class="flow-trigger" data-flow-trigger data-step-label="EvalScope scores the returned answer" aria-expanded="true" aria-controls="flow-detail-4">
+          <svg class="flow-icon" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 7v27h28M13 27v-6m7 6V16m7 11v-9"/><path class="icon-action" pathLength="1" d="M21 8l4 4 9-9"/></svg>
+          <span class="flow-node-copy"><span class="flow-role">04 · Return + score</span><strong>EvalScope</strong><span class="flow-node-note">Answer → accuracy</span><span class="flow-node-context">Check the benchmark key</span></span>
+        </button></li>
+      </ol>
+    </div>
+    <div class="flow-console" aria-label="Selected execution stage">
+      <div class="flow-detail" id="flow-detail-1" data-flow-detail>
+        <div><p class="flow-kicker">01 / 04 · Prepare</p><h4>EvalScope loads one GPQA item</h4><p>A science question, its answer choices, and the fixed run settings become one model request.</p></div>
+        <dl class="flow-facts"><div><dt>Benchmark</dt><dd>GPQA Diamond</dd></div><div><dt>Reasoning effort</dt><dd>Medium</dd></div><div><dt>Output limit</dt><dd>4,096 tokens</dd></div></dl>
+      </div>
+      <div class="flow-detail" id="flow-detail-2" data-flow-detail>
+        <div><p class="flow-kicker">02 / 04 · Send locally</p><h4>The request travels over loopback</h4><p>EvalScope sends the request to LM Studio on this Mac. A separate instance check confirms the selected model is local, too.</p></div>
+        <dl class="flow-facts"><div><dt>Protocol</dt><dd>OpenAI-compatible JSON</dd></div><div><dt>Transport</dt><dd>Local loopback</dd></div><div><dt>Endpoint</dt><dd><code>127.0.0.1:1234</code></dd></div></dl>
+      </div>
+      <div class="flow-detail" id="flow-detail-3" data-flow-detail>
+        <div><p class="flow-kicker">03 / 04 · Generate</p><h4>LM Studio invokes Inco AI's Splash engine</h4><p>Splash runs Qwen3.8-27B on Apple silicon. The model generates its response; LM Studio returns the completed answer.</p></div>
+        <dl class="flow-facts"><div><dt>Engine</dt><dd>Inco AI Splash</dd></div><div><dt>Model</dt><dd>Qwen3.8-27B</dd></div><div><dt>Response mode</dt><dd>Non-streaming</dd></div></dl>
+      </div>
+      <div class="flow-detail" id="flow-detail-4" data-flow-detail>
+        <div><p class="flow-kicker">04 / 04 · Return + score</p><h4>The answer returns to EvalScope for scoring</h4><p>The selected answer is checked against the benchmark key. This cycle repeats for all 198 questions to produce the final accuracy.</p></div>
+        <dl class="flow-facts"><div><dt>Scoring</dt><dd>Exact answer match</dd></div><div><dt>Completed run</dt><dd>198 / 198 questions</dd></div><div><dt>Measured accuracy</dt><dd>54.55%</dd></div></dl>
+      </div>
+    </div>
+  </div>
+  <details class="boundary-disclosure">
+    <summary>What stays private, and what can be published?</summary>
+    <div class="evidence-boundary" aria-label="Evidence review and publication path after the local run">
+      <article class="evidence-destination private"><span class="destination-label">Private</span><h4>Detailed run evidence</h4><p>Prompts, responses, reasoning, logs, and detailed reports remain private.</p></article>
+      <article class="evidence-destination review"><span class="destination-label">Review</span><h4>Allowlist + review gate</h4><p>Privacy, identity, secrets, file type, and size are checked.</p></article>
+      <article class="evidence-destination public"><span class="destination-label">Public</span><h4>Public repository</h4><p>Only the approved aggregate and its public evidence are published.</p></article>
+    </div>
+    <aside class="remote-guard" role="note"><strong>Remote guard.</strong> The selected-instance check determines whether execution qualifies as local. A non-null LM Studio <code>deviceIdentifier</code> blocks that claim.</aside>
+    <aside class="ci-boundary" role="note"><strong>CI boundary:</strong> public GitHub Actions uses hosted runners and static or synthetic inputs. It has no route back to this Mac.</aside>
+  </details>
+  <figcaption id="local-boundary-summary">Illustrated sequence, not live telemetry. Raw run evidence stays private; publication requires review.</figcaption>
+</figure>
 
 </section>
 
@@ -43,14 +106,14 @@ LM Studio documents `llmster` as its headless service. Review the local model ke
 ```bash
 lms daemon up
 lms ls
-lms load <REVIEWED_LOCAL_MODEL_KEY> \
+lms load qwen3.8-27b-splash \
   --identifier racecraft-splash-local \
   --context-length 32768
 lms ps --json
 lms server start
 ```
 
-The `lms ps --json` entry for this study should show the alias `racecraft-splash-local` and `deviceIdentifier: null`.
+For the completed run on this Mac, `qwen3.8-27b-splash` was the installed LM Studio model key and `racecraft-splash-local` was the API-facing alias. Before another run, `lms ls` must show that reviewed key and `lms ps --json` must show the alias with `deviceIdentifier: null`. Do not substitute a similarly named model or linked-device instance.
 
 Official references: [LM Studio headless service](https://lmstudio.ai/docs/developer/core/headless) and [`lms load`](https://lmstudio.ai/docs/cli/load).
 
@@ -81,19 +144,7 @@ evalscope eval \
 
 Command-line flags can change across EvalScope releases. Use the pinned project version and check the current official EvalScope documentation before reproducing the run. Record the resolved task configuration, model identity, report, and hashes before interpreting a score.
 
-</section>
-
-<section class="reader-section warm" aria-label="Review and publication">
-
-## Review before publishing
-
-1. Confirm the requested count, succeeded count, metric, and model alias.
-2. Keep raw prompts, responses, reasoning, credentials, logs, and local paths outside Git.
-3. Publish a fresh allowlisted aggregate rather than copying the raw report.
-4. Run the repository's privacy, identity, secret, file-type, and size gates.
-5. Restore only settings changed by the evaluation, and do not stop user-owned services or models.
-
-Public CI runs only on GitHub-hosted runners with static, mock, or synthetic inputs. Never attach a self-hosted runner, tunnel, remote desktop service, or workflow-triggered local evaluator to this public repository.
+After the run, restore only settings changed for the evaluation. Do not stop or unload services and models that were already running for the operator.
 
 </section>
 

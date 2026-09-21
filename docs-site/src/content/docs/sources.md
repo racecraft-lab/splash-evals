@@ -10,122 +10,91 @@ next: false
 
 <div class="document-sheet">
 
-This page distinguishes three questions: where a number came from, whether it was copied correctly, and whether it is fairly comparable with the local result.
+See who measured each result, where it was published, and what was different about the test. Those details explain why the scores are useful context but not always a direct head-to-head comparison.
 
-<section class="reader-section cool" aria-label="Primary sources">
+<section class="reader-section cool" aria-label="Sources behind the numbers">
 
-## Primary sources used here
+## Where the numbers come from
 
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
-
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
-
-| Evidence | Primary source | What it supports | Important limit |
-|---|---|---|---|
-| Splash / Qwen3.8 GPQA result | Reviewed local EvalScope 1.12.0 aggregate in this repository | 54.55% accuracy; 198/198 completed; local runtime performance | One public benchmark and one exact local condition |
-| GPQA Diamond benchmark | [EvalScope GPQA documentation](https://evalscope.readthedocs.io/en/latest/get_started/supported_dataset/llm.html) and the pinned built-in adapter | Benchmark identity and runner contract | Public dataset; contamination cannot be excluded |
-| GPT-5.6 Sol, Terra, Luna; GPT-5.5; Claude Opus 4.8 | [OpenAI GPT-5.6 announcement](https://openai.com/index/gpt-5-6/) | Publisher comparison-table percentages | Full protocol and immutable model snapshots are not disclosed for every row |
-| GPT-5.5 | [OpenAI GPT-5.5 announcement](https://openai.com/index/introducing-gpt-5-5/) | 93.6% publisher-reported GPQA Diamond context | Same protocol limitations; not a matched local run |
-| Claude 4 provider figures | [Anthropic Claude 4 announcement](https://www.anthropic.com/news/claude-4) | Sonnet 4 and Opus 4 GPQA figures without extended thinking | The headline benchmark uses extended thinking; this site uses the explicitly stated no-thinking values |
-| Claude Sonnet 4.6 and Opus 4.6 | [Anthropic Sonnet 4.6 system card](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 198-question GPQA Diamond comparison under adaptive-thinking/max-effort conditions | Ten-trial/provider conditions differ from the one-pass local run |
-| Claude Opus 4.7 | [Anthropic Opus 4.7 system card](https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf) | Anthropic-reported GPQA Diamond figure | Provider protocol differs from the local EvalScope condition |
-| Claude Opus 4.8 | [Anthropic Opus 4.8 system card](https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf) | 198-question, 25-trial-average GPQA Diamond figure | Trial count and model settings differ from the local run |
-| Claude Sonnet 5 | [Anthropic Sonnet 5 announcement](https://www.anthropic.com/news/claude-sonnet-5) and [Epoch AI model record](https://epoch.ai/models/claude-sonnet-5) | Model identity plus an independent GPQA evaluation | The Anthropic release page does not publish GPQA; Epoch's displayed result is rounded and independently run |
-| Claude Opus 5 | [Anthropic Opus 5 announcement](https://www.anthropic.com/news/claude-opus-5) and [OpenAI GPT-6 comparison](https://openai.com/index/gpt-6-astra/) | Model identity plus a cross-provider GPQA comparison figure | The Anthropic release page does not publish GPQA; the numeric result is not an Anthropic self-report |
-| Independent Claude scorecards | [Epoch AI model catalog](https://epoch.ai/models/search) and the eight model-specific records in the checked-in catalog | Rounded GPQA observations for every requested Claude model from Sonnet 4 through Opus 5 | Epoch does not expose a protocol-matched run record for the local EvalScope condition |
-| Older GPT-4o, GPT-4.1, and o1 context | [OpenAI GPT-4.1 appendix](https://openai.com/index/gpt-4-1/) | Dated GPQA and IFEval figures | Answer extraction materially affects the reported GPQA result |
-| LM Studio runtime | [Headless service guide](https://lmstudio.ai/docs/developer/core/headless) and [`lms load` reference](https://lmstudio.ai/docs/cli/load) | Headless service and model loading commands | Project locality rules add fail-closed checks beyond the docs |
-
+<div class="source-map">
+  <article class="source-card measured">
+    <span class="source-card-label">Measured here</span>
+    <h3>Splash / Qwen3.8</h3>
+    <p>The 54.55% score, 198/198 completion count, and runtime figures come from the reviewed local EvalScope aggregate.</p>
+    <ul>
+      <li><a href="https://github.com/racecraft-lab/splash-evals/blob/main/results/public/gpqa-diamond-splash-local-2026-09-20.json">Reviewed public result</a></li>
+      <li><a href="https://evalscope.readthedocs.io/en/latest/get_started/supported_dataset/llm.html">EvalScope GPQA documentation</a></li>
+      <li><a href="https://inco.ai/blog/splash/">Inco AI's Splash overview</a> and the <a href="https://github.com/QwenLM/Qwen3.8">Qwen3.8 model repository</a></li>
+    </ul>
+    <p class="source-limit"><strong>Limit:</strong> one public benchmark and one exact local condition.</p>
+  </article>
+  <article class="source-card provider">
+    <span class="source-card-label">Model providers</span>
+    <h3>OpenAI and Anthropic</h3>
+    <p>Provider publications supply the GPT and Claude figures labeled “provider-reported” on Results.</p>
+    <ul>
+      <li><a href="https://openai.com/index/gpt-5-6/">OpenAI GPT-5.6 comparison</a> and <a href="https://openai.com/index/introducing-gpt-5-5/">GPT-5.5 announcement</a></li>
+      <li><a href="https://www.anthropic.com/news/claude-4">Claude 4 announcement</a></li>
+      <li><a href="https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf">Claude 4.6 system card</a>, <a href="https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf">Opus 4.7 system card</a>, and <a href="https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf">Opus 4.8 system card</a></li>
+      <li><a href="https://www.anthropic.com/news/claude-sonnet-5">Sonnet 5</a> and <a href="https://www.anthropic.com/news/claude-opus-5">Opus 5</a> announcements</li>
+    </ul>
+    <p class="source-limit"><strong>Limit:</strong> providers do not disclose every field needed to match the local protocol.</p>
+  </article>
+  <article class="source-card independent">
+    <span class="source-card-label">Independent evaluation</span>
+    <h3>Epoch AI scorecards</h3>
+    <p>Epoch supplies independently run, rounded GPQA observations for the requested Claude roster from Sonnet 4 through Opus 5.</p>
+    <ul>
+      <li><a href="https://epoch.ai/models/search">Epoch AI model catalog</a></li>
+      <li><a href="https://epoch.ai/benchmarks/gpqa-diamond">Epoch GPQA Diamond methodology</a></li>
+    </ul>
+    <p class="source-limit"><strong>Limit:</strong> the displayed scorecards are not protocol-matched to this EvalScope run.</p>
+  </article>
+  <article class="source-card context">
+    <span class="source-card-label">Method and runtime context</span>
+    <h3>Older frontier records + LM Studio</h3>
+    <p>Dated OpenAI records supply older-frontier context. LM Studio documentation supports the headless runtime commands—not the evaluation result.</p>
+    <ul>
+      <li><a href="https://openai.com/index/gpt-4-1/">OpenAI GPT-4.1 appendix</a></li>
+      <li><a href="https://lmstudio.ai/docs/developer/core/headless">LM Studio headless guide</a> and <a href="https://lmstudio.ai/docs/cli/load"><code>lms load</code> reference</a></li>
+    </ul>
+    <p class="source-limit"><strong>Limit:</strong> answer extraction affects older GPQA figures; project locality checks go beyond runtime documentation.</p>
+  </article>
 </div>
 
+<p class="source-guidance"><strong>How to read the labels:</strong> “measured here” is this project's local result; “provider-reported” comes from the model developer; “cross-provider” is one developer reporting another's model; “independent” comes from Epoch. The <a href="/splash-evals/dashboard/#benchmark-comparison">Results explorer</a> keeps these labels attached to every observation.</p>
+
 </section>
 
-<section class="reader-section warm" aria-label="Comparison roster source classes">
+<section class="reader-section warm" aria-label="How evidence records work">
 
-## Comparison roster source classes
+## How the evidence catalog works
 
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+<dl class="evidence-principles">
+  <div><dt>One condition per record</dt><dd>A record ties one model to one benchmark, metric, source, and testing condition. The same model can have several legitimate records.</dd></div>
+  <div><dt>Unknown stays unknown</dt><dd>A missing field means the source did not establish it. It is never silently treated as zero or filled by assumption.</dd></div>
+  <div><dt>Same benchmark is not the same protocol</dt><dd>Scores become directly comparable only when the dataset, prompt, attempts, reasoning budget, extraction, and scoring rules align.</dd></div>
+</dl>
 
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+[Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier) · [See what a fair comparison requires](/splash-evals/methodology/#what-makes-a-fair-comparison)
 
-| Roster member | Figure shown on Results | Source class | Condition note |
-|---|---:|---|---|
-| Claude Sonnet 4 · Anthropic | 70.0% | Provider | No extended thinking |
-| Claude Sonnet 4 · Epoch | 78% | Independent | Direct model scorecard, rounded whole-percent display |
-| Claude Opus 4 · Anthropic | 74.9% | Provider | No extended thinking |
-| Claude Opus 4 · Epoch | 76% | Independent | Direct model scorecard, rounded whole-percent display |
-| Claude Sonnet 4.6 · Epoch | 87% | Independent | Direct model scorecard, rounded whole-percent display |
-| Claude Sonnet 4.6 · Anthropic | 89.9% | Provider | Adaptive thinking, max effort, ten-trial average |
-| Claude Opus 4.6 · Epoch | 91% | Independent | Direct model scorecard, rounded whole-percent display |
-| Claude Opus 4.6 · Anthropic | 91.3% | Provider comparison row | Adaptive-thinking/max-effort comparison condition |
-| Claude Opus 4.7 · Anthropic | 94.2% | Provider | Provider evaluation condition |
-| Claude Opus 4.7 · Epoch | 90% | Independent | Direct model scorecard, rounded whole-percent display |
-| Claude Opus 4.8 · Epoch | 91% | Independent | Direct model scorecard, rounded whole-percent display |
-| Claude Opus 4.8 · Anthropic | 93.6% | Provider | 25-trial average |
-| Claude Opus 4.8 · OpenAI | 92.0% | Cross-provider | OpenAI comparison condition |
-| Claude Sonnet 5 · Epoch | 91% | Independent | Direct model scorecard, rounded; no Anthropic GPQA figure |
-| Claude Opus 5 · Epoch | 94% | Independent | Direct model scorecard, rounded; no Anthropic GPQA figure |
-| Claude Opus 5 · OpenAI | 93.7% | Cross-provider | No GPQA figure in the reviewed Anthropic release page |
+</section>
 
+<section class="reader-section cool" aria-label="How reported numbers were checked">
+
+## How the numbers were checked
+
+We checked each published score against its original report, then recorded the details that affect how the result should be read.
+
+<div class="verification-summary">
+  <div><strong>Value</strong><span>Does the saved percentage match the cited source?</span></div>
+  <div><strong>Locator</strong><span>Can another reviewer find the figure on the named page, table, or scorecard?</span></div>
+  <div><strong>Condition</strong><span>Did we preserve qualifications such as thinking mode, trial count, or rounding?</span></div>
 </div>
 
-These rows are intentionally source-labeled. They are not catalog entries unless a separate checked-in frontier record exists, and they are not directly comparable with the local run.
+<aside class="verification-limit" role="note"><strong>What a match means:</strong> the repository copied the cited value and its stated condition correctly. It does <strong>not</strong> reproduce the provider's run or turn the score into a protocol-matched comparison.</aside>
 
-</section>
-
-<section class="reader-section warm" aria-label="Catalog semantics">
-
-## Catalog semantics
-
-The repository's [`references/frontier`](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier) directory stores one factual record per model, benchmark, metric, and condition. Multiple records can describe the same model. A `null` field means **unknown**, never zero.
-
-Catalog records are historical evidence, not provider configuration. They do not authorize remote inference and do not become directly comparable merely because the benchmark title matches.
-
-</section>
-
-<section class="reader-section cool" aria-label="Transcription checks">
-
-## Transcription checks
-
-The checked-in verification ledger performs a second pass over recorded numerical values and their cited locators. Its current GPQA Diamond records include:
-
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
-
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
-
-| Record | Reported value | Check |
-|---|---:|---|
-| GPT-5.6 Sol | 94.6% | Second-pass match |
-| GPT-5.6 Terra | 92.9% | Second-pass match |
-| GPT-5.6 Luna | 92.3% | Second-pass match |
-| GPT-5.5 | 93.6% | Second-pass match |
-| GPT-4.1 | 66.3% | Second-pass match |
-| GPT-4o (2024-11-20) | 46.0% | Second-pass match; extraction caveat applies |
-| OpenAI o1 (high) | 75.7% | Second-pass match |
-| Claude Sonnet 4 | 78% | Epoch scorecard second-pass match; rounded display |
-| Claude Opus 4 | 76% | Epoch scorecard second-pass match; rounded display |
-| Claude Sonnet 4.6 | 87% | Epoch scorecard second-pass match; rounded display |
-| Claude Opus 4.6 | 91% | Epoch scorecard second-pass match; rounded display |
-| Claude Opus 4.7 | 90% | Epoch scorecard second-pass match; rounded display |
-| Claude Opus 4.8 | 91% | Epoch scorecard second-pass match; rounded display |
-| Claude Sonnet 5 | 91% | Epoch scorecard second-pass match; rounded display |
-| Claude Opus 5 | 94% | Epoch scorecard second-pass match; rounded display |
-
-</div>
-
-A transcription match means the repository copied the cited value correctly. It does **not** reproduce the provider's run, fill missing protocol fields, or establish a fair comparison.
-
-[Browse the complete catalog](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier) · [Review the local result](/splash-evals/dashboard/)
-
-</section>
-
-<section class="reader-section warm" aria-label="Comparison status">
-
-## Comparison status
-
-The local GPQA result and the publisher rows share a benchmark name and metric family, so the numbers are useful directional context. They remain only partially matched or unknown because the available sources do not establish the same immutable dataset revision, exact item manifest, prompt, attempts, reasoning budget, extraction, and scorer for every model.
-
-This site therefore reports the values side by side but does not claim an exact gap, rank, equivalence, or improvement.
+[Review the checked-in verification record](https://github.com/racecraft-lab/splash-evals/blob/main/references/frontier/VERIFICATION.md) · [Review the local result](/splash-evals/dashboard/)
 
 </section>
 
