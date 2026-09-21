@@ -28,6 +28,7 @@ def test_sdist_excludes_repository_only_and_private_template_paths() -> None:
         "/.env.example",
         "/.github",
         "/AGENTS.md",
+        "/CLAUDE.md",
         "/docs-site",
         "/docs/github-feature-audit.md",
         "/tests",
