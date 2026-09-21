@@ -194,6 +194,9 @@ test('frontier explorer keeps source order, labels, and evidence details without
   const explorer = page.locator('[data-gpqa-explorer]');
   const view = explorer.getByLabel('Show');
   const family = explorer.getByLabel('Models');
+  await expect(explorer.getByRole('link', { name: 'See where the numbers come from' })).toHaveAttribute(
+    'href', '../sources/#where-the-numbers-come-from',
+  );
   await expect(view).toHaveValue('overview');
   await expect(explorer.getByText('all GPT reports and one independent Epoch score', { exact: false })).toBeVisible();
   await expect(explorer).toContainText('Scan every reported score on one 0–100 scale.');
@@ -233,6 +236,24 @@ test('frontier explorer keeps source order, labels, and evidence details without
   expect(localBox).not.toBeNull();
   expect(localBox.y).toBeGreaterThanOrEqual(listBox.y - 1);
   expect(localBox.y).toBeLessThanOrEqual(listBox.y + 2);
+});
+
+test('score list is compact while Splash stays pinned on desktop and mobile', async ({ page }) => {
+  await page.goto(routeUrl('/dashboard/'));
+  const list = page.locator('.explorer-list');
+  for (const viewport of [{ width: 929, height: 1324 }, { width: 390, height: 1000 }]) {
+    await page.setViewportSize(viewport);
+    const box = await list.boundingBox();
+    expect(box.height).toBeLessThanOrEqual(448);
+    expect(box.height).toBeGreaterThanOrEqual(300);
+    await list.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    const pinned = await list.locator('.local-reference').boundingBox();
+    expect(pinned.y).toBeGreaterThanOrEqual(box.y - 1);
+    expect(pinned.y).toBeLessThanOrEqual(box.y + 2);
+    await list.getByRole('button').last().focus();
+    await expect(page.locator('[data-explorer-detail]')).toContainText('Claude Opus 5');
+    expect(await list.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
 });
 
 test('frontier comparison remains complete when JavaScript is unavailable', async ({

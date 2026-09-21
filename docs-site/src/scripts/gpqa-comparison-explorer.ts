@@ -128,7 +128,7 @@ function showDetail(detail: HTMLElement, record: Observation): void {
   );
   const link = document.createElement('a');
   link.href = record.sourceUrl;
-  link.textContent = record.sourceClass === 'measured' ? 'Review the evidence record' : 'Open the cited source';
+  link.textContent = record.sourceClass === 'measured' ? 'See where the numbers come from' : 'Open the cited source';
   if (/^https?:/.test(record.sourceUrl)) link.rel = 'noreferrer';
   detail.append(eyebrow, title, score, facts, link);
 }

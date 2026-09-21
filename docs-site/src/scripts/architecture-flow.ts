@@ -124,4 +124,13 @@ function initializeArchitectureFlow(root: HTMLElement): void {
   show(0, false);
 }
 
-document.querySelectorAll<HTMLElement>('[data-architecture-flow]').forEach(initializeArchitectureFlow);
+function initializeAllArchitectureFlows(): void {
+  document.querySelectorAll<HTMLElement>('[data-architecture-flow]').forEach(initializeArchitectureFlow);
+}
+
+document.addEventListener('astro:page-load', initializeAllArchitectureFlows);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeAllArchitectureFlows, { once: true });
+} else {
+  initializeAllArchitectureFlows();
+}

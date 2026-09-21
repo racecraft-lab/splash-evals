@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+test('flow initializes after page replacement without duplicating controls', async ({ page }) => {
+  await page.goto('/splash-evals/operations/');
+  await page.locator('[data-architecture-flow]').evaluate((root) => {
+    const replacement = root.cloneNode(true);
+    replacement.removeAttribute('data-enhanced');
+    root.replaceWith(replacement);
+    document.dispatchEvent(new Event('astro:page-load'));
+  });
+  const diagram = page.locator('[data-architecture-flow]');
+  await expect(diagram).toHaveAttribute('data-enhanced', 'true');
+  await diagram.getByRole('button', { name: 'Next step' }).click();
+  await expect(diagram).toHaveAttribute('data-stage', '1');
+  await page.evaluate(() => document.dispatchEvent(new Event('astro:page-load')));
+  await expect(diagram).toHaveAttribute('data-stage', '1');
+  await diagram.getByRole('button', { name: 'Next step' }).click();
+  await expect(diagram).toHaveAttribute('data-stage', '2');
+});
+
 test('request playback gives each stage time to read and obeys pause and manual controls', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-09-21T10:00:00Z') });
   await page.goto('/splash-evals/operations/');
