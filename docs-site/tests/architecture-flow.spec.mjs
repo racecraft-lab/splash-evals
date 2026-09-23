@@ -10,11 +10,11 @@ test('flow initializes after page replacement without duplicating controls', asy
   });
   const diagram = page.locator('[data-architecture-flow]');
   await expect(diagram).toHaveAttribute('data-enhanced', 'true');
-  await diagram.getByRole('button', { name: 'Next step' }).click();
+  await diagram.getByRole('button', { name: 'Next GPQA step' }).click();
   await expect(diagram).toHaveAttribute('data-stage', '1');
   await page.evaluate(() => document.dispatchEvent(new Event('astro:page-load')));
   await expect(diagram).toHaveAttribute('data-stage', '1');
-  await diagram.getByRole('button', { name: 'Next step' }).click();
+  await diagram.getByRole('button', { name: 'Next GPQA step' }).click();
   await expect(diagram).toHaveAttribute('data-stage', '2');
 });
 
@@ -24,7 +24,7 @@ test('request playback gives each stage time to read and obeys pause and manual 
   await page.clock.pauseAt(new Date('2026-09-21T10:01:00Z'));
   const diagram = page.locator('[data-architecture-flow]');
   await expect(diagram).toHaveAttribute('data-stage', '0');
-  await diagram.getByRole('button', { name: 'Play request' }).click();
+  await diagram.locator('[data-flow-play]').click();
   await page.clock.runFor(7_999);
   await expect(diagram).toHaveAttribute('data-stage', '0');
   await page.clock.runFor(1);
@@ -34,19 +34,19 @@ test('request playback gives each stage time to read and obeys pause and manual 
   await expect(diagram.locator('[data-flow-route="1"]')).toHaveCSS('animation-play-state', 'paused');
   await page.clock.runFor(24_000);
   await expect(diagram).toHaveAttribute('data-stage', '1');
-  await diagram.getByRole('button', { name: 'Play request' }).click();
+  await diagram.locator('[data-flow-play]').click();
   await page.clock.runFor(4_999);
   await expect(diagram).toHaveAttribute('data-stage', '1');
   await page.clock.runFor(1);
   await expect(diagram).toHaveAttribute('data-stage', '2');
   await diagram.getByRole('button', { name: 'Pause', exact: true }).click();
   await diagram.locator('[data-flow-trigger]').nth(1).click();
-  await diagram.getByRole('button', { name: 'Next step' }).click();
+  await diagram.getByRole('button', { name: 'Next GPQA step' }).click();
   await expect(diagram).toHaveAttribute('data-stage', '2');
   await expect(diagram).toHaveAttribute('data-playing', 'false');
   await diagram.locator('[data-flow-trigger]').nth(3).press('Enter');
   await expect(diagram).toHaveAttribute('data-stage', '3');
-  await diagram.getByRole('button', { name: 'Play request' }).click();
+  await diagram.locator('[data-flow-play]').click();
   await expect(diagram).toHaveAttribute('data-stage', '0');
   await page.clock.runFor(32_000);
   await expect(diagram.getByRole('status')).toContainText('Sequence complete');
@@ -123,12 +123,24 @@ test('infographic components fit, stay balanced and keep a stable detail height 
         detailHeight ??= geometry.height;
         expect(geometry.height).toBeCloseTo(detailHeight, 0);
       }
-      await diagram.locator('summary').click();
-      expect(await diagram.locator('summary').evaluate((el) => parseFloat(getComputedStyle(el).paddingRight))).toBeGreaterThanOrEqual(28);
+      const codingDisclosure = diagram.locator('details.coding-execution-path');
+      const codingSummary = codingDisclosure.locator(':scope > summary');
+      await codingSummary.click();
+      expect(await codingSummary.evaluate((el) => parseFloat(getComputedStyle(el).paddingRight))).toBeGreaterThanOrEqual(28);
+      await expect(codingDisclosure).toContainText('Official grade');
+      for (const step of await codingDisclosure.locator('.agent-loop > li').all()) {
+        expect(await step.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+      }
+      await codingSummary.click();
+
+      const privacyDisclosure = diagram.locator('details.boundary-disclosure');
+      const privacySummary = privacyDisclosure.locator(':scope > summary');
+      await privacySummary.click();
+      expect(await privacySummary.evaluate((el) => parseFloat(getComputedStyle(el).paddingRight))).toBeGreaterThanOrEqual(28);
       for (const card of await diagram.locator('.evidence-destination').all()) {
         expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       }
-      await diagram.locator('summary').click();
+      await privacySummary.click();
       const nav = await page.locator('.primary-nav a').evaluateAll((links) => links.map((link) => {
         const box = link.getBoundingClientRect();
         return { left: box.left, right: box.right };

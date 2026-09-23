@@ -24,6 +24,8 @@ from local_evals.publication import (
     PublicationRefused,
     _evidence_path_is_safe,
     _git,
+    _github_actor_login,
+    _github_actor_overrides,
     _github_context_from_environment,
 )
 
@@ -72,6 +74,7 @@ def _policy(
     str,
     str,
     str,
+    dict[str, str],
 ]:
     try:
         document = yaml.safe_load((repo / "configs" / "policies.yaml").read_text(encoding="utf-8"))
@@ -83,6 +86,9 @@ def _policy(
     provenance = _mapping(publication.get("github_squash_provenance"))
     committer = _mapping(provenance.get("committer"))
     check = _mapping(provenance.get("required_check"))
+    actor_overrides = _github_actor_overrides(provenance.get("actor_overrides", {}))
+    if actor_overrides is None:
+        raise CollectionError("publication actor policy unavailable")
     return (
         {key: _nonempty(automation.get(key)) for key in ("name", "email")},
         {key: _nonempty(committer.get(key)) for key in ("name", "login")},
@@ -90,7 +96,19 @@ def _policy(
         _nonempty(provenance.get("repository")),
         _nonempty(provenance.get("ref")),
         _nonempty(provenance.get("actor_login")),
+        actor_overrides,
     )
+
+
+def _actor_login_for_commit(
+    actor_login: str,
+    actor_overrides: dict[str, str],
+    commit_sha: str,
+) -> str:
+    resolved = _github_actor_login(actor_login, actor_overrides, commit_sha)
+    if resolved is None:
+        raise CollectionError("publication actor policy unavailable")
+    return resolved
 
 
 def _run_git(repo: Path, args: list[str]) -> str:
@@ -369,6 +387,7 @@ def collect(
         policy_repository,
         policy_ref,
         actor_login,
+        actor_overrides,
     ) = _policy(repo)
     if repository != policy_repository or not ref or not head_sha:
         raise CollectionError("repository or ref does not match publication policy")
@@ -389,13 +408,14 @@ def collect(
             and committer_email == automation_policy["email"]
         ):
             continue
+        commit_actor_login = _actor_login_for_commit(actor_login, actor_overrides, commit_sha)
         records.append(
             _commit_record(
                 repository,
                 commit_sha,
                 committer_policy=committer_policy,
                 check_policy=check_policy,
-                actor_login=actor_login,
+                actor_login=commit_actor_login,
                 request=request,
             )
         )

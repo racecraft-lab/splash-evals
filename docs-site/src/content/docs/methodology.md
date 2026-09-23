@@ -10,17 +10,29 @@ next: false
 
 <div class="document-sheet">
 
-This page separates what was measured, how it was measured, and what the result can support.
+This page separates what was measured, how it was measured, and what each benchmark can support. GPQA Diamond has a completed local result. SWE-bench Verified remains a planned evaluation with qualification still pending.
 
 <section class="reader-section cool" aria-label="Benchmark and sample">
 
-## Benchmark and sample
+## GPQA Diamond method
 
 GPQA Diamond is the most difficult subset of Graduate-Level Google-Proof Q&A, a multiple-choice science benchmark written and validated by domain experts. EvalScope 1.12.0 resolved its built-in `gpqa_diamond` adapter to the `default` subset of the `train` split.
 
 The run used all **198 questions**. It was zero-shot: no worked examples were added to the prompt. The adapter asked the model to reason step by step and end with `ANSWER: [LETTER]`. Accuracy was the mean of exact answer-letter matches.
 
 The benchmark is public and widely studied. It is useful for comparison, but it is not a private held-out set and cannot eliminate training-data contamination.
+
+</section>
+
+<section class="reader-section cool" aria-label="SWE-bench Verified method">
+
+## SWE-bench Verified method
+
+SWE-bench Verified evaluates repository-level issue resolution, not one-turn question answering. Each task requires an isolated repository environment and an agent that can inspect code, plan a fix, edit files, run relevant tests, and submit a final repository state for benchmark scoring.
+
+The measured condition must record the exact task manifest and denominator, harness and agent-scaffold revisions, repository image and dependency state, tool access, model and runtime identity, time and token budgets, retries, test policy, scorer revision, and failure treatment. A change to any of those fields creates a different condition.
+
+No local SWE-bench percentage is published. Before a full run, the grading container and host-isolation boundary must be verified, and a qualification run must prove that the agent/edit/test/scorer loop works without executing model-generated code directly on the Mac host.
 
 </section>
 
@@ -52,7 +64,7 @@ All requests completed, so no transport failures had to be scored or excluded. A
 
 ## What makes a fair comparison?
 
-Two scores are directly comparable only when the important conditions align: benchmark and dataset revision, exact item set, prompt, tools, attempts, reasoning budget, answer extraction, scorer, denominator, and failure treatment.
+Two scores are directly comparable only when the important conditions align: benchmark and dataset revision, exact item set, prompt, tools, attempts, reasoning budget, answer extraction, scorer, denominator, and failure treatment. For coding benchmarks, the agent scaffold, repository image, edit/test loop, and execution budget also have to align.
 
 The current frontier-model sources do not disclose every one of those fields. Their scores are therefore shown as directional context. This project does not combine them into a leaderboard, an “AI score,” a percent-of-frontier badge, or an exact performance gap.
 
@@ -66,7 +78,7 @@ The public repository contains source code, configuration templates, factual ref
 
 That boundary protects private local state and restricted evidence, but it also limits independent review: readers can inspect the method and aggregate, but cannot regrade the run from this site. Public GitHub Actions builds static documentation with mock or synthetic data and has no connection to this Mac or LM Studio.
 
-[Review the result](/splash-evals/dashboard/) · [Inspect the sources](/splash-evals/sources/)
+[Review the benchmark index](/splash-evals/dashboard/) · [Inspect the sources](/splash-evals/sources/)
 
 </section>
 

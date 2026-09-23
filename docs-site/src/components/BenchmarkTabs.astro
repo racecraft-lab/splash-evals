@@ -1,0 +1,19 @@
+---
+import { codingView } from './page-intros';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const current = Astro.url.pathname.replace(/\/$/, '');
+const tabs = [
+  { label: 'All results', route: '/dashboard', status: null },
+  { label: 'GPQA Diamond', route: '/dashboard/gpqa-diamond', status: 'Measured' },
+  { label: 'SWE-bench Verified', route: '/dashboard/swe-bench-verified', status: codingView.capability ? 'Measured' : codingView.label },
+];
+---
+<nav class="benchmark-nav" aria-label="Benchmark results">
+  {tabs.map(({ label, route, status }) => (
+    <a href={`${base}${route}/`} aria-current={current === `${base}${route}` ? 'page' : undefined}>
+      <span>{label}</span>
+      {status && <small>{status}</small>}
+    </a>
+  ))}
+</nav>

@@ -1,0 +1,35 @@
+schema_version: 1
+reference_id: vals-anthropic-claude-opus-4-8-swebench-verified-mini-swe-agent-max
+provider: Anthropic
+evaluator: Vals AI
+evaluator_class: independent
+model_display_name: Claude Opus 4.8
+model_snapshot_id: null
+release_period: null
+measurement_date: null
+source_publication_date: "2026-09-01"
+source_url: "https://www.vals.ai/benchmarks/swebench"
+source_locator: "Archived leaderboard embedded overall record anthropic/claude-opus-4-8 (not the Claude Code row); SWE-bench Verified methodology section"
+source_revision_or_content_hash: "full source HTML fetched 2026-09-21 sha256:6d30bc0a858f9957f07070c2b3e60223f7e24f03bcb4464eadbab78367aad12e"
+retrieved_on: "2026-09-21"
+evidence_class: context_only_incompatible_reference
+benchmark: {name: SWE-bench Verified, version: null, split: Verified, dataset_revision: null, sample_count: 500, sample_id_manifest: null, metric_name: resolved, metric_unit: percent, higher_is_better: true}
+protocol: {few_shot: null, prompts_or_template_revision: null, reasoning_mode: null, output_budget: 128000, attempts_per_task: null, aggregation: overall resolution rate, tool_access: bash_only, agent_scaffold_revision: "mini-swe-agent; exact revision not published", scorer_revision: null, answer_extraction: patch_test_execution}
+reported_score: 88.6
+reported_uncertainty: {standard_error_percent: 1.423}
+external_evaluation:
+  evaluator: Vals AI
+  harness_name: mini-swe-agent
+  harness_revision: null
+  variant: "anthropic/claude-opus-4-8; compute_effort=max; excludes separate Claude Code row"
+  denominator: 500
+  resolved_tasks: 443
+  settings: {temperature: 1, top_p: null, max_output_tokens: 128000, reasoning: null, reasoning_effort: null, compute_effort: max, other_settings: provider_default_except_max_tokens}
+  unknowns: [exact_model_snapshot, run_date, harness_revision, system_prompt_revision, sandbox_revision, scorer_revision, attempts_per_task]
+comparability: incompatible
+comparability_notes:
+  - "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence."
+  - "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row."
+  - "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+rights_and_access_notes: "Brief aggregate and settings metadata from the public Vals AI page; no tasks, patches, logs, or responses redistributed."
+verification_status: source_verified

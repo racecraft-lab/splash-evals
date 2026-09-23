@@ -23,6 +23,7 @@ _COLLECTOR_SPEC.loader.exec_module(collector)
 
 
 REPOSITORY = "racecraft-lab/splash-evals"
+HISTORICAL_DEPENDABOT_SHA = "3a4070415d7a7a57251093170ffbbf46f6f5bcb4"
 AUTOMATION_NAME = "Racecraft Lab Automation"
 AUTOMATION_EMAIL = "info@racecraft.co"
 AUTHOR_EMAIL = "fgabelmannjr" + "@" + "users.noreply.github.com"
@@ -162,6 +163,20 @@ def _record(commit_sha: str, tree_sha: str) -> dict[str, Any]:
     }
 
 
+def _dependabot_record(commit_sha: str, tree_sha: str) -> dict[str, Any]:
+    record = _record(commit_sha, tree_sha)
+    record["actor_login"] = "dependabot[bot]"
+    record["author"].update(
+        {
+            "name": "dependabot[bot]",
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "login": "dependabot[bot]",
+        }
+    )
+    record["pull_request"]["user_login"] = "dependabot[bot]"
+    return record
+
+
 def _evidence(head_sha: str, records: list[dict[str, Any]], *, ref: str = "refs/heads/main"):
     return {
         "schema_version": 1,
@@ -219,6 +234,73 @@ def test_complete_valid_squash_evidence_allows_platform_identity(
 
     assert findings == []
     assert summary["github_provenance_records"] == 1
+
+
+def test_legacy_policy_without_actor_overrides_uses_default_actor() -> None:
+    policy = _policies()["publication"]["github_squash_provenance"]
+
+    fields = publication._github_policy_fields(policy)
+
+    assert fields is not None
+    assert fields[0] == "fgabelmannjr"
+    assert fields[1] == {}
+    assert publication._github_actor_login(fields[0], fields[1], "d" * 40) == "fgabelmannjr"
+
+
+def test_offline_audit_allows_dependabot_only_for_the_exact_approved_sha() -> None:
+    record = _dependabot_record(HISTORICAL_DEPENDABOT_SHA, "b" * 40)
+
+    validated = publication._validate_provenance_record(
+        record,
+        repository=REPOSITORY,
+        policy_ref="refs/heads/main",
+        actor_login="fgabelmannjr",
+        actor_overrides={HISTORICAL_DEPENDABOT_SHA: "dependabot[bot]"},
+        committer_policy=COMMITTER_POLICY,
+        check_policy=CHECK,
+    )
+
+    assert validated is not None
+    assert validated[0] == HISTORICAL_DEPENDABOT_SHA
+
+
+@pytest.mark.parametrize("failure", ["other_sha", "other_author"])
+def test_offline_audit_rejects_dependabot_for_other_sha_or_author(failure: str) -> None:
+    commit_sha = HISTORICAL_DEPENDABOT_SHA
+    record = _dependabot_record(commit_sha, "b" * 40)
+    if failure == "other_sha":
+        commit_sha = "d" * 40
+        record["commit_sha"] = commit_sha
+        record["pull_request"]["merge_commit_sha"] = commit_sha
+        record["main_binding"]["base_sha"] = commit_sha
+        record["main_binding"]["merge_base_sha"] = commit_sha
+    else:
+        record["author"]["login"] = "other-actor"
+
+    validated = publication._validate_provenance_record(
+        record,
+        repository=REPOSITORY,
+        policy_ref="refs/heads/main",
+        actor_login="fgabelmannjr",
+        actor_overrides={HISTORICAL_DEPENDABOT_SHA: "dependabot[bot]"},
+        committer_policy=COMMITTER_POLICY,
+        check_policy=CHECK,
+    )
+
+    assert validated is None
+
+
+def test_collector_resolves_only_the_exact_historical_actor_sha() -> None:
+    policy = collector._policy(Path(__file__).resolve().parents[2])
+    actor_login = policy[5]
+    actor_overrides = policy[6]
+
+    assert actor_overrides == {HISTORICAL_DEPENDABOT_SHA: "dependabot[bot]"}
+    assert (
+        collector._github_actor_login(actor_login, actor_overrides, HISTORICAL_DEPENDABOT_SHA)
+        == "dependabot[bot]"
+    )
+    assert collector._github_actor_login(actor_login, actor_overrides, "d" * 40) == actor_login
 
 
 @pytest.mark.parametrize(

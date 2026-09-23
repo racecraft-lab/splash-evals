@@ -1,0 +1,45 @@
+schema_version: 1
+reference_id: anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic
+provider: Anthropic
+model_display_name: Claude Opus 4.6
+model_snapshot_id: null
+release_period: null
+measurement_date: null
+source_publication_date: null
+source_url: "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
+source_locator: "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Opus 4.6 column"
+source_revision_or_content_hash: "retrieved 2026-09-22; primary source transcription checked once; no immutable content hash published; second transcription pending"
+retrieved_on: "2026-09-22"
+evidence_class: published_historical_reference
+evaluator: Anthropic
+evaluator_class: provider_reported
+benchmark:
+  name: GPQA Diamond
+  version: null
+  split: Diamond
+  dataset_revision: null
+  sample_count: null
+  sample_id_manifest: null
+  metric_name: accuracy
+  metric_unit: percent
+  higher_is_better: true
+protocol:
+  few_shot: null
+  prompts_or_template_revision: null
+  reasoning_mode: null
+  output_budget: null
+  attempts_per_task: null
+  aggregation: null
+  tool_access: null
+  agent_scaffold_revision: null
+  scorer_revision: null
+  answer_extraction: null
+reported_score: 91.3
+reported_uncertainty: null
+comparability: incompatible
+comparability_notes:
+  - "Anthropic's Claude 4.6 System Card reports this GPQA Diamond value; the denominator and settings for Opus 4.6 are not established by this cited observation."
+  - "The Section 2.9 Sonnet 4.6 methodology is not transferred to Opus 4.6; the immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation."
+  - "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+rights_and_access_notes: "Brief factual aggregate from the cited primary source; no benchmark questions or responses redistributed."
+verification_status: source_verified

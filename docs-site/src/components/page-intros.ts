@@ -1,3 +1,11 @@
+import records from '../data/benchmark-records.json';
+import { benchmarkLifecycleView } from '../../scripts/generate-content.mjs';
+import { codingIntro } from '../../scripts/benchmark-detail.mjs';
+
+export const codingView = benchmarkLifecycleView(records.benchmarks['SWE-bench Verified'].result, {
+  benchmarkName: 'SWE-bench Verified', requiredCompleteCount: 500,
+});
+
 type Step = [string, string];
 type IntroBase = {
   summary: string;
@@ -43,7 +51,7 @@ export const pageIntros: Record<string, Intro> = {
   '': {
     summary: 'Splash is Inco AI’s local inference engine. Here it runs the Qwen Team’s Qwen3.8-27B model through LM Studio on a Mac, while Racecraft Lab independently measures the result.',
     variant: 'overview',
-    caption: 'One measured local result, shown beside source-labeled frontier context.',
+    caption: 'Local benchmark evidence, with separate pages for science reasoning and repository repair.',
     study: {
       model: 'Splash + Qwen3.8-27B',
       foundation: 'Inco AI runtime · Qwen Team model · LM Studio',
@@ -54,15 +62,21 @@ export const pageIntros: Record<string, Intro> = {
     },
   },
   dashboard: {
+    summary: 'Choose a benchmark to see its reviewed evidence, external context, method, runtime, and limits. Each benchmark has its own result and testing conditions.',
+    caption: 'Two benchmarks, two evidence states, no blended score.',
+    steps: [['Measured', 'GPQA Diamond · reviewed local result'], [codingView.label, `SWE-bench Verified · ${codingView.detail}`], ['Compare carefully', 'Keep every metric and protocol separate']],
+  },
+  'dashboard/gpqa-diamond': {
     summary: 'Splash scored 54.55% accuracy on the full 198-question GPQA Diamond benchmark. All 198 questions completed with no execution errors.',
     variant: 'results',
-    caption: 'A measured local result. Frontier scores are publisher-reported context, not a protocol-matched head-to-head.',
+    caption: 'A measured local result alongside source-labeled frontier context, not a protocol-matched head-to-head.',
     result: {
       score: '54.55%',
       metric: 'GPQA Diamond accuracy',
       completion: '198 of 198 completed · 0 errors',
     },
   },
+  'dashboard/swe-bench-verified': codingIntro(codingView) as Intro,
   methodology: {
     summary: 'A good test needs more than a plausible answer. Follow the path from a clear question to a result you can interpret.',
     caption: 'The method separates the task, the check, and the claim.',

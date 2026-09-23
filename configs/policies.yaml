@@ -28,6 +28,8 @@ publication:
     repository: racecraft-lab/splash-evals
     ref: refs/heads/main
     actor_login: fgabelmannjr
+    actor_overrides:
+      3a4070415d7a7a57251093170ffbbf46f6f5bcb4: "dependabot[bot]"
     committer:
       name: GitHub
       login: web-flow
