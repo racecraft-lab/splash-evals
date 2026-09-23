@@ -51,7 +51,7 @@ The two benchmark pages use the same evidence pattern, but their metrics are dif
 
 <section class="reader-section cool" aria-label="GPQA benchmark comparison compatibility">
 
-## Benchmark comparison
+## Benchmark comparison (GPQA detail)
 
 This compact comparison remains on the index for compatibility. The GPQA detail page is the canonical view and includes the full source-linked comparison. External values are directional context only; differences in dataset revisions, prompts, sampling, answer extraction, reasoning budgets, and trial counts prevent protocol-matched ranking.
 
@@ -105,7 +105,7 @@ Repeated model names are separate source observations under different conditions
 Earlier links still have a clear destination:
 
 - <span id="runtime-performance"></span>[GPQA Diamond runtime performance](/splash-evals/dashboard/gpqa-diamond/#runtime-performance)
-- [GPQA Diamond benchmark comparison](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
+- <span id="benchmark-comparison"></span>[GPQA Diamond benchmark comparison](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
 - <span id="run-record-and-limitations"></span>[GPQA Diamond run record and limitations](/splash-evals/dashboard/gpqa-diamond/#run-record-and-limitations)
 
 </section>
