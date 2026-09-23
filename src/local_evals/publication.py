@@ -303,8 +303,44 @@ def _github_squash_policy(policies: dict[str, Any]) -> dict[str, Any] | None:
     if not isinstance(publication, dict):
         return None
     value = publication.get("github_squash_provenance")
-    expected_keys = {"repository", "ref", "actor_login", "committer", "required_check"}
-    return value if isinstance(value, dict) and set(value) == expected_keys else None
+    expected_keys = {
+        "repository",
+        "ref",
+        "actor_login",
+        "committer",
+        "required_check",
+    }
+    actual_keys = frozenset(value) if isinstance(value, dict) else frozenset()
+    allowed_key_sets = {
+        frozenset(expected_keys),
+        frozenset(expected_keys | {"actor_overrides"}),
+    }
+    if actual_keys not in allowed_key_sets:
+        return None
+    return value
+
+
+def _github_actor_overrides(value: Any) -> dict[str, str] | None:
+    if not isinstance(value, dict):
+        return None
+    overrides: dict[str, str] = {}
+    for commit_sha, actor_login in value.items():
+        if _provenance_sha(commit_sha) is None or _nonempty_string(actor_login) is None:
+            return None
+        overrides[commit_sha] = actor_login
+    return overrides
+
+
+def _github_actor_login(
+    actor_login: Any,
+    actor_overrides: dict[str, str] | None,
+    commit_sha: Any,
+) -> str | None:
+    base_login = _nonempty_string(actor_login)
+    sha = _provenance_sha(commit_sha)
+    if base_login is None or actor_overrides is None or sha is None:
+        return None
+    return actor_overrides.get(sha, base_login)
 
 
 def _automation_identity(policies: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -319,7 +355,7 @@ def _automation_identity(policies: dict[str, Any]) -> tuple[str | None, str | No
 
 def _github_policy_fields(
     policy: dict[str, Any] | None,
-) -> tuple[str, dict[str, str], dict[str, str]] | None:
+) -> tuple[str, dict[str, str], dict[str, str], dict[str, str]] | None:
     if policy is None:
         return None
     committer = _exact_mapping(policy.get("committer"), {"name", "login"})
@@ -327,13 +363,15 @@ def _github_policy_fields(
         policy.get("required_check"), {"name", "app_slug", "status", "conclusion"}
     )
     actor_login = _nonempty_string(policy.get("actor_login"))
-    if actor_login is None or committer is None or check is None:
+    actor_overrides = _github_actor_overrides(policy.get("actor_overrides", {}))
+    if actor_login is None or actor_overrides is None or committer is None or check is None:
         return None
     fields: list[dict[str, Any]] = [committer, check]
     if any(any(_nonempty_string(item) is None for item in value.values()) for value in fields):
         return None
     return (
         actor_login,
+        actor_overrides,
         {key: str(value) for key, value in committer.items()},
         {key: str(value) for key, value in check.items()},
     )
@@ -422,7 +460,9 @@ def _provenance_top_context(
     *,
     current_ref: str | None,
     current_head: str | None,
-) -> tuple[str, str, str, dict[str, str], dict[str, str]] | None:
+) -> (
+    tuple[str, str, str, dict[str, str], dict[str, str], dict[str, str]] | None
+):
     policy = _github_squash_policy(policies)
     policy_fields = _github_policy_fields(policy)
     if policy is None or policy_fields is None:
@@ -440,8 +480,8 @@ def _provenance_top_context(
         or not isinstance(document.get("records"), list)
     ):
         return None
-    actor_login, committer_policy, check_policy = policy_fields
-    return repository, policy_ref, actor_login, committer_policy, check_policy
+    actor_login, actor_overrides, committer_policy, check_policy = policy_fields
+    return repository, policy_ref, actor_login, actor_overrides, committer_policy, check_policy
 
 
 def _validate_main_binding(binding: dict[str, Any], commit_sha: str) -> bool:
@@ -496,6 +536,7 @@ def _validate_provenance_record(
     repository: str,
     policy_ref: str,
     actor_login: str,
+    actor_overrides: dict[str, str],
     committer_policy: dict[str, str],
     check_policy: dict[str, str],
 ) -> tuple[str, dict[str, Any]] | None:
@@ -515,6 +556,7 @@ def _validate_provenance_record(
     if record is None:
         return None
     commit_sha = _provenance_sha(record.get("commit_sha"))
+    expected_actor_login = _github_actor_login(actor_login, actor_overrides, commit_sha)
     author = _exact_mapping(record.get("author"), {"name", "email", "login"})
     committer = _exact_mapping(record.get("committer"), {"name", "email", "login"})
     verification = _exact_mapping(record.get("verification"), {"verified", "reason"})
@@ -540,9 +582,10 @@ def _validate_provenance_record(
     )
     if (
         commit_sha is None
+        or expected_actor_login is None
         or _nonempty_string(record.get("repository")) != repository
         or _nonempty_string(record.get("ref")) != policy_ref
-        or _nonempty_string(record.get("actor_login")) != actor_login
+        or _nonempty_string(record.get("actor_login")) != expected_actor_login
         or author is None
         or committer is None
         or verification is None
@@ -552,7 +595,7 @@ def _validate_provenance_record(
         or record.get("associated_pr_count") != 1
         or not all(_nonempty_string(value) for value in author.values())
         or not all(_nonempty_string(value) for value in committer.values())
-        or author.get("login") != actor_login
+        or author.get("login") != expected_actor_login
         or committer.get("name") != committer_policy.get("name")
         or committer.get("login") != committer_policy.get("login")
         or verification.get("verified") is not True
@@ -563,7 +606,7 @@ def _validate_provenance_record(
             commit_sha=commit_sha,
             repository=repository,
             policy_ref=policy_ref,
-            actor_login=actor_login,
+            actor_login=expected_actor_login,
             check_policy=check_policy,
         )
     ):
@@ -589,7 +632,14 @@ def _validate_github_provenance(
     )
     if policy_context is None or document is None:
         return [_provenance_finding("github-provenance-invalid")], {}
-    repository, policy_ref, actor_login, committer_policy, check_policy = policy_context
+    (
+        repository,
+        policy_ref,
+        actor_login,
+        actor_overrides,
+        committer_policy,
+        check_policy,
+    ) = policy_context
     records: dict[str, dict[str, Any]] = {}
     for raw_record in document["records"]:
         validated = _validate_provenance_record(
@@ -597,6 +647,7 @@ def _validate_github_provenance(
             repository=repository,
             policy_ref=policy_ref,
             actor_login=actor_login,
+            actor_overrides=actor_overrides,
             committer_policy=committer_policy,
             check_policy=check_policy,
         )
