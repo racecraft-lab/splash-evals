@@ -49,6 +49,55 @@ The two benchmark pages use the same evidence pattern, but their metrics are dif
 
 </section>
 
+<section class="reader-section cool" aria-label="GPQA benchmark comparison compatibility">
+
+## Benchmark comparison
+
+This compact comparison remains on the index for compatibility. The GPQA detail page is the canonical view and includes the full source-linked comparison. External values are directional context only; differences in dataset revisions, prompts, sampling, answer extraction, reasoning budgets, and trial counts prevent protocol-matched ranking.
+
+The measured Splash run completed **198 requested, 198 succeeded, 0 errored**, with **43.95 s** average request latency and **64.13 tokens/s** average output throughput.
+
+<details class="comparison-record">
+<summary>View the source-labeled GPQA comparison table</summary>
+
+<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
+
+<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
+
+| Model / condition | GPQA Diamond | Evidence status |
+|---|---:|---|
+| **Splash / Qwen3.8 · local LM Studio · medium effort** | **54.6%** | Measured here; 198/198 completed |
+| [GPT-5.6 Sol](https://openai.com/index/gpt-5-6/) | 94.6% | OpenAI-reported, directional |
+| [GPT-5.6 Terra](https://openai.com/index/gpt-5-6/) | 92.9% | OpenAI-reported, directional |
+| [GPT-5.6 Luna](https://openai.com/index/gpt-5-6/) | 92.3% | OpenAI-reported, directional |
+| [GPT-5.5](https://openai.com/index/introducing-gpt-5-5/) | 93.6% | OpenAI-reported, directional |
+| [Claude Sonnet 4 · Anthropic provider](https://www.anthropic.com/news/claude-4) | 70.0% | Without extended thinking; provider-reported, directional |
+| [Claude Sonnet 4 · Epoch independent](https://epoch.ai/models/claude-sonnet-4) | 78% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4 · Anthropic provider](https://www.anthropic.com/news/claude-4) | 74.9% | Without extended thinking; provider-reported, directional |
+| [Claude Opus 4 · Epoch independent](https://epoch.ai/models/claude-opus-4) | 76% | Direct model scorecard, rounded; directional |
+| [Claude Sonnet 4.6 · Epoch independent](https://epoch.ai/models/claude-sonnet-4-6) | 87% | Direct model scorecard, rounded; directional |
+| [Claude Sonnet 4.6 · Anthropic provider](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 89.9% | Adaptive thinking at max effort, 10-trial average; directional |
+| [Claude Opus 4.6 · Epoch independent](https://epoch.ai/models/claude-opus-4-6) | 91% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4.6 · Anthropic provider](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 91.3% | Adaptive-thinking/max-effort comparison condition; directional |
+| [Claude Opus 4.7 · Anthropic provider](https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf) | 94.2% | Provider-reported, directional |
+| [Claude Opus 4.7 · Epoch independent](https://epoch.ai/models/claude-opus-4-7) | 90% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4.8 · Epoch independent](https://epoch.ai/models/claude-opus-4-8) | 91% | Direct model scorecard, rounded; directional |
+| [Claude Opus 4.8 · Anthropic provider](https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf) | 93.6% | 25-trial average; provider-reported, directional |
+| [Claude Opus 4.8 · OpenAI cross-provider](https://openai.com/index/gpt-5-6/) | 92.0% | OpenAI comparison table, directional |
+| [Claude Sonnet 5 · Epoch independent](https://epoch.ai/models/claude-sonnet-5) | 91% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
+| [Claude Opus 5 · Epoch independent](https://epoch.ai/models/claude-opus-5) | 94% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
+| [Claude Opus 5 · OpenAI cross-provider](https://openai.com/index/gpt-6-astra/) | 93.7% | Anthropic's release page does not publish a GPQA figure |
+
+</div>
+
+Repeated model names are separate source observations under different conditions, not a ranking.
+
+</details>
+
+[Read the GPQA benchmark comparison details](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
+
+</section>
+
 <section class="reader-section cool" aria-label="Compatibility links">
 
 ## Existing result links
@@ -56,7 +105,7 @@ The two benchmark pages use the same evidence pattern, but their metrics are dif
 Earlier links still have a clear destination:
 
 - <span id="runtime-performance"></span>[GPQA Diamond runtime performance](/splash-evals/dashboard/gpqa-diamond/#runtime-performance)
-- <span id="benchmark-comparison"></span>[GPQA Diamond benchmark comparison](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
+- [GPQA Diamond benchmark comparison](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
 - <span id="run-record-and-limitations"></span>[GPQA Diamond run record and limitations](/splash-evals/dashboard/gpqa-diamond/#run-record-and-limitations)
 
 </section>
