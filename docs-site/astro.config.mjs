@@ -10,12 +10,12 @@ export default defineConfig({
   base: BASE,
   trailingSlash: 'always',
   redirects: {
-    '/benchmark-tasks': `${BASE}/methodology/#benchmark-and-sample`,
+    '/benchmark-tasks': `${BASE}/methodology/#gpqa-diamond-method`,
     '/local-pilot-results': `${BASE}/methodology/#the-evaluated-condition`,
     '/architecture': `${BASE}/operations/#local-system-boundary`,
     '/privacy': `${BASE}/methodology/#privacy-and-public-evidence`,
-    '/capability-readiness': `${BASE}/dashboard/#run-record-and-limitations`,
-    '/historical-frontier-comparison': `${BASE}/dashboard/#benchmark-comparison`,
+    '/capability-readiness': `${BASE}/dashboard/gpqa-diamond/#run-record-and-limitations`,
+    '/historical-frontier-comparison': `${BASE}/dashboard/gpqa-diamond/#benchmark-comparison`,
     '/frontier-catalog': `${BASE}/sources/#how-the-evidence-catalog-works`,
     '/frontier-verification': `${BASE}/sources/#how-the-numbers-were-checked`,
     '/glossary': `${BASE}/#key-terms`,
@@ -52,7 +52,16 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Splash Evals',
-          items: ['index', 'dashboard', 'methodology', 'operations', 'sources'],
+          items: [
+            'index',
+            {
+              label: 'Results',
+              items: ['dashboard', 'dashboard/gpqa-diamond', 'dashboard/swe-bench-verified'],
+            },
+            'methodology',
+            'operations',
+            'sources',
+          ],
         },
       ],
       social: [

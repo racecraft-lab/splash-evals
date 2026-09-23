@@ -1,0 +1,48 @@
+schema_version: 1
+benchmark: SWE-bench Verified
+purpose: external_source_coverage_only
+coverage_status: source_covered
+comparability_status: not_established
+local_measurement_status: not_measured
+requested_model_count: 12
+source_covered_model_count: 12
+direct_comparison_eligible_count: 0
+denominator_per_evaluation: 500
+retrieved_on: "2026-09-21"
+source_groups:
+  - source_group: vals_mini_swe_agent
+    evaluator: Vals AI
+    model_provider_scope: [Anthropic, OpenAI]
+    source_url: "https://www.vals.ai/benchmarks/swebench"
+    source_locator: "Archived benchmark overall leaderboard records and Methodology section"
+    source_revision_or_content_hash: "full source HTML fetched 2026-09-21 sha256:6d30bc0a858f9957f07070c2b3e60223f7e24f03bcb4464eadbab78367aad12e"
+    harness: mini-swe-agent
+    harness_revision: null
+    record_count: 10
+  - source_group: anthropic_standard_scaffold
+    evaluator: Anthropic
+    model_provider_scope: [Anthropic]
+    source_url: "https://www.anthropic.com/news/claude-4"
+    source_locator: "Claude 4 results, Performance benchmark reporting, and SWE-bench methodology sections"
+    source_revision_or_content_hash: "full source HTML fetched 2026-09-21 sha256:f8bdec872490418168a1832e1ab5695007b7bfa707e6af78bd2f9d88d8005d8b"
+    harness: Anthropic simple scaffold
+    harness_revision: null
+    record_count: 2
+roster:
+  - {model: GPT-5.5, source_group: vals_mini_swe_agent, reference_id: vals-openai-gpt-5-5-swebench-verified-mini-swe-agent-xhigh}
+  - {model: GPT-5.6 Sol, source_group: vals_mini_swe_agent, reference_id: vals-openai-gpt-5-6-sol-swebench-verified-mini-swe-agent}
+  - {model: GPT-5.6 Terra, source_group: vals_mini_swe_agent, reference_id: vals-openai-gpt-5-6-terra-swebench-verified-mini-swe-agent}
+  - {model: GPT-5.6 Luna, source_group: vals_mini_swe_agent, reference_id: vals-openai-gpt-5-6-luna-swebench-verified-mini-swe-agent}
+  - {model: Claude Opus 4, source_group: anthropic_standard_scaffold, reference_id: anthropic-claude-opus-4-swebench-verified-standard-scaffold}
+  - {model: Claude Sonnet 4, source_group: anthropic_standard_scaffold, reference_id: anthropic-claude-sonnet-4-swebench-verified-standard-scaffold}
+  - {model: Claude Sonnet 4.6, source_group: vals_mini_swe_agent, reference_id: vals-anthropic-claude-sonnet-4-6-swebench-verified-mini-swe-agent-max}
+  - {model: Claude Opus 4.6, source_group: vals_mini_swe_agent, reference_id: vals-anthropic-claude-opus-4-6-thinking-swebench-verified-mini-swe-agent-max}
+  - {model: Claude Opus 4.7, source_group: vals_mini_swe_agent, reference_id: vals-anthropic-claude-opus-4-7-swebench-verified-mini-swe-agent-max}
+  - {model: Claude Opus 4.8, source_group: vals_mini_swe_agent, reference_id: vals-anthropic-claude-opus-4-8-swebench-verified-mini-swe-agent-max}
+  - {model: Claude Sonnet 5, source_group: vals_mini_swe_agent, reference_id: vals-anthropic-claude-sonnet-5-swebench-verified-mini-swe-agent-max}
+  - {model: Claude Opus 5, source_group: vals_mini_swe_agent, reference_id: vals-anthropic-claude-opus-5-swebench-verified-mini-swe-agent}
+limitations:
+  - "Coverage means each requested model has a reviewed public source record; it is not a direct-comparison eligibility decision."
+  - "The ten Vals rows use mini-swe-agent, while Claude Opus 4 and Sonnet 4 use Anthropic's different standard two-tool scaffold."
+  - "Exact deltas remain blocked unless dataset revision and samples, model snapshot, scaffold and prompt revision, attempts, tools, limits, grader, metric, and aggregation all match."
+  - "No local Splash SWE-bench Verified result exists, so the external records cannot be ranked against Splash."

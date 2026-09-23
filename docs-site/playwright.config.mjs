@@ -41,7 +41,7 @@ export default defineConfig({
   webServer: {
     command: `ASTRO_PREVIEW_BACKGROUND=0 pnpm preview --host ${previewHost} --port ${previewPort}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

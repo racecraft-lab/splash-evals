@@ -1,0 +1,1270 @@
+{
+  "benchmarks": {
+    "GPQA Diamond": {
+      "references": [
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic's Claude 4 announcement reports this GPQA Diamond value without extended thinking; the denominator, immutable model snapshot, benchmark revision, dataset revision, sample manifest, and full protocol are not established by this cited observation.",
+            "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4",
+          "reference_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-anthropic",
+          "score": 74.9,
+          "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Opus 4 column",
+          "source_record_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-anthropic",
+          "source_record_sha256": "f9c5161eed168a444a08e466b744aea0c6110ed397599707e589d144f141a6fc",
+          "source_url": "https://www.anthropic.com/news/claude-4"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4",
+          "reference_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-epoch",
+          "score": 76.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-epoch",
+          "source_record_sha256": "4017c3e950569af006523716bac29d7e3d3ea13d25231353272a9881fa30ab87",
+          "source_url": "https://epoch.ai/models/claude-opus-4"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic's Claude 4.6 System Card reports this GPQA Diamond value; the denominator and settings for Opus 4.6 are not established by this cited observation.",
+            "The Section 2.9 Sonnet 4.6 methodology is not transferred to Opus 4.6; the immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+            "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.6",
+          "reference_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic",
+          "score": 91.3,
+          "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Opus 4.6 column",
+          "source_record_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic",
+          "source_record_sha256": "cf9be683850b693188e04831211dc7f96fb774239518d0f27830342ad3ab2183",
+          "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.6",
+          "reference_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-epoch",
+          "score": 91.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4.6 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-epoch",
+          "source_record_sha256": "648a5aa3a86b706ff2aac1d8b9538a6b655b7579996ef00ce2873eafd2a8440e",
+          "source_url": "https://epoch.ai/models/claude-opus-4-6"
+        },
+        {
+          "denominator": 198,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic's Claude Opus 4.7 System Card reports 198 GPQA Diamond questions averaged over 10 trials; other settings, immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+            "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.7",
+          "reference_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-anthropic",
+          "score": 94.2,
+          "source_locator": "Claude Opus 4.7 System Card, section 8.4, GPQA Diamond result",
+          "source_record_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-anthropic",
+          "source_record_sha256": "4e15676406a46b2527879d2bad2e9fe661060595a982e546f85ee221a5af5bbb",
+          "source_url": "https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.7",
+          "reference_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-epoch",
+          "score": 90.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4.7 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-epoch",
+          "source_record_sha256": "756ee79c05d0019b941e76ad522304588d4d0557db7fc65a684cf988f7b09ab0",
+          "source_url": "https://epoch.ai/models/claude-opus-4-7"
+        },
+        {
+          "denominator": 198,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic's Claude Opus 4.8 System Card reports 198 GPQA Diamond questions averaged over 25 trials; other settings, immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+            "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.8",
+          "reference_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-anthropic",
+          "score": 93.6,
+          "source_locator": "Claude Opus 4.8 System Card, section 8.6, GPQA Diamond result",
+          "source_record_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-anthropic",
+          "source_record_sha256": "02b972830dcae349898173faf7b84940a76c69b4e758c420fe0a00bb05779fe0",
+          "source_url": "https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.8",
+          "reference_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-epoch",
+          "score": 91.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4.8 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-epoch",
+          "source_record_sha256": "29a704c55b0ee33f707c31332d25c2609e09644c32fff3b8b2fb691707091e71",
+          "source_url": "https://epoch.ai/models/claude-opus-4-8"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": "OpenAI",
+          "evaluator_class": "cross_provider",
+          "limitations": [
+            "OpenAI's Academic GPQA Diamond table reports Anthropic Claude Opus 4.8 at this value; the evaluator is OpenAI and the model developer is Anthropic.",
+            "Denominator, settings, immutable model snapshot, benchmark revision, dataset revision, and sample manifest are not established by this cited observation; this cross-provider record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.8",
+          "reference_id": "anthropic-claude-opus-4-8-gpqa-diamond-openai",
+          "score": 92.0,
+          "source_locator": "GPT-5.6 announcement, Academic GPQA Diamond row, Claude Opus 4.8 column",
+          "source_record_id": "anthropic-claude-opus-4-8-gpqa-diamond-openai",
+          "source_record_sha256": "8933e2382d4f608fd869a3285d933ff02c73610624d1981c9e3167dcf7bb507b",
+          "source_url": "https://openai.com/index/gpt-5-6/"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 5",
+          "reference_id": "anthropic-claude-opus-5-2026-07-gpqa-diamond-epoch",
+          "score": 94.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 5 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-opus-5-2026-07-gpqa-diamond-epoch",
+          "source_record_sha256": "0dfb318317152ff6eeea5f676b15cb53c658bc13a860212674db878f025e8caf",
+          "source_url": "https://epoch.ai/models/claude-opus-5"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": "OpenAI",
+          "evaluator_class": "cross_provider",
+          "limitations": [
+            "OpenAI's Academic GPQA Diamond table reports Anthropic Claude Opus 5 at this value in the Opus 5 column, not the Fable column; the evaluator is OpenAI and the model developer is Anthropic.",
+            "Denominator, settings, immutable model snapshot, benchmark revision, dataset revision, and sample manifest are not established by this cited observation; this cross-provider record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 5",
+          "reference_id": "anthropic-claude-opus-5-gpqa-diamond-openai",
+          "score": 93.7,
+          "source_locator": "GPT-6 Astra announcement, Academic GPQA Diamond row, Claude Opus 5 column (not the Fable column)",
+          "source_record_id": "anthropic-claude-opus-5-gpqa-diamond-openai",
+          "source_record_sha256": "b3f42a25cd516c287c63112005dd1a2a10bb4bcfe49d0efdc6594a82588ee70d",
+          "source_url": "https://openai.com/index/gpt-6-astra/"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic's Claude 4 announcement reports this GPQA Diamond value without extended thinking; the denominator, immutable model snapshot, benchmark revision, dataset revision, sample manifest, and full protocol are not established by this cited observation.",
+            "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 4",
+          "reference_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-anthropic",
+          "score": 70.0,
+          "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Sonnet 4 column",
+          "source_record_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-anthropic",
+          "source_record_sha256": "6687f0db84cf6d9fa7b597a27dfc34df3dcc7e3723d5a930711ff69746cad3e8",
+          "source_url": "https://www.anthropic.com/news/claude-4"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 4",
+          "reference_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-epoch",
+          "score": 78.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Sonnet 4 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-epoch",
+          "source_record_sha256": "fadb89cdcd7026e8f286e11a0f86545b3d0164cc0cebaa8254a1908ba634e2e3",
+          "source_url": "https://epoch.ai/models/claude-sonnet-4"
+        },
+        {
+          "denominator": 198,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic's Claude 4.6 System Card reports this GPQA Diamond value; Section 2.9 reports 198 GPQA Diamond questions averaged over 10 trials for Claude Sonnet 4.6 only.",
+            "Section 2.9 documents adaptive thinking at max effort with default temperature and top-p for Sonnet 4.6; those settings apply only to Sonnet 4.6, while the immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+            "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 4.6",
+          "reference_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-anthropic",
+          "score": 89.9,
+          "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Sonnet 4.6 column",
+          "source_record_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-anthropic",
+          "source_record_sha256": "e7494a9ac8cf6ca8d64936b7699dd1c98a84e1f07982d6767a3a6146b514b129",
+          "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 4.6",
+          "reference_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-epoch",
+          "score": 87.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Sonnet 4.6 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-epoch",
+          "source_record_sha256": "0c03ea3e20ce3f8b29d52d7d7f57bb83b4516561ef61321f6b46550de4c9eb31",
+          "source_url": "https://epoch.ai/models/claude-sonnet-4-6"
+        },
+        {
+          "denominator": null,
+          "developer": "Anthropic",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+            "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+            "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 5",
+          "reference_id": "anthropic-claude-sonnet-5-2026-06-gpqa-diamond-epoch",
+          "score": 91.0,
+          "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Sonnet 5 column (rounded whole-percent value)",
+          "source_record_id": "anthropic-claude-sonnet-5-2026-06-gpqa-diamond-epoch",
+          "source_record_sha256": "f3fe771b5cac3717df3421b0035b274a6188b3775eb60e24461771a78b179a8f",
+          "source_url": "https://epoch.ai/models/claude-sonnet-5"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "Exact API snapshot is not disclosed in the source table.",
+            "Publisher extraction and a bounded local subset prevent a direct delta."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "GPT-4.1",
+          "reference_id": "openai-gpt-4.1-2025-04-gpqa-diamond",
+          "score": 66.3,
+          "source_locator": "Appendix, Academic knowledge table and GPQA footnote 1",
+          "source_record_id": "openai-gpt-4.1-2025-04-gpqa-diamond",
+          "source_record_sha256": "b6970e8dba512449bbcc3b0568a537c86deb245c355669c5ec3eb5bacfdcd592",
+          "source_url": "https://openai.com/index/gpt-4-1/"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "Source footnote says model extraction changes GPT-4o from approximately 46% to 54%; the table/extraction relationship is not sufficient for a direct local delta.",
+            "Local pilot is a subset unless a separately authorized full aligned run is completed."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "GPT-4o",
+          "reference_id": "openai-gpt-4o-2024-11-20-gpqa-diamond",
+          "score": 46.0,
+          "source_locator": "Appendix, Academic knowledge table and GPQA footnote 1",
+          "source_record_id": "openai-gpt-4o-2024-11-20-gpqa-diamond",
+          "source_record_sha256": "b92458b963f4800ccabde91d797f9a13c1e12ddf72a2a88f7f3b19e81acea1dc",
+          "source_url": "https://openai.com/index/gpt-4-1/"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The official Academic table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+            "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+            "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.5",
+          "reference_id": "openai-gpt-5.5-2026-07-gpqa-diamond",
+          "score": 93.6,
+          "source_locator": "Academic table, GPQA Diamond row, GPT-5.5 column",
+          "source_record_id": "openai-gpt-5.5-2026-07-gpqa-diamond",
+          "source_record_sha256": "8eaaeba1fcbdcef54294197a276600c04556d83b439bb77e467e92f02ed0634b",
+          "source_url": "https://openai.com/index/gpt-5-6/"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+            "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+            "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.6 Luna",
+          "reference_id": "openai-gpt-5.6-luna-2026-07-gpqa-diamond",
+          "score": 92.3,
+          "source_locator": "Academic table, GPQA Diamond row, GPT-5.6 Luna column",
+          "source_record_id": "openai-gpt-5.6-luna-2026-07-gpqa-diamond",
+          "source_record_sha256": "84e5690e13f86c8706783efe6146ed6757d5a42bf10697e5d2c88b695af750ab",
+          "source_url": "https://openai.com/index/gpt-5-6/"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+            "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+            "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.6 Sol",
+          "reference_id": "openai-gpt-5.6-sol-2026-07-gpqa-diamond",
+          "score": 94.6,
+          "source_locator": "Academic table, GPQA Diamond row, GPT-5.6 Sol column",
+          "source_record_id": "openai-gpt-5.6-sol-2026-07-gpqa-diamond",
+          "source_record_sha256": "7f5f984b0ae218475c270ccb5e697c704612a2ec2a6992e5b6eb91331dc0523b",
+          "source_url": "https://openai.com/index/gpt-5-6/"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+            "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+            "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.6 Terra",
+          "reference_id": "openai-gpt-5.6-terra-2026-07-gpqa-diamond",
+          "score": 92.9,
+          "source_locator": "Academic table, GPQA Diamond row, GPT-5.6 Terra column",
+          "source_record_id": "openai-gpt-5.6-terra-2026-07-gpqa-diamond",
+          "source_record_sha256": "c6c8f216bc7fe221369d57bcf86ace74b7ad7ffca22034c89369c0c75d0fbf27",
+          "source_url": "https://openai.com/index/gpt-5-6/"
+        },
+        {
+          "denominator": null,
+          "developer": "OpenAI",
+          "evaluator": null,
+          "evaluator_class": null,
+          "limitations": [
+            "Exact o1 snapshot and reasoning-token budget are not disclosed in the source table.",
+            "Publisher extraction and a bounded local subset prevent a direct delta."
+          ],
+          "metric_name": "accuracy",
+          "metric_unit": "percent",
+          "model_label": "OpenAI o1 (high)",
+          "reference_id": "openai-o1-high-gpqa-diamond",
+          "score": 75.7,
+          "source_locator": "Appendix, Academic knowledge table, OpenAI o1 (high) column",
+          "source_record_id": "openai-o1-high-gpqa-diamond",
+          "source_record_sha256": "d59ee4acd2b77a47e25f7b811749580ef57b729261db7697828235478c2245ff",
+          "source_url": "https://openai.com/index/gpt-4-1/"
+        }
+      ],
+      "result": {
+        "counts": {
+          "errored": 0,
+          "requested": 198,
+          "succeeded": 198
+        },
+        "evaluator": {
+          "developer": null,
+          "evidence_class": "measured_here",
+          "model_label": "Splash / Qwen3.8",
+          "name": "EvalScope",
+          "version": "1.12.0"
+        },
+        "identity": {
+          "adapter": "gpqa_diamond",
+          "dataset_id": "AI-ModelScope/gpqa_diamond",
+          "dataset_provider": "modelscope",
+          "dataset_revision": null,
+          "evaluation_version": "v1.0",
+          "name": "GPQA Diamond",
+          "split": "train",
+          "subset": "default",
+          "variant": "diamond"
+        },
+        "limitations": [
+          "The upstream dataset revision was not recorded by the resolved adapter.",
+          "81 of 198 cases reached the 4096-token output cap.",
+          "Time to first token and time per output token were unavailable from the compatible endpoint.",
+          "Publisher-reported comparison scores may use protocols that are not identical to this evaluation."
+        ],
+        "metric_name": "accuracy",
+        "metric_unit": "proportion",
+        "provenance": {
+          "artifacts": {
+            "progress_sha256": "f71604e1b66511b152428fb49e07334602309aaa70afe233b49347ec4f542c69",
+            "report_sha256": "5863ba54c2ec07cb1e508585d8e2129e863e1573fda2a23cf2aae241bec5e56a",
+            "task_config_sha256": "f69e7d5ccead9ed80ebcf77eb26f7e5cdfe3e24c3483b9d06db5ef30863420e2"
+          },
+          "source": "reviewed GPQA public capability artifact"
+        },
+        "reference_observations": [
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic's Claude 4 announcement reports this GPQA Diamond value without extended thinking; the denominator, immutable model snapshot, benchmark revision, dataset revision, sample manifest, and full protocol are not established by this cited observation.",
+              "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4",
+            "reference_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-anthropic",
+            "score": 74.9,
+            "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Opus 4 column",
+            "source_record_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-anthropic",
+            "source_record_sha256": "f9c5161eed168a444a08e466b744aea0c6110ed397599707e589d144f141a6fc",
+            "source_url": "https://www.anthropic.com/news/claude-4"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4",
+            "reference_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-epoch",
+            "score": 76.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-epoch",
+            "source_record_sha256": "4017c3e950569af006523716bac29d7e3d3ea13d25231353272a9881fa30ab87",
+            "source_url": "https://epoch.ai/models/claude-opus-4"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic's Claude 4.6 System Card reports this GPQA Diamond value; the denominator and settings for Opus 4.6 are not established by this cited observation.",
+              "The Section 2.9 Sonnet 4.6 methodology is not transferred to Opus 4.6; the immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+              "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.6",
+            "reference_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic",
+            "score": 91.3,
+            "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Opus 4.6 column",
+            "source_record_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic",
+            "source_record_sha256": "cf9be683850b693188e04831211dc7f96fb774239518d0f27830342ad3ab2183",
+            "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.6",
+            "reference_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-epoch",
+            "score": 91.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4.6 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-epoch",
+            "source_record_sha256": "648a5aa3a86b706ff2aac1d8b9538a6b655b7579996ef00ce2873eafd2a8440e",
+            "source_url": "https://epoch.ai/models/claude-opus-4-6"
+          },
+          {
+            "denominator": 198,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic's Claude Opus 4.7 System Card reports 198 GPQA Diamond questions averaged over 10 trials; other settings, immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+              "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.7",
+            "reference_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-anthropic",
+            "score": 94.2,
+            "source_locator": "Claude Opus 4.7 System Card, section 8.4, GPQA Diamond result",
+            "source_record_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-anthropic",
+            "source_record_sha256": "4e15676406a46b2527879d2bad2e9fe661060595a982e546f85ee221a5af5bbb",
+            "source_url": "https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.7",
+            "reference_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-epoch",
+            "score": 90.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4.7 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-epoch",
+            "source_record_sha256": "756ee79c05d0019b941e76ad522304588d4d0557db7fc65a684cf988f7b09ab0",
+            "source_url": "https://epoch.ai/models/claude-opus-4-7"
+          },
+          {
+            "denominator": 198,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic's Claude Opus 4.8 System Card reports 198 GPQA Diamond questions averaged over 25 trials; other settings, immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+              "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.8",
+            "reference_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-anthropic",
+            "score": 93.6,
+            "source_locator": "Claude Opus 4.8 System Card, section 8.6, GPQA Diamond result",
+            "source_record_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-anthropic",
+            "source_record_sha256": "02b972830dcae349898173faf7b84940a76c69b4e758c420fe0a00bb05779fe0",
+            "source_url": "https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.8",
+            "reference_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-epoch",
+            "score": 91.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 4.8 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-epoch",
+            "source_record_sha256": "29a704c55b0ee33f707c31332d25c2609e09644c32fff3b8b2fb691707091e71",
+            "source_url": "https://epoch.ai/models/claude-opus-4-8"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": "OpenAI",
+            "evaluator_class": "cross_provider",
+            "limitations": [
+              "OpenAI's Academic GPQA Diamond table reports Anthropic Claude Opus 4.8 at this value; the evaluator is OpenAI and the model developer is Anthropic.",
+              "Denominator, settings, immutable model snapshot, benchmark revision, dataset revision, and sample manifest are not established by this cited observation; this cross-provider record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.8",
+            "reference_id": "anthropic-claude-opus-4-8-gpqa-diamond-openai",
+            "score": 92.0,
+            "source_locator": "GPT-5.6 announcement, Academic GPQA Diamond row, Claude Opus 4.8 column",
+            "source_record_id": "anthropic-claude-opus-4-8-gpqa-diamond-openai",
+            "source_record_sha256": "8933e2382d4f608fd869a3285d933ff02c73610624d1981c9e3167dcf7bb507b",
+            "source_url": "https://openai.com/index/gpt-5-6/"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 5",
+            "reference_id": "anthropic-claude-opus-5-2026-07-gpqa-diamond-epoch",
+            "score": 94.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Opus 5 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-opus-5-2026-07-gpqa-diamond-epoch",
+            "source_record_sha256": "0dfb318317152ff6eeea5f676b15cb53c658bc13a860212674db878f025e8caf",
+            "source_url": "https://epoch.ai/models/claude-opus-5"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": "OpenAI",
+            "evaluator_class": "cross_provider",
+            "limitations": [
+              "OpenAI's Academic GPQA Diamond table reports Anthropic Claude Opus 5 at this value in the Opus 5 column, not the Fable column; the evaluator is OpenAI and the model developer is Anthropic.",
+              "Denominator, settings, immutable model snapshot, benchmark revision, dataset revision, and sample manifest are not established by this cited observation; this cross-provider record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 5",
+            "reference_id": "anthropic-claude-opus-5-gpqa-diamond-openai",
+            "score": 93.7,
+            "source_locator": "GPT-6 Astra announcement, Academic GPQA Diamond row, Claude Opus 5 column (not the Fable column)",
+            "source_record_id": "anthropic-claude-opus-5-gpqa-diamond-openai",
+            "source_record_sha256": "b3f42a25cd516c287c63112005dd1a2a10bb4bcfe49d0efdc6594a82588ee70d",
+            "source_url": "https://openai.com/index/gpt-6-astra/"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic's Claude 4 announcement reports this GPQA Diamond value without extended thinking; the denominator, immutable model snapshot, benchmark revision, dataset revision, sample manifest, and full protocol are not established by this cited observation.",
+              "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 4",
+            "reference_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-anthropic",
+            "score": 70.0,
+            "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Sonnet 4 column",
+            "source_record_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-anthropic",
+            "source_record_sha256": "6687f0db84cf6d9fa7b597a27dfc34df3dcc7e3723d5a930711ff69746cad3e8",
+            "source_url": "https://www.anthropic.com/news/claude-4"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 4",
+            "reference_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-epoch",
+            "score": 78.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Sonnet 4 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-epoch",
+            "source_record_sha256": "fadb89cdcd7026e8f286e11a0f86545b3d0164cc0cebaa8254a1908ba634e2e3",
+            "source_url": "https://epoch.ai/models/claude-sonnet-4"
+          },
+          {
+            "denominator": 198,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic's Claude 4.6 System Card reports this GPQA Diamond value; Section 2.9 reports 198 GPQA Diamond questions averaged over 10 trials for Claude Sonnet 4.6 only.",
+              "Section 2.9 documents adaptive thinking at max effort with default temperature and top-p for Sonnet 4.6; those settings apply only to Sonnet 4.6, while the immutable model snapshot, dataset revision, and sample manifest are not established by this cited observation.",
+              "The local Splash run used a different prompt and scorer path; protocol equivalence is not established and this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 4.6",
+            "reference_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-anthropic",
+            "score": 89.9,
+            "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Sonnet 4.6 column",
+            "source_record_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-anthropic",
+            "source_record_sha256": "e7494a9ac8cf6ca8d64936b7699dd1c98a84e1f07982d6767a3a6146b514b129",
+            "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 4.6",
+            "reference_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-epoch",
+            "score": 87.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Sonnet 4.6 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-epoch",
+            "source_record_sha256": "0c03ea3e20ce3f8b29d52d7d7f57bb83b4516561ef61321f6b46550de4c9eb31",
+            "source_url": "https://epoch.ai/models/claude-sonnet-4-6"
+          },
+          {
+            "denominator": null,
+            "developer": "Anthropic",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The Epoch model scorecard publishes a rounded whole-percent value but does not identify the underlying run, exact API snapshot, measurement date, uncertainty, or scorecard selection/aggregation rule.",
+              "Epoch's GPQA Diamond page describes the 198-question subset and a simple-evals prompt with strict ANSWER: LETTER extraction, and records a 2026-02-20 prompt-format change to benchmark version 1.0.6; the model scorecard does not identify which benchmark or prompt revision produced this value, so version, dataset revision, sample count, and run protocol remain null.",
+              "The local Splash result used EvalScope 1.12.0, reasoning effort medium, a 4096-token output cap, and its own prompt/scorer path. Protocol equivalence is not established; this record must not support a direct score difference, ranking, or capability-equivalence claim."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 5",
+            "reference_id": "anthropic-claude-sonnet-5-2026-06-gpqa-diamond-epoch",
+            "score": 91.0,
+            "source_locator": "Benchmark scorecard, Science > GPQA Diamond row, Claude Sonnet 5 column (rounded whole-percent value)",
+            "source_record_id": "anthropic-claude-sonnet-5-2026-06-gpqa-diamond-epoch",
+            "source_record_sha256": "f3fe771b5cac3717df3421b0035b274a6188b3775eb60e24461771a78b179a8f",
+            "source_url": "https://epoch.ai/models/claude-sonnet-5"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "Exact API snapshot is not disclosed in the source table.",
+              "Publisher extraction and a bounded local subset prevent a direct delta."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "GPT-4.1",
+            "reference_id": "openai-gpt-4.1-2025-04-gpqa-diamond",
+            "score": 66.3,
+            "source_locator": "Appendix, Academic knowledge table and GPQA footnote 1",
+            "source_record_id": "openai-gpt-4.1-2025-04-gpqa-diamond",
+            "source_record_sha256": "b6970e8dba512449bbcc3b0568a537c86deb245c355669c5ec3eb5bacfdcd592",
+            "source_url": "https://openai.com/index/gpt-4-1/"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "Source footnote says model extraction changes GPT-4o from approximately 46% to 54%; the table/extraction relationship is not sufficient for a direct local delta.",
+              "Local pilot is a subset unless a separately authorized full aligned run is completed."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "GPT-4o",
+            "reference_id": "openai-gpt-4o-2024-11-20-gpqa-diamond",
+            "score": 46.0,
+            "source_locator": "Appendix, Academic knowledge table and GPQA footnote 1",
+            "source_record_id": "openai-gpt-4o-2024-11-20-gpqa-diamond",
+            "source_record_sha256": "b92458b963f4800ccabde91d797f9a13c1e12ddf72a2a88f7f3b19e81acea1dc",
+            "source_url": "https://openai.com/index/gpt-4-1/"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The official Academic table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+              "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+              "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.5",
+            "reference_id": "openai-gpt-5.5-2026-07-gpqa-diamond",
+            "score": 93.6,
+            "source_locator": "Academic table, GPQA Diamond row, GPT-5.5 column",
+            "source_record_id": "openai-gpt-5.5-2026-07-gpqa-diamond",
+            "source_record_sha256": "8eaaeba1fcbdcef54294197a276600c04556d83b439bb77e467e92f02ed0634b",
+            "source_url": "https://openai.com/index/gpt-5-6/"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+              "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+              "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.6 Luna",
+            "reference_id": "openai-gpt-5.6-luna-2026-07-gpqa-diamond",
+            "score": 92.3,
+            "source_locator": "Academic table, GPQA Diamond row, GPT-5.6 Luna column",
+            "source_record_id": "openai-gpt-5.6-luna-2026-07-gpqa-diamond",
+            "source_record_sha256": "84e5690e13f86c8706783efe6146ed6757d5a42bf10697e5d2c88b695af750ab",
+            "source_url": "https://openai.com/index/gpt-5-6/"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+              "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+              "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.6 Sol",
+            "reference_id": "openai-gpt-5.6-sol-2026-07-gpqa-diamond",
+            "score": 94.6,
+            "source_locator": "Academic table, GPQA Diamond row, GPT-5.6 Sol column",
+            "source_record_id": "openai-gpt-5.6-sol-2026-07-gpqa-diamond",
+            "source_record_sha256": "7f5f984b0ae218475c270ccb5e697c704612a2ec2a6992e5b6eb91331dc0523b",
+            "source_url": "https://openai.com/index/gpt-5-6/"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "The official table reports a GPQA Diamond percentage, but does not publish an immutable API snapshot ID for this condition.",
+              "Benchmark version, dataset revision, sample manifest, prompt/template, reasoning effort, attempts, aggregation, and scorer are not published for this row.",
+              "The bounded local pilot uses 12 authorized questions and cannot yield a direct historical delta from this aggregate."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.6 Terra",
+            "reference_id": "openai-gpt-5.6-terra-2026-07-gpqa-diamond",
+            "score": 92.9,
+            "source_locator": "Academic table, GPQA Diamond row, GPT-5.6 Terra column",
+            "source_record_id": "openai-gpt-5.6-terra-2026-07-gpqa-diamond",
+            "source_record_sha256": "c6c8f216bc7fe221369d57bcf86ace74b7ad7ffca22034c89369c0c75d0fbf27",
+            "source_url": "https://openai.com/index/gpt-5-6/"
+          },
+          {
+            "denominator": null,
+            "developer": "OpenAI",
+            "evaluator": null,
+            "evaluator_class": null,
+            "limitations": [
+              "Exact o1 snapshot and reasoning-token budget are not disclosed in the source table.",
+              "Publisher extraction and a bounded local subset prevent a direct delta."
+            ],
+            "metric_name": "accuracy",
+            "metric_unit": "percent",
+            "model_label": "OpenAI o1 (high)",
+            "reference_id": "openai-o1-high-gpqa-diamond",
+            "score": 75.7,
+            "source_locator": "Appendix, Academic knowledge table, OpenAI o1 (high) column",
+            "source_record_id": "openai-o1-high-gpqa-diamond",
+            "source_record_sha256": "d59ee4acd2b77a47e25f7b811749580ef57b729261db7697828235478c2245ff",
+            "source_url": "https://openai.com/index/gpt-4-1/"
+          }
+        ],
+        "result_id": "gpqa-diamond-splash-local-2026-09-20",
+        "runtime": {
+          "average_latency_seconds": 43.950018,
+          "duration_seconds": 8716.0,
+          "output_tokens_per_second": 64.13,
+          "total_input_tokens": 54846,
+          "total_output_tokens": 558061
+        },
+        "schema_version": 1,
+        "score": 0.5455,
+        "status": "complete",
+        "task_outcomes": null,
+        "tested_configuration": {
+          "attempts_per_task": null,
+          "harness": "EvalScope",
+          "harness_version": "1.12.0",
+          "max_output_tokens": 4096,
+          "reasoning_effort": "medium",
+          "temperature": null,
+          "top_p": null
+        }
+      }
+    },
+    "SWE-bench Verified": {
+      "references": [
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.6",
+          "reference_id": "vals-anthropic-claude-opus-4-6-thinking-swebench-verified-mini-swe-agent-max",
+          "score": 78.2,
+          "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-4-6-thinking, displayed as Claude Opus 4.6 (Thinking); SWE-bench Verified methodology section",
+          "source_record_id": "vals-anthropic-claude-opus-4-6-thinking-swebench-verified-mini-swe-agent-max",
+          "source_record_sha256": "c7136c2e6ca7e6c0932b7f0936a0fdbef05412a7880ae6242f6f242bf6d0809d",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.7",
+          "reference_id": "vals-anthropic-claude-opus-4-7-swebench-verified-mini-swe-agent-max",
+          "score": 82.0,
+          "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-4-7; SWE-bench Verified methodology section",
+          "source_record_id": "vals-anthropic-claude-opus-4-7-swebench-verified-mini-swe-agent-max",
+          "source_record_sha256": "6d8a9e19e7c684e01d59dde3f921b08ebc1ef00ef4cb294aa84b0b3c0302e37b",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4.8",
+          "reference_id": "vals-anthropic-claude-opus-4-8-swebench-verified-mini-swe-agent-max",
+          "score": 88.6,
+          "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-4-8 (not the Claude Code row); SWE-bench Verified methodology section",
+          "source_record_id": "vals-anthropic-claude-opus-4-8-swebench-verified-mini-swe-agent-max",
+          "source_record_sha256": "dd9a5f8a83960c6aadc9b024f63d17bf94097c8730f9eb036acc9f4ed6ea6c6e",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic reports this standard score over the full 500-problem Verified set with no extended thinking and a simple bash-plus-string-replacement scaffold; it is not the separately reported high-compute result.",
+            "This scaffold is not Vals AI's mini-swe-agent bash-only harness. The exact API snapshot, code/prompt/sandbox/scorer revisions, run date, attempts per task, output budget, aggregation, and rounding are not published.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish direct comparability, and this record must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 4",
+          "reference_id": "anthropic-claude-opus-4-swebench-verified-standard-scaffold",
+          "score": 72.5,
+          "source_locator": "Claude 4 section (72.5%); Performance benchmark reporting; SWE-bench methodology standard-score paragraphs",
+          "source_record_id": "anthropic-claude-opus-4-swebench-verified-standard-scaffold",
+          "source_record_sha256": "6c1bdf9c7c8d48c15badb54aed666c488c71fc82a644f42c4d35fb0a1f5380b0",
+          "source_url": "https://www.anthropic.com/news/claude-4"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Opus 5",
+          "reference_id": "vals-anthropic-claude-opus-5-swebench-verified-mini-swe-agent",
+          "score": 97.0,
+          "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-5; SWE-bench Verified methodology section",
+          "source_record_id": "vals-anthropic-claude-opus-5-swebench-verified-mini-swe-agent",
+          "source_record_sha256": "2915a3a0d2d0e41f41e08c2fe4735b744207e8473c4faf53db84beda3e8542e9",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 4.6",
+          "reference_id": "vals-anthropic-claude-sonnet-4-6-swebench-verified-mini-swe-agent-max",
+          "score": 77.4,
+          "source_locator": "Archived leaderboard embedded overall record anthropic/claude-sonnet-4-6; SWE-bench Verified methodology section",
+          "source_record_id": "vals-anthropic-claude-sonnet-4-6-swebench-verified-mini-swe-agent-max",
+          "source_record_sha256": "26fbb032ffe86818cdc59e1bc3232d9a0f3ea1dd809d908f5791aa595b8cec43",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Anthropic",
+          "evaluator_class": "provider_reported",
+          "limitations": [
+            "Anthropic reports this standard score over the full 500-problem Verified set with no extended thinking and a simple bash-plus-string-replacement scaffold; it is not the separately reported high-compute result.",
+            "This scaffold is not Vals AI's mini-swe-agent bash-only harness. The exact API snapshot, code/prompt/sandbox/scorer revisions, run date, attempts per task, output budget, aggregation, and rounding are not published.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish direct comparability, and this record must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 4",
+          "reference_id": "anthropic-claude-sonnet-4-swebench-verified-standard-scaffold",
+          "score": 72.7,
+          "source_locator": "Claude 4 section (72.7%); Performance benchmark reporting; SWE-bench methodology standard-score paragraphs",
+          "source_record_id": "anthropic-claude-sonnet-4-swebench-verified-standard-scaffold",
+          "source_record_sha256": "8ace1dd06f86eb3cc4179d6903772caab2c00a901747c632909ae9c184492093",
+          "source_url": "https://www.anthropic.com/news/claude-4"
+        },
+        {
+          "denominator": 500,
+          "developer": "Anthropic",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "Claude Sonnet 5",
+          "reference_id": "vals-anthropic-claude-sonnet-5-swebench-verified-mini-swe-agent-max",
+          "score": 79.6,
+          "source_locator": "Archived leaderboard embedded overall record anthropic/claude-sonnet-5; SWE-bench Verified methodology section",
+          "source_record_id": "vals-anthropic-claude-sonnet-5-swebench-verified-mini-swe-agent-max",
+          "source_record_sha256": "fd9649d2606d9f01534df79c9afb35ee0a44e2a66a22a5c9cc21da19a7fb1f38",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "OpenAI",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.5",
+          "reference_id": "vals-openai-gpt-5-5-swebench-verified-mini-swe-agent-xhigh",
+          "score": 82.6,
+          "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.5 (not Codex or Factory rows); SWE-bench Verified methodology section",
+          "source_record_id": "vals-openai-gpt-5-5-swebench-verified-mini-swe-agent-xhigh",
+          "source_record_sha256": "6aaa6381f77686bb644903c97ad1ddafe413080ae24664669e0be822d3b3a442",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "OpenAI",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.6 Luna",
+          "reference_id": "vals-openai-gpt-5-6-luna-swebench-verified-mini-swe-agent",
+          "score": 93.0,
+          "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.6-luna; SWE-bench Verified methodology section",
+          "source_record_id": "vals-openai-gpt-5-6-luna-swebench-verified-mini-swe-agent",
+          "source_record_sha256": "5a891f9974687a8fb0b8f5a91fc8efd7cc49d934ce145b4522eb8b79c1ad3fde",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "OpenAI",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.6 Sol",
+          "reference_id": "vals-openai-gpt-5-6-sol-swebench-verified-mini-swe-agent",
+          "score": 96.2,
+          "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.6-sol; SWE-bench Verified methodology section",
+          "source_record_id": "vals-openai-gpt-5-6-sol-swebench-verified-mini-swe-agent",
+          "source_record_sha256": "b2d8a3247ccd56a3fad5613b0dfcb19fbbead7714e1ab0f0c26d2772050ae794",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        {
+          "denominator": 500,
+          "developer": "OpenAI",
+          "evaluator": "Vals AI",
+          "evaluator_class": "independent",
+          "limitations": [
+            "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+            "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+            "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+          ],
+          "metric_name": "resolved",
+          "metric_unit": "percent",
+          "model_label": "GPT-5.6 Terra",
+          "reference_id": "vals-openai-gpt-5-6-terra-swebench-verified-mini-swe-agent",
+          "score": 95.4,
+          "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.6-terra; SWE-bench Verified methodology section",
+          "source_record_id": "vals-openai-gpt-5-6-terra-swebench-verified-mini-swe-agent",
+          "source_record_sha256": "187efb4a9379d6bda9afa3aa74deae51584ed36491b287c44985eaf716127cfb",
+          "source_url": "https://www.vals.ai/benchmarks/swebench"
+        }
+      ],
+      "result": null
+    }
+  },
+  "input_sha256": {
+    "references/frontier/anthropic-claude-opus-4-2025-05-gpqa-provider.yaml": "74b010f7befef04a405a515407b301cf3f120efa5aa901c7708d45f0559c2858",
+    "references/frontier/anthropic-claude-opus-4-2025-05-gpqa.yaml": "4017c3e950569af006523716bac29d7e3d3ea13d25231353272a9881fa30ab87",
+    "references/frontier/anthropic-claude-opus-4-6-2026-02-gpqa-provider.yaml": "b735b416ebb6988987b70ae6a012f65beeeae17805ba44b939f88068df50bd53",
+    "references/frontier/anthropic-claude-opus-4-6-2026-02-gpqa.yaml": "648a5aa3a86b706ff2aac1d8b9538a6b655b7579996ef00ce2873eafd2a8440e",
+    "references/frontier/anthropic-claude-opus-4-6-vals-swebench.yaml": "c7136c2e6ca7e6c0932b7f0936a0fdbef05412a7880ae6242f6f242bf6d0809d",
+    "references/frontier/anthropic-claude-opus-4-7-2026-04-gpqa-provider.yaml": "726c9f6df6873c0e73bc4d9c4c1a9a97905a5b1509cd99e72e88b98a4d28eb11",
+    "references/frontier/anthropic-claude-opus-4-7-2026-04-gpqa.yaml": "756ee79c05d0019b941e76ad522304588d4d0557db7fc65a684cf988f7b09ab0",
+    "references/frontier/anthropic-claude-opus-4-7-vals-swebench.yaml": "6d8a9e19e7c684e01d59dde3f921b08ebc1ef00ef4cb294aa84b0b3c0302e37b",
+    "references/frontier/anthropic-claude-opus-4-8-2026-05-gpqa-provider.yaml": "a18cbab5ad1509ea1151e8d0eca64b9f30bd628ce29f4c5cde0dd2d19e53f2d8",
+    "references/frontier/anthropic-claude-opus-4-8-2026-05-gpqa.yaml": "29a704c55b0ee33f707c31332d25c2609e09644c32fff3b8b2fb691707091e71",
+    "references/frontier/anthropic-claude-opus-4-8-gpqa-cross-provider.yaml": "e7be0210e32531c6e22a5a07335990b0cede8ef71e902a1628407b721d07c468",
+    "references/frontier/anthropic-claude-opus-4-8-vals-swebench.yaml": "dd9a5f8a83960c6aadc9b024f63d17bf94097c8730f9eb036acc9f4ed6ea6c6e",
+    "references/frontier/anthropic-claude-opus-4-standard-swebench.yaml": "6c1bdf9c7c8d48c15badb54aed666c488c71fc82a644f42c4d35fb0a1f5380b0",
+    "references/frontier/anthropic-claude-opus-5-2026-07-gpqa.yaml": "0dfb318317152ff6eeea5f676b15cb53c658bc13a860212674db878f025e8caf",
+    "references/frontier/anthropic-claude-opus-5-gpqa-cross-provider.yaml": "8536971a9f4a6fe09c0bd2b83431c0a7dfef6cddb00def1281a73d7ff028fd20",
+    "references/frontier/anthropic-claude-opus-5-vals-swebench.yaml": "2915a3a0d2d0e41f41e08c2fe4735b744207e8473c4faf53db84beda3e8542e9",
+    "references/frontier/anthropic-claude-sonnet-4-2025-05-gpqa-provider.yaml": "5f24ae9a5e37a3f16856e194b172e04bcb6079d912c92a149f8ca5ed7d29b5a9",
+    "references/frontier/anthropic-claude-sonnet-4-2025-05-gpqa.yaml": "fadb89cdcd7026e8f286e11a0f86545b3d0164cc0cebaa8254a1908ba634e2e3",
+    "references/frontier/anthropic-claude-sonnet-4-6-2026-02-gpqa-provider.yaml": "e1ee6d6d5d2f6bd05219f89d49314150e4a6999769435bdf2fc1c6ae6a9aa641",
+    "references/frontier/anthropic-claude-sonnet-4-6-2026-02-gpqa.yaml": "0c03ea3e20ce3f8b29d52d7d7f57bb83b4516561ef61321f6b46550de4c9eb31",
+    "references/frontier/anthropic-claude-sonnet-4-6-vals-swebench.yaml": "26fbb032ffe86818cdc59e1bc3232d9a0f3ea1dd809d908f5791aa595b8cec43",
+    "references/frontier/anthropic-claude-sonnet-4-standard-swebench.yaml": "8ace1dd06f86eb3cc4179d6903772caab2c00a901747c632909ae9c184492093",
+    "references/frontier/anthropic-claude-sonnet-5-2026-06-gpqa.yaml": "f3fe771b5cac3717df3421b0035b274a6188b3775eb60e24461771a78b179a8f",
+    "references/frontier/anthropic-claude-sonnet-5-vals-swebench.yaml": "fd9649d2606d9f01534df79c9afb35ee0a44e2a66a22a5c9cc21da19a7fb1f38",
+    "references/frontier/claude-3.5-sonnet-2024-06-gpqa.yaml": "af20e51cef2c685d1d0188eec6429695dbcd57d9e3bfa1432df0aae37066faef",
+    "references/frontier/claude-3.5-sonnet-20241022-aider-pass1.yaml": "425a7162cf327dd0b055821e199125d98c02f8e5eb3eca4a543c087bf6b481b2",
+    "references/frontier/claude-3.5-sonnet-20241022-aider-pass2.yaml": "38ac04e5a52e5d5f6fe0162a7e7d1cb7a0af85bf101b46d291d96bcbbfad7f92",
+    "references/frontier/claude-3.7-sonnet-20250219-no-think-aider-pass1.yaml": "71cd50ccef47d47806c76a6226d40191df9022c19d93ba852b29caedd887b7d7",
+    "references/frontier/claude-3.7-sonnet-20250219-no-think-aider-pass2.yaml": "bfad7ef668fbd67b7c415f081ab04e57792ecdede9b0ade36f0829c12bb1fca5",
+    "references/frontier/claude-3.7-sonnet-20250219-think32k-aider-pass1.yaml": "cabadeeb57b8440568bc9f9b1b299c2a9e169e59af900a3ffc6cabc4d673ce04",
+    "references/frontier/claude-3.7-sonnet-20250219-think32k-aider-pass2.yaml": "871be4a0c229677038dc63945d88265708de42f72a77438c611e65e5587cd523",
+    "references/frontier/gemini-2.5-pro-preview-03-25-aider-pass1.yaml": "273640028277adfb2571c1dc014478a6f27f521f1e1253b2d4a24946fd80715a",
+    "references/frontier/gemini-2.5-pro-preview-03-25-aider-pass2.yaml": "fd276ecfd02f31ac090c0c1713075700bb56619929a939995a9192f65f8e4d2a",
+    "references/frontier/gpt-4.1-2025-04-gpqa.yaml": "b6970e8dba512449bbcc3b0568a537c86deb245c355669c5ec3eb5bacfdcd592",
+    "references/frontier/gpt-4.1-2025-04-ifeval.yaml": "3565b14a676304f700e3f862737a29daa172731a7739d3c656a953b58ed79796",
+    "references/frontier/gpt-4o-2024-11-20-gpqa.yaml": "b92458b963f4800ccabde91d797f9a13c1e12ddf72a2a88f7f3b19e81acea1dc",
+    "references/frontier/gpt-4o-2024-11-20-ifeval.yaml": "98e2d80657e2c2faae1bccdc26e07a10d2e26190414a929eaa78599ffd6041c1",
+    "references/frontier/openai-gpt-5-5-vals-swebench.yaml": "6aaa6381f77686bb644903c97ad1ddafe413080ae24664669e0be822d3b3a442",
+    "references/frontier/openai-gpt-5-6-luna-vals-swebench.yaml": "5a891f9974687a8fb0b8f5a91fc8efd7cc49d934ce145b4522eb8b79c1ad3fde",
+    "references/frontier/openai-gpt-5-6-sol-vals-swebench.yaml": "b2d8a3247ccd56a3fad5613b0dfcb19fbbead7714e1ab0f0c26d2772050ae794",
+    "references/frontier/openai-gpt-5-6-terra-vals-swebench.yaml": "187efb4a9379d6bda9afa3aa74deae51584ed36491b287c44985eaf716127cfb",
+    "references/frontier/openai-gpt-5.5-2026-07-gpqa.yaml": "8eaaeba1fcbdcef54294197a276600c04556d83b439bb77e467e92f02ed0634b",
+    "references/frontier/openai-gpt-5.6-luna-2026-07-gpqa.yaml": "84e5690e13f86c8706783efe6146ed6757d5a42bf10697e5d2c88b695af750ab",
+    "references/frontier/openai-gpt-5.6-sol-2026-07-gpqa.yaml": "7f5f984b0ae218475c270ccb5e697c704612a2ec2a6992e5b6eb91331dc0523b",
+    "references/frontier/openai-gpt-5.6-terra-2026-07-gpqa.yaml": "c6c8f216bc7fe221369d57bcf86ace74b7ad7ffca22034c89369c0c75d0fbf27",
+    "references/frontier/openai-o1-high-gpqa.yaml": "d59ee4acd2b77a47e25f7b811749580ef57b729261db7697828235478c2245ff",
+    "references/frontier/openai-o1-high-ifeval.yaml": "4aa93ad22dbcb329ced7166f9bd1dd4fde37af5dd777fde688636909ff44ebe6",
+    "results/public/gpqa-diamond-splash-local-2026-09-20.json": "99ce46fa6a90fb6f3d5df051d4dd39c40e2801cb1e6ad6f1272b0154057d9082"
+  },
+  "schema_version": 1
+}

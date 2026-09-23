@@ -1,0 +1,35 @@
+schema_version: 1
+reference_id: anthropic-claude-opus-4-swebench-verified-standard-scaffold
+provider: Anthropic
+evaluator: Anthropic
+evaluator_class: provider_reported
+model_display_name: Claude Opus 4
+model_snapshot_id: null
+release_period: "2025-05"
+measurement_date: null
+source_publication_date: "2025-05-22"
+source_url: "https://www.anthropic.com/news/claude-4"
+source_locator: "Claude 4 section (72.5%); Performance benchmark reporting; SWE-bench methodology standard-score paragraphs"
+source_revision_or_content_hash: "full source HTML fetched 2026-09-21 sha256:f8bdec872490418168a1832e1ab5695007b7bfa707e6af78bd2f9d88d8005d8b"
+retrieved_on: "2026-09-21"
+evidence_class: context_only_incompatible_reference
+benchmark: {name: SWE-bench Verified, version: null, split: Verified, dataset_revision: null, sample_count: 500, sample_id_manifest: null, metric_name: resolved, metric_unit: percent, higher_is_better: true}
+protocol: {few_shot: null, prompts_or_template_revision: null, reasoning_mode: off, output_budget: null, attempts_per_task: null, aggregation: null, tool_access: bash_and_string_replace_file_edit, agent_scaffold_revision: "Anthropic simple scaffold; exact code revision not published", scorer_revision: null, answer_extraction: patch_test_execution}
+reported_score: 72.5
+reported_uncertainty: null
+external_evaluation:
+  evaluator: Anthropic
+  harness_name: Anthropic simple scaffold
+  harness_revision: null
+  variant: "standard score; no extended thinking; not high-compute"
+  denominator: 500
+  resolved_tasks: null
+  settings: {extended_thinking: false, bash_tool: true, string_replace_file_edit_tool: true, planning_tool: false, high_compute_parallel_sampling: false, output_budget: null}
+  unknowns: [exact_model_snapshot, run_date, harness_revision, prompt_revision, sandbox_revision, scorer_revision, attempts_per_task, aggregation_and_rounding]
+comparability: incompatible
+comparability_notes:
+  - "Anthropic reports this standard score over the full 500-problem Verified set with no extended thinking and a simple bash-plus-string-replacement scaffold; it is not the separately reported high-compute result."
+  - "This scaffold is not Vals AI's mini-swe-agent bash-only harness. The exact API snapshot, code/prompt/sandbox/scorer revisions, run date, attempts per task, output budget, aggregation, and rounding are not published."
+  - "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish direct comparability, and this record must not support an exact ranking or gap claim."
+rights_and_access_notes: "Brief factual aggregate and methodology metadata from Anthropic's public announcement; no tasks, patches, logs, or responses redistributed."
+verification_status: source_verified

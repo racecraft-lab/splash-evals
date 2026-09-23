@@ -1,6 +1,6 @@
 # Run it yourself
 
-This repository is a local evaluation workbench, not a hosted model service. The public website cannot send requests to a model.
+This repository is a local evaluation workbench, not a hosted model service. The public website cannot send requests to a model. Each benchmark has its own runner contract and evidence gate.
 
 <section class="reader-section cool" aria-label="Local system boundary">
 
@@ -8,13 +8,13 @@ This repository is a local evaluation workbench, not a hosted model service. The
 
 <figure class="system-boundary" data-architecture-flow aria-labelledby="local-boundary-title" aria-describedby="local-boundary-summary">
   <div class="boundary-heading">
-    <div><p class="boundary-eyebrow">Local execution path</p><h3 id="local-boundary-title">From question to score</h3><p class="boundary-description">Follow one question through the local evaluation.</p></div>
+    <div><p class="boundary-eyebrow">Local execution paths</p><h3 id="local-boundary-title">Two benchmarks, one local boundary</h3><p class="boundary-description">GPQA checks one answer. SWE-bench runs an edit-and-test agent loop before a separate official grade.</p></div>
     <span class="boundary-status">Interactive illustration</span>
   </div>
   <div class="flow-controls" data-flow-controls hidden>
     <div class="flow-actions">
-      <button type="button" class="flow-play" data-flow-play>Play request</button>
-      <button type="button" data-flow-next>Next step</button>
+      <button type="button" class="flow-play" data-flow-play>Play GPQA request</button>
+      <button type="button" data-flow-next>Next GPQA step</button>
       <button type="button" data-flow-reset>Reset</button>
     </div>
     <p class="flow-status" data-flow-status role="status">Select a stage, or play at 8 seconds per step.</p>
@@ -72,6 +72,17 @@ This repository is a local evaluation workbench, not a hosted model service. The
       </div>
     </div>
   </div>
+  <details class="comparison-record coding-execution-path">
+    <summary>SWE-bench Verified: open, edit, test, submit, and officially grade</summary>
+    <p>Unlike GPQA's one-response path, one coding task can cycle through repository inspection, edits, and tests inside its isolated task container. Qualification remains non-capability evidence; no local SWE-bench score is published.</p>
+    <ol class="agent-loop">
+      <li><span>1</span><div><strong>Open</strong><p>Load one frozen issue and its exact repository revision into a fresh task workspace.</p></div></li>
+      <li><span>2</span><div><strong>Edit</strong><p>The agent inspects code and makes a bounded repository patch inside the task container.</p></div></li>
+      <li><span>3</span><div><strong>Test</strong><p>The agent may iterate on visible task checks; generated commands never run on the Mac host.</p></div></li>
+      <li><span>4</span><div><strong>Submit</strong><p>The final patch is sealed as the task output. Failed and incomplete tasks stay in the denominator.</p></div></li>
+      <li><span>5</span><div><strong>Official grade</strong><p>A separate fresh grader container applies the trusted SWE-bench tests that the agent cannot modify.</p></div></li>
+    </ol>
+  </details>
   <details class="boundary-disclosure">
     <summary>What stays private, and what can be published?</summary>
     <div class="evidence-boundary" aria-label="Evidence review and publication path after the local run">
@@ -84,6 +95,18 @@ This repository is a local evaluation workbench, not a hosted model service. The
   </details>
   <figcaption id="local-boundary-summary">Illustrated sequence, not live telemetry. Raw run evidence stays private; publication requires review.</figcaption>
 </figure>
+
+</section>
+
+<section class="reader-section warm" aria-label="Coding benchmark agent loop">
+
+## Prepare the SWE-bench agent loop
+
+SWE-bench Verified is not a prompt-only command. The execution illustration above shows its full agent loop beside GPQA's shorter answer-check path. Expand the coding path to see where iteration ends and trusted grading begins.
+
+The public repository does not yet claim that this benchmark-specific loop is qualified for Splash, so it does not provide a copy-and-run full-evaluation command or local coding score. The future run must use the reviewed task manifest, pinned harness and scaffold, private output directory, and verified container boundary.
+
+[Review the pending SWE-bench evidence](swe-bench-verified.md)
 
 </section>
 
@@ -111,7 +134,7 @@ Official references: [LM Studio headless service](https://lmstudio.ai/docs/devel
 
 <section class="reader-section cool" aria-label="Run GPQA Diamond with EvalScope">
 
-## Run GPQA Diamond
+## Reproduce GPQA Diamond
 
 Install the repository dependencies, keep outputs outside the checkout, and use the exact public benchmark name. Remove any `--limit` option for the full evaluation.
 

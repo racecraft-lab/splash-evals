@@ -17,7 +17,7 @@ const items = [
   <div class="identity"><SiteTitle /><ProjectLockup /></div>
   <nav aria-label="Main navigation" class="primary-nav">
     {items.map(({ label, route }) => {
-      const exact = current === `${base}${route}`;
+      const exact = current === `${base}${route}` || (route === '/dashboard' && current.startsWith(`${base}/dashboard/`));
       return <a href={`${base}${route}/`} aria-current={exact ? 'page' : undefined}>{label}</a>;
     })}
   </nav>

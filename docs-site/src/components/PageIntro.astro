@@ -1,8 +1,9 @@
 ---
 import DefaultTitle from '@astrojs/starlight/components/PageTitle.astro';
 import { LinkButton } from '@astrojs/starlight/components';
-import GpqaExplorerBehavior from './GpqaExplorerBehavior.astro';
+import BenchmarkExplorerBehavior from './BenchmarkExplorerBehavior.astro';
 import ArchitectureFlowBehavior from './ArchitectureFlowBehavior.astro';
+import BenchmarkTabs from './BenchmarkTabs.astro';
 import { pageIntros } from './page-intros';
 
 const { id, entry } = Astro.locals.starlightRoute;
@@ -10,6 +11,7 @@ const intro = pageIntros[id];
 const home = id === '';
 const actions = entry.data.hero?.actions ?? [];
 ---
+{(id === 'dashboard' || id.startsWith('dashboard/')) && <BenchmarkTabs />}
 {intro ? (
   <section class:list={['page-intro', { 'home-intro': home, hero: home }]} aria-labelledby="_top">
     <div class="intro-copy">
@@ -60,5 +62,5 @@ const actions = entry.data.hero?.actions ?? [];
     </figure>
   </section>
 ) : <DefaultTitle><slot /></DefaultTitle>}
-{id === 'dashboard' && <GpqaExplorerBehavior />}
+{id.startsWith('dashboard/') && <BenchmarkExplorerBehavior />}
 {id === 'operations' && <ArchitectureFlowBehavior />}

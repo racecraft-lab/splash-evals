@@ -34,9 +34,9 @@ Splash is not the model itself. It is the software that runs the model quickly o
   <li><span>Independent test</span><strong>Racecraft Lab</strong><p>Racecraft Lab, the technical innovation lab of Racecraft Systems, sends GPQA questions through EvalScope and publishes the reviewed result.</p></li>
 </ol>
 
-We ran the complete **198-question GPQA Diamond** benchmark against this exact local setup. It scored **54.55% accuracy** (**54.6% rounded**), and all 198 requests completed.
+We ran the complete **198-question GPQA Diamond** benchmark against this exact local setup. It scored **54.55% accuracy** (**54.6% rounded**), and all 198 requests completed. That is the first reviewed result in a growing benchmark portfolio.
 
-That is a real capability result for one difficult science-reasoning benchmark. It is not a general intelligence score, and it does not prove that Splash is equivalent to a frontier model.
+The next target, **SWE-bench Verified**, asks a different question: can the local system resolve real repository issues through an agent, edit, and test loop? Its external reference coverage is published, but the local qualification and full result are still pending. No coding score is claimed.
 
 [Explore the result](/splash-evals/dashboard/) · [See exactly how we tested](/splash-evals/methodology/)
 
@@ -80,7 +80,7 @@ Published and independently reproduced GPQA figures place the requested GPT-5.5,
 
 So this site labels every external number by source and condition and presents it as **directional context**, not as a head-to-head ranking or an exact performance gap. A provider figure and an independent Epoch AI figure may differ for the same model without either being a transcription error.
 
-[Read the comparison table](/splash-evals/dashboard/#benchmark-comparison)
+[Choose a benchmark](/splash-evals/dashboard/) · [Explore the GPQA comparison](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
 
 </section>
 
@@ -91,6 +91,7 @@ So this site labels every external number by source and condition and presents i
 <dl class="project-definitions" id="key-terms">
 <div><dt>Splash / Qwen3.8</dt><dd>Short for the Qwen3.8-27B model served through Inco AI's Splash runtime in LM Studio. The result applies to this exact setup, not every Qwen model or runtime configuration.</dd></div>
 <div><dt>GPQA Diamond</dt><dd>A difficult multiple-choice benchmark written by domain experts in biology, chemistry, and physics.</dd></div>
+<div><dt>SWE-bench Verified</dt><dd>A repository-level coding benchmark where an agent must inspect code, edit files, run tests, and resolve real issues. The local result is not yet measured.</dd></div>
 <div><dt>Directional comparison</dt><dd>Useful context from a published score whose full testing conditions do not match or are not completely disclosed.</dd></div>
 </dl>
 

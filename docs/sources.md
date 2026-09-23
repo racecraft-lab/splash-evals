@@ -1,10 +1,10 @@
 # Sources and evidence
 
-See who measured each result, where it was published, and what was different about the test. Those details explain why the scores are useful context but not always a direct head-to-head comparison.
+See who measured each result, where it was published, and what was different about the test. The catalog now covers science reasoning and coding, but the local evidence status is different for each benchmark.
 
 <section class="reader-section cool" aria-label="Sources behind the numbers">
 
-## Where the numbers come from
+## GPQA Diamond sources
 
 <div class="source-map">
   <article class="source-card measured">
@@ -52,7 +52,21 @@ See who measured each result, where it was published, and what was different abo
   </article>
 </div>
 
-<p class="source-guidance"><strong>How to read the labels:</strong> “measured here” is this project's local result; “provider-reported” comes from the model developer; “cross-provider” is one developer reporting another's model; “independent” comes from Epoch. The <a href="/splash-evals/dashboard/#benchmark-comparison">Results explorer</a> keeps these labels attached to every observation.</p>
+<p class="source-guidance"><strong>How to read the labels:</strong> “measured here” is this project's local result; “provider-reported” comes from the model developer; “cross-provider” is one developer reporting another's model; “independent” comes from Epoch. The <a href="/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison">GPQA explorer</a> keeps these labels attached to every observation.</p>
+
+</section>
+
+<section class="reader-section warm" aria-label="SWE-bench Verified sources">
+
+## SWE-bench Verified sources
+
+The coding explorer is generated from the source-verified SWE-bench records in `references/frontier/`. Its coverage manifest is `references/benchmarks/swebench-verified-coverage.yaml` and is explicitly limited to **external source coverage**.
+
+The manifest records `local_measurement_status: not_measured` and `comparability_status: not_established`. Each external record keeps the evaluator, harness and revision, benchmark variant, 500-task denominator, numerator when the source permits it, settings, and unknown fields with the reported score. A missing field remains unknown rather than being inferred.
+
+Those records support a 12-observation external explorer. They do not support a Splash score, model ranking, exact gap, or percent-of-frontier claim.
+
+[Review SWE-bench readiness](swe-bench-verified.md#external-reference-explorer) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
 
 </section>
 
@@ -84,6 +98,6 @@ We checked each published score against its original report, then recorded the d
 
 <aside class="verification-limit" role="note"><strong>What a match means:</strong> the repository copied the cited value and its stated condition correctly. It does <strong>not</strong> reproduce the provider's run or turn the score into a protocol-matched comparison.</aside>
 
-[Review the checked-in verification record](https://github.com/racecraft-lab/splash-evals/blob/main/references/frontier/VERIFICATION.md) · [Review the local result](dashboard.md)
+[Review the checked-in verification record](https://github.com/racecraft-lab/splash-evals/blob/main/references/frontier/VERIFICATION.md) · [Review the benchmark index](dashboard.md)
 
 </section>
