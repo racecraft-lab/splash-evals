@@ -460,9 +460,7 @@ def _provenance_top_context(
     *,
     current_ref: str | None,
     current_head: str | None,
-) -> (
-    tuple[str, str, str, dict[str, str], dict[str, str], dict[str, str]] | None
-):
+) -> tuple[str, str, str, dict[str, str], dict[str, str], dict[str, str]] | None:
     policy = _github_squash_policy(policies)
     policy_fields = _github_policy_fields(policy)
     if policy is None or policy_fields is None:

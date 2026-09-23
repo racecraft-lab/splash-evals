@@ -297,9 +297,7 @@ def test_collector_resolves_only_the_exact_historical_actor_sha() -> None:
 
     assert actor_overrides == {HISTORICAL_DEPENDABOT_SHA: "dependabot[bot]"}
     assert (
-        collector._github_actor_login(
-            actor_login, actor_overrides, HISTORICAL_DEPENDABOT_SHA
-        )
+        collector._github_actor_login(actor_login, actor_overrides, HISTORICAL_DEPENDABOT_SHA)
         == "dependabot[bot]"
     )
     assert collector._github_actor_login(actor_login, actor_overrides, "d" * 40) == actor_login
