@@ -84,7 +84,7 @@ This repository is a local evaluation workbench, not a hosted model service. The
   </div>
   <details class="comparison-record coding-execution-path">
     <summary>SWE-bench Verified: open, edit, test, submit, and officially grade</summary>
-    <p>Unlike GPQA's one-response path, one coding task can cycle through repository inspection, edits, and tests inside its isolated task container. Qualification remains non-capability evidence; no local SWE-bench score is published.</p>
+    <p>Unlike GPQA's one-response path, one coding task can cycle through repository inspection, edits, and tests inside its isolated task container. The reviewed full run resolved 360 of 500 tasks.</p>
     <ol class="agent-loop">
       <li><span>1</span><div><strong>Open</strong><p>Load one frozen issue and its exact repository revision into a fresh task workspace.</p></div></li>
       <li><span>2</span><div><strong>Edit</strong><p>The agent inspects code and makes a bounded repository patch inside the task container.</p></div></li>
@@ -110,13 +110,13 @@ This repository is a local evaluation workbench, not a hosted model service. The
 
 <section class="reader-section warm" aria-label="Coding benchmark agent loop">
 
-## Prepare the SWE-bench agent loop
+## The SWE-bench agent loop
 
 SWE-bench Verified is not a prompt-only command. The execution illustration above shows its full agent loop beside GPQA's shorter answer-check path. Expand the coding path to see where iteration ends and trusted grading begins.
 
-The public repository does not yet claim that this benchmark-specific loop is qualified for Splash, so it does not provide a copy-and-run full-evaluation command or local coding score. The future run must use the reviewed task manifest, pinned harness and scaffold, private output directory, and verified container boundary.
+The loop is qualified for Splash, and the reviewed full run is published. A full evaluation still needs a private frozen task manifest, pinned task and grader images, an explicit approval marker, and the verified container boundary, so the public repository does not provide a copy-and-run command.
 
-[Review the pending SWE-bench evidence](/splash-evals/dashboard/swe-bench-verified/)
+[Review the SWE-bench result](/splash-evals/dashboard/swe-bench-verified/)
 
 </section>
 

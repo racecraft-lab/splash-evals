@@ -1,0 +1,54 @@
+schema_version: 1
+suite: swebench-qualification
+evidence_class: runtime_scorer_qualification
+expanded: true
+runner: swebench-local-sandbox-v1
+limitations:
+  - Qualification is limited to at most 10 frozen tasks and is never capability evidence.
+  - "This continuation holds the three never-attempted tasks of cohort d6a36a59; 17 of 20 cumulative qualification attempts were used before it."
+  - "Deviation from upstream mini-SWE-agent SWE-bench config: step_limit is 100 (upstream 250)."
+  - "This profile uses the separately approved reasoning: on variant because xhigh is unsupported; do not represent it as xhigh."
+  - Private tasks, patches, repository checkouts, grader output, and checkpoints remain outside Git.
+  - No cloud inference, fallback judge, or public CI execution is permitted.
+swebench:
+  schema_version: 1
+  mode: qualification
+  manifest_path: swebench/qualification/manifest.json
+  manifest_sha256: 46348217de3ac301dd1b77687c251714f330ac4fb35b7b02422ccc91ac31df3b
+  mini_swe_agent_version: 2.4.6
+  mini_swe_agent_wheel_sha256: a35463c553ac825c7773b03cfa69cd44958e3af20155dcc5711fdf9e4c67cd54
+  swebench_version: 5.0.2
+  swebench_wheel_sha256: b7f0416a1e686eca22c2f749b5f816685a202835032f6683080e2b53545bbb62
+  runner_config_sha256: 8618dedab40170903410b3cec3711fce1dd69807051f42c4aa44c2e0527a7270
+  model: racecraft-splash-local
+  model_runtime:
+    adapter_revision_sha256: e4049bce62fbd92a2990af031168ba5999d71192567d00daf2900ba21f06dbcb
+    served_model_fingerprint: dea3084a7d67b3808fc26e4166cc51f4e85be87bad0b2040b91ec0c3a7c6eee0
+    runtime_identity_sha256: af72b713c608fdaae34b65d4c841dbf72581810d9ce36804d98ddda1eaa97111
+  image_bindings_path: swebench/qualification/image-bindings.json
+  image_bindings_sha256: e7762a3f20b9acfee756cf878de00f3d290d4a37f05868bb82ce67ec1fbbbb7a
+  image_bindings_task_count: 3
+  image_bindings_ordered_instance_ids_sha256: 432e692e5692bbe379c2e26e0c5a09618410e568915670c3a2bdefe29b387cb2
+  control_image_reference: local/swebench-control@sha256:7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee
+  control_image_digest: sha256:7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee
+  platform: linux/amd64
+  task_count: 3
+  parameters:
+    reasoning_effort: 'on'
+    temperature: 1.0
+    top_p: 0.95
+    max_output_tokens: 65536
+  resource_limits:
+    timeout_seconds: 3600
+    memory_bytes: 17179869184
+    cpus: "4.0"
+    pids_limit: 512
+    nofile_limit: 1024
+    tmpfs_bytes: 268435456
+    max_output_bytes: 10485760
+    max_turns: 100
+    max_requests: 100
+    max_task_output_tokens: 262144
+  protocol_approval:
+    approved: false
+    approved_fingerprint: null

@@ -6,6 +6,17 @@ from pathlib import Path
 import pytest
 
 import local_evals.runs as runs
+from local_evals.benchmark_results import (
+    BenchmarkCounts,
+    BenchmarkEvaluator,
+    BenchmarkIdentity,
+    BenchmarkProvenance,
+    BenchmarkResult,
+    BenchmarkStatus,
+    EvaluatorClass,
+    MetricUnit,
+    TaskOutcomes,
+)
 from local_evals.models import (
     DiscoveryReport,
     LocalityEvidence,
@@ -969,3 +980,604 @@ def test_resume_and_rescore_explicitly_refuse_evalscope_core_semantics(
         runs.resume_run("core-run", dry_run=True, root=tmp_path)
     with pytest.raises(runs.RunError, match="EvalScope core rescore is unavailable"):
         runs.rescore_run("core-run", "builtin-exact-v1", root=tmp_path)
+
+
+def _swebench_base_plan(suite: str, *, fingerprint: str = "a" * 64) -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "experiment_id": "swebench-experiment",
+        "suite": suite,
+        "config_id": "lmstudio-as-found",
+        "evidence_class": (
+            "runtime_scorer_qualification"
+            if suite == "swebench-qualification"
+            else "local_measurement"
+        ),
+        "model_id": "racecraft-splash-local",
+        "model_is_splash": True,
+        "locality_evidence": {
+            "status": "verified_local",
+            "endpoint_loopback": True,
+            "local_instance_evidence": True,
+        },
+        "model_instance_evidence": {
+            "selection": "exact_loaded_record",
+            "splash_attribution": "confirmed",
+            "instance_id_sha256": "b" * 64,
+            "native_identity": {"loaded_instance_id_match": True},
+        },
+        "runner": "swebench-local-sandbox-v1",
+        "blockers": [],
+        "sample_count": 10 if suite == "swebench-qualification" else 500,
+        "request_count": 10 if suite == "swebench-qualification" else 500,
+        "protocol": {"suite": suite},
+        "protocol_fingerprint": fingerprint,
+        "selection_hash": "c" * 64,
+        "selection_status": (
+            "qualification" if suite == "swebench-qualification" else "held_out_verified"
+        ),
+        "selection_evidence": {
+            "manifest_sha256": "c" * 64,
+            "protocol_fingerprint": fingerprint,
+            "frozen_before_tuning": suite == "swebench-verified",
+        },
+        "held_out": suite == "swebench-verified",
+        "allow_expanded": True,
+        "limitations": [],
+        "approval_evidence": {
+            "required": suite == "swebench-verified",
+            "status": "verified" if suite == "swebench-verified" else "not_required",
+            "approved_fingerprint": fingerprint if suite == "swebench-verified" else None,
+        },
+    }
+
+
+def _swebench_result(mode: str, *, run_id: str = "swebench-run") -> dict[str, object]:
+    count = 10 if mode == "qualification" else 500
+    qualification = mode == "qualification"
+    benchmark = BenchmarkResult(
+        result_id=run_id,
+        identity=BenchmarkIdentity(
+            name="SWE-bench Verified",
+            variant="qualification-disjoint" if qualification else "verified-500",
+            adapter="mini-swe-agent-bash-docker",
+            dataset_provider="princeton-nlp",
+            dataset_id="SWE-bench_Verified",
+            dataset_revision="c" * 64,
+            evaluation_version="4.1.0",
+            split="test",
+            subset="disjoint-qualification" if qualification else "verified",
+        ),
+        status=BenchmarkStatus.QUALIFICATION if qualification else BenchmarkStatus.COMPLETE,
+        counts=BenchmarkCounts(requested=count, succeeded=count, errored=0),
+        task_outcomes=TaskOutcomes(
+            resolved=count - 1, unresolved=1, model_failure=0, infrastructure_error=0
+        ),
+        metric_name="resolution_rate",
+        metric_unit=MetricUnit.PROPORTION,
+        score=None if qualification else (count - 1) / count,
+        evaluator=BenchmarkEvaluator(
+            name="SWE-bench official grader",
+            version="4.1.0",
+            developer="SWE-bench",
+            model_label="racecraft-splash-local",
+            evidence_class=EvaluatorClass.MEASURED_HERE,
+        ),
+        provenance=BenchmarkProvenance(
+            source="synthetic unit test",
+            artifacts={
+                "protocol_fingerprint": "a" * 64,
+                "manifest": "c" * 64,
+                "runner_config": "d" * 64,
+                "task_image": "e" * 64,
+                "grader_image": "f" * 64,
+            },
+        ),
+        limitations=("Synthetic unit test.",),
+    )
+    summary = {
+        "schema_version": 1,
+        "status": "completed",
+        "evidence_class": (
+            "runtime_scorer_qualification" if qualification else "held_out_capability"
+        ),
+        "task_count": count,
+        "attempted_count": count,
+        "completed_count": count,
+        "resolved_count": count - 1,
+        "unresolved_count": 1,
+        "model_failure_count": 0,
+        "infrastructure_error_count": 0,
+        "error_count": 0,
+        "resolution_rate": None if qualification else (count - 1) / count,
+        "protocol_fingerprint": "a" * 64,
+        "manifest_sha256": "c" * 64,
+        "runner_config_sha256": "d" * 64,
+        "task_image_digest": "sha256:" + "e" * 64,
+        "grader_image_digest": "sha256:" + "f" * 64,
+        "non_capability": qualification,
+        "capability_claim_allowed": not qualification,
+    }
+    return {
+        "status": "completed",
+        "run_id": run_id,
+        "mode": mode,
+        "task_count": count,
+        "protocol_fingerprint": "a" * 64,
+        "manifest_sha256": "c" * 64,
+        "benchmark_summary": summary,
+        "benchmark_result": benchmark.model_dump(mode="json"),
+        "benchmark_result_fingerprint_sha256": benchmark.fingerprint_sha256(),
+    }
+
+
+def _swebench_outcome_result(
+    *,
+    model_failure: int = 0,
+    infrastructure_error: int = 0,
+    attempted_count: int | None = None,
+    completed: int = 499,
+    resolved: int | None = None,
+    unresolved: int | None = None,
+) -> dict[str, object]:
+    result = _swebench_result("verified")
+    count = 500
+    errors = model_failure + infrastructure_error
+    resolved = completed - 1 if resolved is None else resolved
+    unresolved = 1 if unresolved is None else unresolved
+    complete = completed + errors == count and infrastructure_error < count
+    summary = result["benchmark_summary"]
+    assert isinstance(summary, dict)
+    summary.update(
+        status="completed" if complete else "partial",
+        attempted_count=(completed + model_failure if attempted_count is None else attempted_count),
+        completed_count=completed,
+        resolved_count=resolved,
+        unresolved_count=unresolved,
+        model_failure_count=model_failure,
+        infrastructure_error_count=infrastructure_error,
+        error_count=errors,
+        resolution_rate=resolved / count,
+        capability_claim_allowed=complete,
+    )
+    benchmark = BenchmarkResult.model_validate(result["benchmark_result"]).model_copy(
+        update={
+            "status": BenchmarkStatus.COMPLETE if complete else BenchmarkStatus.PARTIAL,
+            "counts": BenchmarkCounts(requested=count, succeeded=completed, errored=errors),
+            "task_outcomes": TaskOutcomes(
+                resolved=resolved,
+                unresolved=unresolved,
+                model_failure=model_failure,
+                infrastructure_error=infrastructure_error,
+            ),
+            "score": resolved / count if complete else None,
+        }
+    )
+    result.update(
+        status="completed" if complete else "partial",
+        benchmark_result=benchmark.model_dump(mode="json"),
+        benchmark_result_fingerprint_sha256=benchmark.fingerprint_sha256(),
+    )
+    return result
+
+
+def test_swebench_model_failures_stay_in_the_500_denominator_and_are_reviewed() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_outcome_result(model_failure=1)
+
+    manifest = runs._swebench_run_manifest(plan, result)
+
+    assert manifest["benchmark_summary"]["resolution_rate"] == 498 / 500
+    assert manifest["benchmark_summary"]["model_failure_count"] == 1
+    assert manifest["benchmark_summary"]["infrastructure_error_count"] == 0
+    assert manifest["capability_evidence"] is True
+    assert manifest["publication_eligible"] is True
+    assert manifest["aggregate"] == {
+        **manifest["aggregate"],
+        "planned": 500,
+        "attempted": 500,
+        "model_failure": 1,
+        "infrastructure_error": 0,
+        "score": 498 / 500,
+    }
+
+
+def test_swebench_infrastructure_errors_are_distinct_and_count_as_unresolved() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_outcome_result(infrastructure_error=1)
+
+    manifest = runs._swebench_run_manifest(plan, result)
+
+    assert manifest["aggregate"]["model_failure"] == 0
+    assert manifest["aggregate"]["infrastructure_error"] == 1
+    assert manifest["aggregate"]["failed"] == 1
+    assert manifest["aggregate"]["attempted"] == 499
+    assert manifest["aggregate"]["unattempted"] == 1
+    assert manifest["aggregate"]["score"] == 498 / 500
+    assert manifest["capability_claim_allowed"] is True
+    assert manifest["publication_eligible"] is True
+
+
+def test_swebench_attempted_count_uses_verified_response_evidence() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_outcome_result(
+        completed=497,
+        resolved=496,
+        unresolved=1,
+        model_failure=1,
+        infrastructure_error=2,
+        attempted_count=499,
+    )
+
+    manifest = runs._swebench_run_manifest(plan, result)
+
+    assert manifest["aggregate"]["planned"] == 500
+    assert manifest["aggregate"]["attempted"] == 499
+    assert manifest["aggregate"]["unattempted"] == 1
+    assert manifest["aggregate"]["model_failure"] == 1
+    assert manifest["aggregate"]["infrastructure_error"] == 2
+    assert manifest["aggregate"]["failed"] == 3
+    assert manifest["aggregate"]["score"] == 496 / 500
+    assert manifest["capability_claim_allowed"] is True
+
+
+def test_swebench_all_model_failures_are_a_measured_zero_of_500() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_outcome_result(completed=0, resolved=0, unresolved=0, model_failure=500)
+
+    manifest = runs._swebench_run_manifest(plan, result)
+
+    assert manifest["aggregate"]["score"] == 0.0
+    assert manifest["aggregate"]["failed"] == 500
+    assert manifest["aggregate"]["model_failure"] == 500
+    assert manifest["aggregate"]["infrastructure_error"] == 0
+    assert manifest["capability_evidence"] is True
+
+
+def test_swebench_incomplete_accounting_is_rejected_before_manifest() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_outcome_result(completed=499)
+
+    with pytest.raises(runs.RunError, match="orchestration contract"):
+        runs._swebench_run_manifest(plan, result)
+
+
+def test_swebench_mismatched_summary_and_result_counts_are_rejected() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_result("verified")
+    summary = result["benchmark_summary"]
+    assert isinstance(summary, dict)
+    summary["resolved_count"] = 398
+    summary["resolution_rate"] = 398 / 500
+
+    with pytest.raises(runs.RunError, match="orchestration contract"):
+        runs._swebench_run_manifest(plan, result)
+
+
+def test_swebench_attempt_count_cannot_omit_verified_responses() -> None:
+    plan = _swebench_base_plan("swebench-verified")
+    result = _swebench_result("verified")
+    summary = result["benchmark_summary"]
+    assert isinstance(summary, dict)
+    summary["attempted_count"] = 0
+
+    with pytest.raises(runs.RunError, match="orchestration contract"):
+        runs._swebench_run_manifest(plan, result)
+
+
+def test_swebench_full_plan_requires_exact_approval_and_frozen_protocol(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    base = _swebench_base_plan("swebench-verified")
+    base["blockers"] = [
+        "No licensed/version-pinned executable task manifest is installed for this expanded suite."
+    ]
+    profile = {
+        "suite": "swebench-verified",
+        "approval_marker": "racecraft-swebench-verified-full-v1",
+        "swebench": {
+            "mode": "verified",
+            "protocol_approval": {"approved": True, "approved_fingerprint": "a" * 64},
+        },
+    }
+    readiness = {
+        "status": "ready",
+        "blockers": [],
+        "metadata": {
+            "runner": "swebench-local-sandbox-v1",
+            "task_count": 500,
+            "protocol_fingerprint": "a" * 64,
+            "manifest_sha256": "c" * 64,
+        },
+    }
+    monkeypatch.setattr(runs, "build_plan", lambda *args, **kwargs: dict(base))
+    monkeypatch.setattr(runs, "load_suite", lambda *args, **kwargs: profile)
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(
+        runs,
+        "_suite_plan_metadata",
+        lambda *args, **kwargs: {
+            "runner": "swebench-local-sandbox-v1",
+            "swebench_readiness": readiness,
+            "sample_count": 500,
+            "blockers": [],
+            "output_directory": "external-state://swebench/runs",
+            "selection_hash": "c" * 64,
+        },
+    )
+
+    blocked = runs.build_execution_plan(
+        "swebench-verified", "lmstudio-as-found", allow_expanded=True, root=tmp_path
+    )
+    ready = runs.build_execution_plan(
+        "swebench-verified",
+        "lmstudio-as-found",
+        allow_expanded=True,
+        root=tmp_path,
+        swebench_approval_marker="racecraft-swebench-verified-full-v1",
+    )
+
+    assert "full_run_budget_approval_missing" in blocked["blockers"]
+    assert ready["blockers"] == []
+    assert ready["held_out"] is True
+    assert ready["approval_evidence"]["status"] == "verified"
+
+
+def test_swebench_public_profiles_are_registered_and_fail_closed() -> None:
+    repo = Path(__file__).resolve().parents[2]
+    qualification = runs.load_suite("swebench-qualification", repo)
+    verified = runs.load_suite("swebench-verified", repo)
+
+    assert qualification["expanded"] is True
+    assert qualification["swebench"]["mode"] == "qualification"
+    # The frozen continuation cohort holds the three never-attempted tasks.
+    assert qualification["swebench"]["task_count"] == 3
+    assert qualification["swebench"]["protocol_approval"]["approved"] is False
+    assert verified["expanded"] is True
+    assert verified["approval_marker"] == "racecraft-swebench-verified-full-v1"
+    assert verified["swebench"]["mode"] == "verified"
+    assert verified["swebench"]["task_count"] == 500
+    # Operator-approved 2026-09-25 for exactly this protocol fingerprint.
+    assert verified["swebench"]["protocol_approval"] == {
+        "approved": True,
+        "approved_fingerprint": (
+            "59f9d524fd9e40c786cd282e95d2a87b4f4ab7051e8bcb273eda3b6c02cfb724"
+        ),
+    }
+    # The verified profile binds the served identity observed during qualification.
+    assert verified["swebench"]["model_runtime"]["served_model_fingerprint"] == (
+        "dea3084a7d67b3808fc26e4166cc51f4e85be87bad0b2040b91ec0c3a7c6eee0"
+    )
+
+
+def test_swebench_qualification_execution_is_always_non_capability(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    state = tmp_path / "external-state"
+    plan = _swebench_base_plan("swebench-qualification")
+    profile = {"suite": "swebench-qualification", "swebench": {"mode": "qualification"}}
+    api = type(
+        "Api",
+        (),
+        {
+            "execute_swebench": staticmethod(
+                lambda *args, **kwargs: _swebench_result("qualification")
+            )
+        },
+    )
+    monkeypatch.setattr(runs, "build_execution_plan", lambda *args, **kwargs: plan)
+    monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
+    monkeypatch.setattr(runs, "load_suite", lambda *args, **kwargs: profile)
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(runs, "_swebench_api", lambda: api)
+
+    result = runs.execute_run(
+        "swebench-qualification", "lmstudio-as-found", allow_expanded=True, root=tmp_path
+    )
+
+    manifest = result["manifest"]
+    assert manifest["held_out"] is False
+    assert manifest["non_capability"] is True
+    assert manifest["capability_claim_allowed"] is False
+    assert manifest["capability_evidence"] is False
+    assert manifest["publication_eligible"] is False
+    assert manifest["aggregate"]["score"] is None
+    assert manifest["primary_objective_status_if_run"] == "pilot_only"
+    assert (state / "runs" / "swebench-run" / "manifest.json").is_file()
+
+
+def test_swebench_resume_requires_fresh_full_approval(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    state = tmp_path / "external-state"
+    manifest = {
+        **_swebench_base_plan("swebench-verified"),
+        "status": "partial",
+        "run_id": "swebench-run",
+    }
+    observed: dict[str, object] = {}
+
+    class Api:
+        @staticmethod
+        def resume_swebench(*args, **kwargs):
+            observed["resume"] = kwargs
+            return _swebench_result("verified")
+
+    monkeypatch.setattr(runs, "_run_dir", lambda *args, **kwargs: state / "runs/swebench-run")
+    monkeypatch.setattr(runs, "load_run", lambda *args, **kwargs: (manifest, []))
+    monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
+    monkeypatch.setattr(
+        runs,
+        "load_suite",
+        lambda *args, **kwargs: {
+            "suite": "swebench-verified",
+            "approval_marker": "racecraft-swebench-verified-full-v1",
+            "swebench": {"mode": "verified"},
+        },
+    )
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(runs, "_swebench_api", lambda: Api)
+    monkeypatch.setattr(runs, "_persist_swebench_manifest", lambda *args, **kwargs: None)
+
+    with pytest.raises(runs.ResumeRefused, match="approval marker"):
+        runs.resume_run("swebench-run", dry_run=False, root=tmp_path)
+    resumed = runs.resume_run(
+        "swebench-run",
+        dry_run=False,
+        root=tmp_path,
+        swebench_approval_marker="racecraft-swebench-verified-full-v1",
+    )
+
+    assert resumed["status"] == "completed"
+    assert observed["resume"]["approval_marker"] == "racecraft-swebench-verified-full-v1"
+
+
+def test_swebench_rescore_returns_report_without_changing_source_run(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    state = tmp_path / "external-state"
+    source_result = _swebench_result("verified")
+    manifest = runs._swebench_run_manifest(_swebench_base_plan("swebench-verified"), source_result)
+    manifest_before = json.loads(json.dumps(manifest))
+    run_id = str(manifest["run_id"])
+    run_dir = state / "runs" / run_id
+    run_dir.mkdir(parents=True)
+    original_files = {
+        "manifest.json": json.dumps(manifest, sort_keys=True).encode("utf-8"),
+        "checkpoint-0000.json": b'{"status":"completed","grade":"unresolved"}',
+        "result.json": b'{"aggregate":{"resolved":0,"planned":500}}',
+        "aggregate.json": b'{"resolved":0,"planned":500}',
+    }
+    for name, content in original_files.items():
+        (run_dir / name).write_bytes(content)
+    before = {name: (run_dir / name).read_bytes() for name in original_files}
+    report = {
+        "schema_version": 1,
+        "report_id": "a" * 64,
+        "report_sha256": "b" * 64,
+        "run_id": run_id,
+        "protocol_fingerprint": manifest["protocol_fingerprint"],
+        "manifest_sha256": manifest["selection_hash"],
+        "task_count": manifest["sample_count"],
+        "rescored_count": manifest["sample_count"],
+        "tasks": [
+            {"task_index": index, "rescored": True} for index in range(manifest["sample_count"])
+        ],
+    }
+    persisted_manifests: list[dict[str, object]] = []
+
+    class Api:
+        @staticmethod
+        def rescore_swebench(*args, **kwargs):
+            return report
+
+    monkeypatch.setattr(runs, "_run_dir", lambda *args, **kwargs: run_dir)
+    monkeypatch.setattr(runs, "load_run", lambda *args, **kwargs: (manifest, []))
+    monkeypatch.setattr(runs, "get_state_dir", lambda *args, **kwargs: state)
+    monkeypatch.setattr(
+        runs,
+        "load_suite",
+        lambda *args, **kwargs: {
+            "suite": "swebench-verified",
+            "approval_marker": "racecraft-swebench-verified-full-v1",
+            "swebench": {"mode": "verified"},
+        },
+    )
+    monkeypatch.setattr(runs, "load_config", lambda *args, **kwargs: _local_config())
+    monkeypatch.setattr(runs, "_swebench_api", lambda: Api)
+    monkeypatch.setattr(
+        runs,
+        "_persist_swebench_manifest",
+        lambda _state, value: persisted_manifests.append(value),
+    )
+
+    rescored = runs.rescore_run(run_id, "swebench-grader-pinned", root=tmp_path)
+
+    assert rescored["status"] == "rescored"
+    assert rescored["scorer_version"] == "swebench-grader-pinned"
+    assert {key: rescored[key] for key in report} == report
+    assert rescored["report_id"] == report["report_id"]
+    assert rescored["report_sha256"] == report["report_sha256"]
+    assert rescored["tasks"] == report["tasks"]
+    assert "manifest" not in rescored
+    assert persisted_manifests == []
+    assert manifest == manifest_before
+    assert {name: (run_dir / name).read_bytes() for name in original_files} == before
+
+
+def test_swebench_rescore_rejects_non_pinned_scorer_before_running(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = {"suite": "swebench-verified"}
+    scorer_called = False
+
+    class Api:
+        @staticmethod
+        def rescore_swebench(*args, **kwargs):
+            nonlocal scorer_called
+            scorer_called = True
+            raise AssertionError("a non-pinned scorer must be rejected before scoring")
+
+    monkeypatch.setattr(runs, "_run_dir", lambda *args, **kwargs: tmp_path)
+    monkeypatch.setattr(runs, "load_run", lambda *args, **kwargs: (manifest, []))
+    monkeypatch.setattr(runs, "_swebench_api", lambda: Api)
+
+    with pytest.raises(runs.RunError, match="requires the frozen grader"):
+        runs.rescore_run("swebench-run", "unreviewed-grader-v2", root=tmp_path)
+
+    assert scorer_called is False
+
+
+def test_swebench_rescore_rejects_inconsistent_source_manifest(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = runs._swebench_run_manifest(
+        _swebench_base_plan("swebench-verified"), _swebench_result("verified")
+    )
+    aggregate = manifest["aggregate"]
+    assert isinstance(aggregate, dict)
+    aggregate["score"] = 0.01
+    scorer_called = False
+
+    class Api:
+        @staticmethod
+        def rescore_swebench(*args, **kwargs):
+            nonlocal scorer_called
+            scorer_called = True
+            raise AssertionError("an inconsistent source manifest must fail before rescoring")
+
+    monkeypatch.setattr(runs, "_swebench_api", lambda: Api)
+
+    with pytest.raises(runs.RunError, match="source manifest failed validation"):
+        runs._rescore_swebench_run(
+            str(manifest["run_id"]), "swebench-grader-pinned", manifest, tmp_path
+        )
+
+    assert scorer_called is False
+
+
+def test_swebench_run_that_raises_leaves_a_resumable_outer_manifest(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    state = tmp_path / "external-state"
+    plan = _swebench_base_plan("swebench-verified")
+
+    class TransportStopped(Exception):
+        pass
+
+    class Api:
+        @staticmethod
+        def execute_swebench(*args, **kwargs):
+            kwargs["on_run_created"]("swebench-run")
+            raise TransportStopped
+
+    monkeypatch.setattr(runs, "_swebench_api", lambda: Api)
+    with pytest.raises(TransportStopped):
+        runs._execute_swebench_run(
+            tmp_path, state, plan, _local_config(), {"swebench": {}}, "marker"
+        )
+
+    manifest = json.loads((state / "runs/swebench-run/manifest.json").read_text())
+    assert manifest["run_id"] == "swebench-run"
+    assert manifest["status"] == "blocked"
+    assert manifest["protocol_fingerprint"] == plan["protocol_fingerprint"]

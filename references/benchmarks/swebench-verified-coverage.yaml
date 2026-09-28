@@ -3,7 +3,7 @@ benchmark: SWE-bench Verified
 purpose: external_source_coverage_only
 coverage_status: source_covered
 comparability_status: not_established
-local_measurement_status: not_measured
+local_measurement_status: measured
 requested_model_count: 12
 source_covered_model_count: 12
 direct_comparison_eligible_count: 0
@@ -45,4 +45,4 @@ limitations:
   - "Coverage means each requested model has a reviewed public source record; it is not a direct-comparison eligibility decision."
   - "The ten Vals rows use mini-swe-agent, while Claude Opus 4 and Sonnet 4 use Anthropic's different standard two-tool scaffold."
   - "Exact deltas remain blocked unless dataset revision and samples, model snapshot, scaffold and prompt revision, attempts, tools, limits, grader, metric, and aggregation all match."
-  - "No local Splash SWE-bench Verified result exists, so the external records cannot be ranked against Splash."
+  - "The local Splash result uses a different agent configuration and testing conditions, so the external records cannot be ranked against it or subtracted from it."

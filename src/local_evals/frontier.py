@@ -28,6 +28,7 @@ EVIDENCE_CLASSES = {
 }
 COMPARABILITY = {"matched", "partially_matched", "incompatible", "unknown"}
 PROVIDERS = {"OpenAI", "Anthropic", "Google"}
+EVALUATOR_CLASSES = {"independent", "provider_reported", "cross_provider"}
 METRIC_UNITS = {"proportion", "percent"}
 REASONING_MODES = {"off", "on", "low", "medium", "high"}
 
@@ -91,6 +92,13 @@ def validate_reference_record(
     provider = record.get("provider")
     if provider not in PROVIDERS:
         errors.append("provider must be one of: Anthropic, Google, OpenAI")
+    if "evaluator" in record or "evaluator_class" in record:
+        if not _nonblank(record.get("evaluator")):
+            errors.append("evaluator must be nonblank when evaluator metadata is present")
+        if record.get("evaluator_class") not in EVALUATOR_CLASSES:
+            errors.append(
+                "evaluator_class must be independent, provider_reported, or cross_provider"
+            )
     if not _nonblank(record.get("model_display_name")):
         errors.append("model_display_name must be nonblank")
     source_url = record.get("source_url")

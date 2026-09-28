@@ -35,6 +35,9 @@ def test_model_capable_workflows_are_explicitly_mock_only() -> None:
         assert "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" in text
     assert "local-evals privacy audit --scope publication" in ci
     assert 'git checkout --detach "$PR_HEAD_SHA"' in ci
+    assert "PR_NUMBER: ${{ github.event.pull_request.number }}" in ci
+    assert '--pull-request "$PR_NUMBER"' in ci
+    assert "gitleaks dir . --redact --no-banner --no-color" in ci
     assert "local-evals privacy audit --scope publication" in release
     assert "pull-requests: read" in release
     assert "checks: read" in release
@@ -61,8 +64,34 @@ def test_model_capable_workflows_are_explicitly_mock_only() -> None:
     assert 'gitleaks" dir docs-site/dist --redact --no-banner --no-color' in docs
     assert "path: docs-site/dist" in docs
     assert "gitleaks dir dist --redact --no-banner --no-color" in release
+    assert "GitHub creates separate provenance attestations for these artifacts" in release
+    old_provenance_claim = (
+        "Artifacts contain project code/docs, a wheel, sdist, CycloneDX SBOM, "
+        "checksums, and provenance"
+    )
+    assert old_provenance_claim not in release
     assert "working-directory: dist" in release
     assert "sha256sum *.whl *.tar.gz sbom.cdx.json > SHA256SUMS" in release
     assert "sha256sum dist/*.whl" not in release
     assert "working-directory: release-artifacts" in release
     assert "sha256sum --check SHA256SUMS" in release
+
+
+def test_workflows_set_up_pinned_node_and_locked_swebench_sdk_before_full_pytest() -> None:
+    root = Path(__file__).resolve().parents[2]
+    setup = (
+        "uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6 "
+        "source: github.com/actions/setup-node"
+    )
+    npm = "npm --prefix scripts/swebench-sdk ci --ignore-scripts --no-audit --no-fund"
+    for name in ("ci.yml", "release.yml"):
+        text = (root / ".github" / "workflows" / name).read_text(encoding="utf-8")
+        assert "node-version: 22" in text
+        first_pytest = text.index("uv run pytest")
+        assert text.index(setup) < first_pytest
+        assert text.index(npm) < first_pytest
+        assert npm in text
+        # mock-only preservation
+        assert 'LOCAL_EVALS_TEST_MODE: "mock-only"' in text
+    ci = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert ci.index(setup) < ci.index("node-version: 22") < ci.index(npm)

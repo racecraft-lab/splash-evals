@@ -10,13 +10,13 @@ next: false
 
 <div class="document-sheet">
 
-<div class="finding pending" role="region" aria-label="SWE-bench Verified status">
+<div class="finding measured" role="region" aria-label="SWE-bench Verified status">
 
-## No local Splash score is published yet
+## Splash scored 72.00% on SWE-bench Verified
 
-The local evaluation is pending benchmark-specific qualification and a full reviewed run.
+This is the reviewed result for the full 500-task repository-repair benchmark. Published frontier observations provide context under different testing conditions.
 
-
+<p class="evaluation-caveat">360 resolved / 500 requested · 122 unresolved · 16 model failures · 2 infrastructure errors.</p>
 
 </div>
 
@@ -27,11 +27,11 @@ The local evaluation is pending benchmark-specific qualification and a full revi
 <dl class="evaluation-summary">
 <div><dt>System under study</dt><dd><strong>Splash / Qwen3.8</strong><span>Local LM Studio deployment</span></dd></div>
 <div><dt>Benchmark</dt><dd><strong>SWE-bench Verified</strong><span>500 repository-repair tasks</span></dd></div>
-<div><dt>Local score</dt><dd><strong>Not available</strong><span>No capability percentage is reported</span></dd></div>
-<div><dt>Status</dt><dd><strong>Pending</strong><span>Qualification and full run remain</span></dd></div>
+<div><dt>Local score</dt><dd><strong>72.00%</strong><span>Resolved tasks</span></dd></div>
+<div><dt>Status</dt><dd><strong>Reviewed full run</strong><span>482 completed · 18 errors · 500 requested</span></dd></div>
 </dl>
 
-<aside class="method-note" role="note">A setup check or qualification run is not a SWE-bench capability result. A local score requires a full reviewed 500-task evaluation.</aside>
+<aside class="method-note" role="note">This score applies to the recorded model, agent, tools and testing conditions. Matching benchmark names does not establish a matched comparison.</aside>
 
 </section>
 
@@ -39,7 +39,7 @@ The local evaluation is pending benchmark-specific qualification and a full revi
 
 ## External reference explorer
 
-These published observations use SWE-bench Verified, but the agents and testing conditions differ. The pinned Splash row shows its current reviewed status. Missing scores are labeled explicitly.
+These published observations use SWE-bench Verified, but the agents and testing conditions differ. The pinned Splash row shows the reviewed local result. The Vals AI rows also use mini-swe-agent, but with different step limits, settings, and environments, so they remain context rather than a ranking. Missing scores are labeled explicitly.
 
 <aside class="method-note" role="note"><strong>Two different source groups:</strong> ten Vals AI observations use mini-swe-agent and are labeled “Vals AI independent.” Two Claude 4 observations use Anthropic's standard scaffold and are labeled “Provider-reported.” Do not rank or subtract across those harness groups.</aside>
 
@@ -60,11 +60,11 @@ These published observations use SWE-bench Verified, but the agents and testing 
 <table>
   <thead><tr><th>Model / condition</th><th>Reported score</th><th>Evidence</th><th>Published condition</th></tr></thead>
   <tbody>
-<tr data-source-class="pending" data-family="local" data-local="true" data-score="" data-source-url="/splash-evals/sources/#swe-bench-verified-sources">
+<tr data-source-class="measured" data-family="local" data-local="true" data-score="72" data-source-url="https://github.com/racecraft-lab/splash-evals/blob/main/results/public/swe-bench-verified-splash-local-2026-09-28.json">
   <td><strong>Splash / Qwen3.8</strong></td>
-  <td>Pending</td>
-  <td>Local pending</td>
-  <td>No reviewed local result is published.</td>
+  <td>72.00%</td>
+  <td>Measured here</td>
+  <td>360 / 500 resolved · 18 errors counted unresolved</td>
 </tr>
 <tr data-source-class="independent" data-family="claude" data-local="false" data-score="78.2" data-source-url="https://www.vals.ai/benchmarks/swebench">
   <td><a href="https://www.vals.ai/benchmarks/swebench">Claude Opus 4.6</a></td>
@@ -178,8 +178,21 @@ This loop differs fundamentally from GPQA's one-request answer check. Agent scaf
 
 ## Limitations and tested conditions
 
-<ul><li>Qualification and a full local run are still required.</li><li>External observations use different agents, settings or testing conditions.</li><li>Raw tasks, trajectories, patches and logs remain private.</li></ul>
-
+<ul><li>Results apply only to Splash/Qwen3.8 served by local LM Studio under the frozen protocol, task images, and grader image listed in provenance.</li><li>Scoring follows the upstream SWE-bench convention: resolved tasks divided by all 500 tasks. Model failures (16) and infrastructure errors (2) count as unresolved.</li><li>Both infrastructure errors are model-side context exhaustion: the conversation filled the 131,072-token context window and LM Studio refused the next request. The pinned transport reports this as a generic failure, so the harness recorded an infrastructure error.</li><li>The first pass resolved 357 of 500 tasks (71.4%, first_pass_result). Five tasks whose attempts were cut off by host faults (one GPU hang, one memory lockup, and three model unloads) were re-run once at the end with operator approval under the same protocol (rerun_ledger). Three resolved, giving 360 of 500 (72.0%). This is a deviation from the one-attempt protocol for those five tasks only.</li><li>Thirteen tasks never reached the model because the model was unloaded between tasks. The harness recorded no inference for them and ran them on resume. The run now stops before any task when the frozen model is not being served.</li><li>Harness accounting changed during the run, before any result was reviewed: infrastructure errors now count as unresolved (upstream convention) instead of withholding the result, and a cut-off inference stops the run. The protocol fingerprint did not change.</li><li>After two host lockups, the Splash engine&#39;s memory budget was capped at 48 GiB by a local edit to LM Studio&#39;s Splash launcher. The cap limits cache memory only. Model weights, the 131,072-token context, and the served model fingerprint are unchanged.</li><li>The approved reasoning variant is on, because xhigh is unsupported. Do not represent it as xhigh.</li><li>Deviations from the upstream mini-SWE-agent SWE-bench configuration: step limit 100 (upstream 250), command timeout 120 s (upstream 60 s), and no cost limit.</li><li>Task containers use linux/amd64 images under Rosetta emulation on Apple silicon. Harness qualification ran under QEMU before the switch to Rosetta. All 500 gold patches resolve in this environment.</li><li>Agent containers are always offline. Graders are offline except for 12 tasks whose graders reach only their listed hosts through a hostname-checking gateway; upstream grades with open network. Each grading run is limited to 3,600 s.</li><li>Four psf/requests tasks depend on live httpbin.org during grading.</li><li>After the run, the grader egress probe was hardened (an explicit TLS 1.2 minimum and one duplicate check removed) and the gateway image was rebuilt. The run used the earlier gateway image and sources listed in provenance (run_egress_gateway_image, run_egress_gateway_sources). The probe verifies gateway isolation and does not affect grades.</li><li>External SWE-bench Verified scores use different agents, scaffolds, step limits, and settings. They are context only and do not support a ranking or a score difference.</li><li>Private tasks, trajectories, patches, grader output, and checkpoints remain outside Git.</li></ul>
+<details class="comparison-record">
+<summary>Tested settings and provenance</summary>
+<dl class="evaluation-summary">
+<div><dt>Evaluator</dt><dd><strong>SWE-bench official grader</strong><span>5.0.2</span></dd></div>
+<div><dt>Harness</dt><dd><strong>mini-swe-agent-bash-docker</strong><span>2.4.6</span></dd></div>
+<div><dt>Reasoning effort</dt><dd><strong>on</strong></dd></div>
+<div><dt>Maximum output</dt><dd><strong>65536</strong></dd></div>
+<div><dt>Temperature</dt><dd><strong>1</strong></dd></div>
+<div><dt>Top-p</dt><dd><strong>0.95</strong></dd></div>
+<div><dt>Attempts per task</dt><dd><strong>1</strong></dd></div>
+</dl>
+<p>Dataset revision: <code>78f471bf655a3137b2e8a75af1501690ec009ec3</code></p>
+<ul><li>control_image: <code>7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee</code></li><li>final_result: <code>059af70d126c4eb3558bf8821e60659b5a64ee129c903017d63b9eab604e0766</code></li><li>first_pass_result: <code>05ef4ce6f3bc7da0d79dd00ef3a893a8e0edf200dd5bcabb51fd28e4a583dbd0</code></li><li>image_bindings: <code>0ee0dac095d1ea165ce138f7b9266c6552742b50d6e30ac0d8f4ca14c0fa018e</code></li><li>manifest: <code>ff10857aca817eb5ed1d3d4b81e4273a2a1af6e1e88719ed0e845c23d4180262</code></li><li>protocol_fingerprint: <code>59f9d524fd9e40c786cd282e95d2a87b4f4ab7051e8bcb273eda3b6c02cfb724</code></li><li>rerun_ledger: <code>9d5f88f35f78ce2072d6fc3f1fff827452ef4bb15d1f78297cc7e885df298e9b</code></li><li>run_egress_gateway_image: <code>b270251f836abdbc9b8af79b43f32f41c453583bcd063fa69cdc266450ebaea4</code></li><li>run_egress_gateway_sources: <code>82c777e42599b3c35899759ae08f98f3abc690f08424bb85cccac8c4557bcd0d</code></li><li>runner_config: <code>8618dedab40170903410b3cec3711fce1dd69807051f42c4aa44c2e0527a7270</code></li></ul>
+</details>
 
 </section>
 

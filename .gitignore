@@ -16,6 +16,7 @@ build/
 _site/
 site/
 docs-site/node_modules/
+scripts/swebench-sdk/node_modules/
 docs-site/.astro/
 docs-site/dist/
 docs-site/playwright-report/
@@ -43,3 +44,4 @@ models/
 *.bin
 *.pt
 *.pth
+*.whl

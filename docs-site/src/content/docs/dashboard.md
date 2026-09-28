@@ -24,12 +24,12 @@ This is the benchmark index. Each result keeps its score, runtime, method, sourc
     <p>A full public science-reasoning benchmark run through EvalScope 1.12.0 and local LM Studio.</p>
     <a class="benchmark-link" href="/splash-evals/dashboard/gpqa-diamond/">Explore GPQA Diamond</a>
   </article>
-  <article class="benchmark-card pending" data-benchmark-status="pending">
-    <p class="benchmark-kicker">Coding evaluation · 12 external references</p>
+  <article class="benchmark-card measured" data-benchmark-status="complete">
+    <p class="benchmark-kicker">Measured capability result · 12 external references</p>
     <h3>SWE-bench Verified</h3>
-    <p class="benchmark-score"><strong>Pending</strong><span>Qualification and full local result remain</span></p>
-    <p>The benchmark plan and external source coverage are published. No Splash coding score is claimed.</p>
-    <a class="benchmark-link" href="/splash-evals/dashboard/swe-bench-verified/">Review SWE-bench readiness</a>
+    <p class="benchmark-score"><strong>72.00%</strong><span>360 / 500 resolved · 18 errors counted unresolved</span></p>
+    <p>A reviewed full 500-task local result is published separately from the historical reference context.</p>
+    <a class="benchmark-link" href="/splash-evals/dashboard/swe-bench-verified/">Explore SWE-bench Verified</a>
   </article>
 </div>
 

@@ -52,6 +52,7 @@ publication:
     - .md
     - .mjs
     - .py
+    - .sh
     - .svg
     - .toml
     - .txt

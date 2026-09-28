@@ -1,0 +1,9 @@
+# Keep every default rule. The public LM Studio model key is not a credential, but the
+# generic-api-key rule matches it in byte-pinned SWE-bench transport files.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public LM Studio model key"
+regexTarget = "secret"
+regexes = ['''^qwen3\.8-27b-splash$''']

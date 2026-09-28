@@ -18,7 +18,7 @@
           "score": 74.9,
           "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Opus 4 column",
           "source_record_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-anthropic",
-          "source_record_sha256": "f9c5161eed168a444a08e466b744aea0c6110ed397599707e589d144f141a6fc",
+          "source_record_sha256": "74b010f7befef04a405a515407b301cf3f120efa5aa901c7708d45f0559c2858",
           "source_url": "https://www.anthropic.com/news/claude-4"
         },
         {
@@ -58,7 +58,7 @@
           "score": 91.3,
           "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Opus 4.6 column",
           "source_record_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic",
-          "source_record_sha256": "cf9be683850b693188e04831211dc7f96fb774239518d0f27830342ad3ab2183",
+          "source_record_sha256": "b735b416ebb6988987b70ae6a012f65beeeae17805ba44b939f88068df50bd53",
           "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
         },
         {
@@ -97,7 +97,7 @@
           "score": 94.2,
           "source_locator": "Claude Opus 4.7 System Card, section 8.4, GPQA Diamond result",
           "source_record_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-anthropic",
-          "source_record_sha256": "4e15676406a46b2527879d2bad2e9fe661060595a982e546f85ee221a5af5bbb",
+          "source_record_sha256": "726c9f6df6873c0e73bc4d9c4c1a9a97905a5b1509cd99e72e88b98a4d28eb11",
           "source_url": "https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf"
         },
         {
@@ -136,7 +136,7 @@
           "score": 93.6,
           "source_locator": "Claude Opus 4.8 System Card, section 8.6, GPQA Diamond result",
           "source_record_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-anthropic",
-          "source_record_sha256": "02b972830dcae349898173faf7b84940a76c69b4e758c420fe0a00bb05779fe0",
+          "source_record_sha256": "a18cbab5ad1509ea1151e8d0eca64b9f30bd628ce29f4c5cde0dd2d19e53f2d8",
           "source_url": "https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf"
         },
         {
@@ -175,7 +175,7 @@
           "score": 92.0,
           "source_locator": "GPT-5.6 announcement, Academic GPQA Diamond row, Claude Opus 4.8 column",
           "source_record_id": "anthropic-claude-opus-4-8-gpqa-diamond-openai",
-          "source_record_sha256": "8933e2382d4f608fd869a3285d933ff02c73610624d1981c9e3167dcf7bb507b",
+          "source_record_sha256": "e7be0210e32531c6e22a5a07335990b0cede8ef71e902a1628407b721d07c468",
           "source_url": "https://openai.com/index/gpt-5-6/"
         },
         {
@@ -214,7 +214,7 @@
           "score": 93.7,
           "source_locator": "GPT-6 Astra announcement, Academic GPQA Diamond row, Claude Opus 5 column (not the Fable column)",
           "source_record_id": "anthropic-claude-opus-5-gpqa-diamond-openai",
-          "source_record_sha256": "b3f42a25cd516c287c63112005dd1a2a10bb4bcfe49d0efdc6594a82588ee70d",
+          "source_record_sha256": "8536971a9f4a6fe09c0bd2b83431c0a7dfef6cddb00def1281a73d7ff028fd20",
           "source_url": "https://openai.com/index/gpt-6-astra/"
         },
         {
@@ -233,7 +233,7 @@
           "score": 70.0,
           "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Sonnet 4 column",
           "source_record_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-anthropic",
-          "source_record_sha256": "6687f0db84cf6d9fa7b597a27dfc34df3dcc7e3723d5a930711ff69746cad3e8",
+          "source_record_sha256": "5f24ae9a5e37a3f16856e194b172e04bcb6079d912c92a149f8ca5ed7d29b5a9",
           "source_url": "https://www.anthropic.com/news/claude-4"
         },
         {
@@ -273,7 +273,7 @@
           "score": 89.9,
           "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Sonnet 4.6 column",
           "source_record_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-anthropic",
-          "source_record_sha256": "e7494a9ac8cf6ca8d64936b7699dd1c98a84e1f07982d6767a3a6146b514b129",
+          "source_record_sha256": "e1ee6d6d5d2f6bd05219f89d49314150e4a6999769435bdf2fc1c6ae6a9aa641",
           "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
         },
         {
@@ -511,7 +511,7 @@
             "score": 74.9,
             "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Opus 4 column",
             "source_record_id": "anthropic-claude-opus-4-2025-05-gpqa-diamond-anthropic",
-            "source_record_sha256": "f9c5161eed168a444a08e466b744aea0c6110ed397599707e589d144f141a6fc",
+            "source_record_sha256": "74b010f7befef04a405a515407b301cf3f120efa5aa901c7708d45f0559c2858",
             "source_url": "https://www.anthropic.com/news/claude-4"
           },
           {
@@ -551,7 +551,7 @@
             "score": 91.3,
             "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Opus 4.6 column",
             "source_record_id": "anthropic-claude-opus-4-6-2026-02-gpqa-diamond-anthropic",
-            "source_record_sha256": "cf9be683850b693188e04831211dc7f96fb774239518d0f27830342ad3ab2183",
+            "source_record_sha256": "b735b416ebb6988987b70ae6a012f65beeeae17805ba44b939f88068df50bd53",
             "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
           },
           {
@@ -590,7 +590,7 @@
             "score": 94.2,
             "source_locator": "Claude Opus 4.7 System Card, section 8.4, GPQA Diamond result",
             "source_record_id": "anthropic-claude-opus-4-7-2026-04-gpqa-diamond-anthropic",
-            "source_record_sha256": "4e15676406a46b2527879d2bad2e9fe661060595a982e546f85ee221a5af5bbb",
+            "source_record_sha256": "726c9f6df6873c0e73bc4d9c4c1a9a97905a5b1509cd99e72e88b98a4d28eb11",
             "source_url": "https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf"
           },
           {
@@ -629,7 +629,7 @@
             "score": 93.6,
             "source_locator": "Claude Opus 4.8 System Card, section 8.6, GPQA Diamond result",
             "source_record_id": "anthropic-claude-opus-4-8-2026-05-gpqa-diamond-anthropic",
-            "source_record_sha256": "02b972830dcae349898173faf7b84940a76c69b4e758c420fe0a00bb05779fe0",
+            "source_record_sha256": "a18cbab5ad1509ea1151e8d0eca64b9f30bd628ce29f4c5cde0dd2d19e53f2d8",
             "source_url": "https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf"
           },
           {
@@ -668,7 +668,7 @@
             "score": 92.0,
             "source_locator": "GPT-5.6 announcement, Academic GPQA Diamond row, Claude Opus 4.8 column",
             "source_record_id": "anthropic-claude-opus-4-8-gpqa-diamond-openai",
-            "source_record_sha256": "8933e2382d4f608fd869a3285d933ff02c73610624d1981c9e3167dcf7bb507b",
+            "source_record_sha256": "e7be0210e32531c6e22a5a07335990b0cede8ef71e902a1628407b721d07c468",
             "source_url": "https://openai.com/index/gpt-5-6/"
           },
           {
@@ -707,7 +707,7 @@
             "score": 93.7,
             "source_locator": "GPT-6 Astra announcement, Academic GPQA Diamond row, Claude Opus 5 column (not the Fable column)",
             "source_record_id": "anthropic-claude-opus-5-gpqa-diamond-openai",
-            "source_record_sha256": "b3f42a25cd516c287c63112005dd1a2a10bb4bcfe49d0efdc6594a82588ee70d",
+            "source_record_sha256": "8536971a9f4a6fe09c0bd2b83431c0a7dfef6cddb00def1281a73d7ff028fd20",
             "source_url": "https://openai.com/index/gpt-6-astra/"
           },
           {
@@ -726,7 +726,7 @@
             "score": 70.0,
             "source_locator": "Claude 4 announcement appendix, GPQA Diamond without extended thinking row, Claude Sonnet 4 column",
             "source_record_id": "anthropic-claude-sonnet-4-2025-05-gpqa-diamond-anthropic",
-            "source_record_sha256": "6687f0db84cf6d9fa7b597a27dfc34df3dcc7e3723d5a930711ff69746cad3e8",
+            "source_record_sha256": "5f24ae9a5e37a3f16856e194b172e04bcb6079d912c92a149f8ca5ed7d29b5a9",
             "source_url": "https://www.anthropic.com/news/claude-4"
           },
           {
@@ -766,7 +766,7 @@
             "score": 89.9,
             "source_locator": "Claude 4.6 System Card, Table 2.1.A, page 15, GPQA Diamond row, Claude Sonnet 4.6 column",
             "source_record_id": "anthropic-claude-sonnet-4-6-2026-02-gpqa-diamond-anthropic",
-            "source_record_sha256": "e7494a9ac8cf6ca8d64936b7699dd1c98a84e1f07982d6767a3a6146b514b129",
+            "source_record_sha256": "e1ee6d6d5d2f6bd05219f89d49314150e4a6999769435bdf2fc1c6ae6a9aa641",
             "source_url": "https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf"
           },
           {
@@ -1213,7 +1213,327 @@
           "source_url": "https://www.vals.ai/benchmarks/swebench"
         }
       ],
-      "result": null
+      "result": {
+        "counts": {
+          "errored": 18,
+          "requested": 500,
+          "succeeded": 482
+        },
+        "evaluator": {
+          "developer": null,
+          "evidence_class": "measured_here",
+          "model_label": "Splash / Qwen3.8",
+          "name": "SWE-bench official grader",
+          "version": "5.0.2"
+        },
+        "identity": {
+          "adapter": "mini-swe-agent-bash-docker",
+          "dataset_id": "SWE-bench/SWE-bench_Verified",
+          "dataset_provider": "princeton-nlp",
+          "dataset_revision": "78f471bf655a3137b2e8a75af1501690ec009ec3",
+          "evaluation_version": "5.0.2",
+          "name": "SWE-bench Verified",
+          "split": "test",
+          "subset": "verified",
+          "variant": "verified-500"
+        },
+        "limitations": [
+          "Results apply only to Splash/Qwen3.8 served by local LM Studio under the frozen protocol, task images, and grader image listed in provenance.",
+          "Scoring follows the upstream SWE-bench convention: resolved tasks divided by all 500 tasks. Model failures (16) and infrastructure errors (2) count as unresolved.",
+          "Both infrastructure errors are model-side context exhaustion: the conversation filled the 131,072-token context window and LM Studio refused the next request. The pinned transport reports this as a generic failure, so the harness recorded an infrastructure error.",
+          "The first pass resolved 357 of 500 tasks (71.4%, first_pass_result). Five tasks whose attempts were cut off by host faults (one GPU hang, one memory lockup, and three model unloads) were re-run once at the end with operator approval under the same protocol (rerun_ledger). Three resolved, giving 360 of 500 (72.0%). This is a deviation from the one-attempt protocol for those five tasks only.",
+          "Thirteen tasks never reached the model because the model was unloaded between tasks. The harness recorded no inference for them and ran them on resume. The run now stops before any task when the frozen model is not being served.",
+          "Harness accounting changed during the run, before any result was reviewed: infrastructure errors now count as unresolved (upstream convention) instead of withholding the result, and a cut-off inference stops the run. The protocol fingerprint did not change.",
+          "After two host lockups, the Splash engine's memory budget was capped at 48 GiB by a local edit to LM Studio's Splash launcher. The cap limits cache memory only. Model weights, the 131,072-token context, and the served model fingerprint are unchanged.",
+          "The approved reasoning variant is on, because xhigh is unsupported. Do not represent it as xhigh.",
+          "Deviations from the upstream mini-SWE-agent SWE-bench configuration: step limit 100 (upstream 250), command timeout 120 s (upstream 60 s), and no cost limit.",
+          "Task containers use linux/amd64 images under Rosetta emulation on Apple silicon. Harness qualification ran under QEMU before the switch to Rosetta. All 500 gold patches resolve in this environment.",
+          "Agent containers are always offline. Graders are offline except for 12 tasks whose graders reach only their listed hosts through a hostname-checking gateway; upstream grades with open network. Each grading run is limited to 3,600 s.",
+          "Four psf/requests tasks depend on live httpbin.org during grading.",
+          "After the run, the grader egress probe was hardened (an explicit TLS 1.2 minimum and one duplicate check removed) and the gateway image was rebuilt. The run used the earlier gateway image and sources listed in provenance (run_egress_gateway_image, run_egress_gateway_sources). The probe verifies gateway isolation and does not affect grades.",
+          "External SWE-bench Verified scores use different agents, scaffolds, step limits, and settings. They are context only and do not support a ranking or a score difference.",
+          "Private tasks, trajectories, patches, grader output, and checkpoints remain outside Git."
+        ],
+        "metric_name": "resolution_rate",
+        "metric_unit": "proportion",
+        "provenance": {
+          "artifacts": {
+            "control_image": "7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee",
+            "final_result": "059af70d126c4eb3558bf8821e60659b5a64ee129c903017d63b9eab604e0766",
+            "first_pass_result": "05ef4ce6f3bc7da0d79dd00ef3a893a8e0edf200dd5bcabb51fd28e4a583dbd0",
+            "image_bindings": "0ee0dac095d1ea165ce138f7b9266c6552742b50d6e30ac0d8f4ca14c0fa018e",
+            "manifest": "ff10857aca817eb5ed1d3d4b81e4273a2a1af6e1e88719ed0e845c23d4180262",
+            "protocol_fingerprint": "59f9d524fd9e40c786cd282e95d2a87b4f4ab7051e8bcb273eda3b6c02cfb724",
+            "rerun_ledger": "9d5f88f35f78ce2072d6fc3f1fff827452ef4bb15d1f78297cc7e885df298e9b",
+            "run_egress_gateway_image": "b270251f836abdbc9b8af79b43f32f41c453583bcd063fa69cdc266450ebaea4",
+            "run_egress_gateway_sources": "82c777e42599b3c35899759ae08f98f3abc690f08424bb85cccac8c4557bcd0d",
+            "runner_config": "8618dedab40170903410b3cec3711fce1dd69807051f42c4aa44c2e0527a7270"
+          },
+          "source": "private local SWE-bench execution; aggregate reviewed for publication"
+        },
+        "reference_observations": [
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.6",
+            "reference_id": "vals-anthropic-claude-opus-4-6-thinking-swebench-verified-mini-swe-agent-max",
+            "score": 78.2,
+            "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-4-6-thinking, displayed as Claude Opus 4.6 (Thinking); SWE-bench Verified methodology section",
+            "source_record_id": "vals-anthropic-claude-opus-4-6-thinking-swebench-verified-mini-swe-agent-max",
+            "source_record_sha256": "c7136c2e6ca7e6c0932b7f0936a0fdbef05412a7880ae6242f6f242bf6d0809d",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.7",
+            "reference_id": "vals-anthropic-claude-opus-4-7-swebench-verified-mini-swe-agent-max",
+            "score": 82.0,
+            "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-4-7; SWE-bench Verified methodology section",
+            "source_record_id": "vals-anthropic-claude-opus-4-7-swebench-verified-mini-swe-agent-max",
+            "source_record_sha256": "6d8a9e19e7c684e01d59dde3f921b08ebc1ef00ef4cb294aa84b0b3c0302e37b",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4.8",
+            "reference_id": "vals-anthropic-claude-opus-4-8-swebench-verified-mini-swe-agent-max",
+            "score": 88.6,
+            "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-4-8 (not the Claude Code row); SWE-bench Verified methodology section",
+            "source_record_id": "vals-anthropic-claude-opus-4-8-swebench-verified-mini-swe-agent-max",
+            "source_record_sha256": "dd9a5f8a83960c6aadc9b024f63d17bf94097c8730f9eb036acc9f4ed6ea6c6e",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic reports this standard score over the full 500-problem Verified set with no extended thinking and a simple bash-plus-string-replacement scaffold; it is not the separately reported high-compute result.",
+              "This scaffold is not Vals AI's mini-swe-agent bash-only harness. The exact API snapshot, code/prompt/sandbox/scorer revisions, run date, attempts per task, output budget, aggregation, and rounding are not published.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish direct comparability, and this record must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 4",
+            "reference_id": "anthropic-claude-opus-4-swebench-verified-standard-scaffold",
+            "score": 72.5,
+            "source_locator": "Claude 4 section (72.5%); Performance benchmark reporting; SWE-bench methodology standard-score paragraphs",
+            "source_record_id": "anthropic-claude-opus-4-swebench-verified-standard-scaffold",
+            "source_record_sha256": "6c1bdf9c7c8d48c15badb54aed666c488c71fc82a644f42c4d35fb0a1f5380b0",
+            "source_url": "https://www.anthropic.com/news/claude-4"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Opus 5",
+            "reference_id": "vals-anthropic-claude-opus-5-swebench-verified-mini-swe-agent",
+            "score": 97.0,
+            "source_locator": "Archived leaderboard embedded overall record anthropic/claude-opus-5; SWE-bench Verified methodology section",
+            "source_record_id": "vals-anthropic-claude-opus-5-swebench-verified-mini-swe-agent",
+            "source_record_sha256": "2915a3a0d2d0e41f41e08c2fe4735b744207e8473c4faf53db84beda3e8542e9",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 4.6",
+            "reference_id": "vals-anthropic-claude-sonnet-4-6-swebench-verified-mini-swe-agent-max",
+            "score": 77.4,
+            "source_locator": "Archived leaderboard embedded overall record anthropic/claude-sonnet-4-6; SWE-bench Verified methodology section",
+            "source_record_id": "vals-anthropic-claude-sonnet-4-6-swebench-verified-mini-swe-agent-max",
+            "source_record_sha256": "26fbb032ffe86818cdc59e1bc3232d9a0f3ea1dd809d908f5791aa595b8cec43",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Anthropic",
+            "evaluator_class": "provider_reported",
+            "limitations": [
+              "Anthropic reports this standard score over the full 500-problem Verified set with no extended thinking and a simple bash-plus-string-replacement scaffold; it is not the separately reported high-compute result.",
+              "This scaffold is not Vals AI's mini-swe-agent bash-only harness. The exact API snapshot, code/prompt/sandbox/scorer revisions, run date, attempts per task, output budget, aggregation, and rounding are not published.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish direct comparability, and this record must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 4",
+            "reference_id": "anthropic-claude-sonnet-4-swebench-verified-standard-scaffold",
+            "score": 72.7,
+            "source_locator": "Claude 4 section (72.7%); Performance benchmark reporting; SWE-bench methodology standard-score paragraphs",
+            "source_record_id": "anthropic-claude-sonnet-4-swebench-verified-standard-scaffold",
+            "source_record_sha256": "8ace1dd06f86eb3cc4179d6903772caab2c00a901747c632909ae9c184492093",
+            "source_url": "https://www.anthropic.com/news/claude-4"
+          },
+          {
+            "denominator": 500,
+            "developer": "Anthropic",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "Claude Sonnet 5",
+            "reference_id": "vals-anthropic-claude-sonnet-5-swebench-verified-mini-swe-agent-max",
+            "score": 79.6,
+            "source_locator": "Archived leaderboard embedded overall record anthropic/claude-sonnet-5; SWE-bench Verified methodology section",
+            "source_record_id": "vals-anthropic-claude-sonnet-5-swebench-verified-mini-swe-agent-max",
+            "source_record_sha256": "fd9649d2606d9f01534df79c9afb35ee0a44e2a66a22a5c9cc21da19a7fb1f38",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "OpenAI",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.5",
+            "reference_id": "vals-openai-gpt-5-5-swebench-verified-mini-swe-agent-xhigh",
+            "score": 82.6,
+            "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.5 (not Codex or Factory rows); SWE-bench Verified methodology section",
+            "source_record_id": "vals-openai-gpt-5-5-swebench-verified-mini-swe-agent-xhigh",
+            "source_record_sha256": "6aaa6381f77686bb644903c97ad1ddafe413080ae24664669e0be822d3b3a442",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "OpenAI",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.6 Luna",
+            "reference_id": "vals-openai-gpt-5-6-luna-swebench-verified-mini-swe-agent",
+            "score": 93.0,
+            "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.6-luna; SWE-bench Verified methodology section",
+            "source_record_id": "vals-openai-gpt-5-6-luna-swebench-verified-mini-swe-agent",
+            "source_record_sha256": "5a891f9974687a8fb0b8f5a91fc8efd7cc49d934ce145b4522eb8b79c1ad3fde",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "OpenAI",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.6 Sol",
+            "reference_id": "vals-openai-gpt-5-6-sol-swebench-verified-mini-swe-agent",
+            "score": 96.2,
+            "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.6-sol; SWE-bench Verified methodology section",
+            "source_record_id": "vals-openai-gpt-5-6-sol-swebench-verified-mini-swe-agent",
+            "source_record_sha256": "b2d8a3247ccd56a3fad5613b0dfcb19fbbead7714e1ab0f0c26d2772050ae794",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          },
+          {
+            "denominator": 500,
+            "developer": "OpenAI",
+            "evaluator": "Vals AI",
+            "evaluator_class": "independent",
+            "limitations": [
+              "This is a model-plus-harness result from Vals AI's archived leaderboard, not a model-only score; the named row variant and 500-task denominator are part of the evidence.",
+              "Vals reports a shared mini-swe-agent bash-only method and provider defaults except the highest available output limit, but does not publish the exact model snapshot, harness commit, system prompt revision, sandbox/scorer revision, run date, or attempts per task for this row.",
+              "There is no local Splash SWE-bench Verified measurement. Source coverage does not establish comparability with the local GPQA run, Anthropic's different standard scaffold, or any future local coding run, and must not support an exact ranking or gap claim."
+            ],
+            "metric_name": "resolved",
+            "metric_unit": "percent",
+            "model_label": "GPT-5.6 Terra",
+            "reference_id": "vals-openai-gpt-5-6-terra-swebench-verified-mini-swe-agent",
+            "score": 95.4,
+            "source_locator": "Archived leaderboard embedded overall record openai/gpt-5.6-terra; SWE-bench Verified methodology section",
+            "source_record_id": "vals-openai-gpt-5-6-terra-swebench-verified-mini-swe-agent",
+            "source_record_sha256": "187efb4a9379d6bda9afa3aa74deae51584ed36491b287c44985eaf716127cfb",
+            "source_url": "https://www.vals.ai/benchmarks/swebench"
+          }
+        ],
+        "result_id": "swe-bench-verified-splash-local-2026-09-28",
+        "runtime": null,
+        "schema_version": 1,
+        "score": 0.72,
+        "status": "complete",
+        "task_outcomes": {
+          "infrastructure_error": 2,
+          "model_failure": 16,
+          "resolved": 360,
+          "unresolved": 122
+        },
+        "tested_configuration": {
+          "attempts_per_task": 1,
+          "harness": "mini-swe-agent-bash-docker",
+          "harness_version": "2.4.6",
+          "max_output_tokens": 65536,
+          "reasoning_effort": "on",
+          "temperature": 1.0,
+          "top_p": 0.95
+        }
+      }
     }
   },
   "input_sha256": {
@@ -1264,7 +1584,8 @@
     "references/frontier/openai-gpt-5.6-terra-2026-07-gpqa.yaml": "c6c8f216bc7fe221369d57bcf86ace74b7ad7ffca22034c89369c0c75d0fbf27",
     "references/frontier/openai-o1-high-gpqa.yaml": "d59ee4acd2b77a47e25f7b811749580ef57b729261db7697828235478c2245ff",
     "references/frontier/openai-o1-high-ifeval.yaml": "4aa93ad22dbcb329ced7166f9bd1dd4fde37af5dd777fde688636909ff44ebe6",
-    "results/public/gpqa-diamond-splash-local-2026-09-20.json": "99ce46fa6a90fb6f3d5df051d4dd39c40e2801cb1e6ad6f1272b0154057d9082"
+    "results/public/gpqa-diamond-splash-local-2026-09-20.json": "99ce46fa6a90fb6f3d5df051d4dd39c40e2801cb1e6ad6f1272b0154057d9082",
+    "results/public/swe-bench-verified-splash-local-2026-09-28.json": "32e2583be813599bb634a669d7e0b06170367cc875a7e47657a8e623735f172c"
   },
   "schema_version": 1
 }

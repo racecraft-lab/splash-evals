@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast, overload
 
+from .benchmark_results import BenchmarkResult
 from .runs import (
     _CORE_EVIDENCE_LIMITATION,
     RunError,
@@ -187,7 +188,7 @@ def _scan_file(path: Path, repo: Path, policies: dict[str, Any]) -> list[dict[st
     suffix = path.suffix.casefold()
     denied = set(policies["publication"]["denied_suffixes"])
     allowed = set(policies["publication"]["allowed_suffixes"])
-    if suffix in denied or (suffix and suffix not in allowed):
+    if suffix in denied or (suffix and suffix not in allowed and suffix != ".in"):
         findings.append(
             {"rule": "uninspectable-or-denied-type", "path": relative, "severity": "block"}
         )
@@ -612,6 +613,104 @@ def _validate_provenance_record(
     return commit_sha, record
 
 
+def _validate_github_commit_record(
+    raw_record: Any,
+    *,
+    repository: str,
+    policy_ref: str,
+    actor_login: str,
+    committer_policy: dict[str, str],
+    current_ref: str | None,
+    current_head: str | None,
+    actions_event: str | None,
+) -> tuple[str, dict[str, Any]] | None:
+    if not isinstance(raw_record, dict):
+        return None
+    record_type = raw_record.get("record_type")
+    common_keys = {
+        "record_type",
+        "commit_sha",
+        "repository",
+        "ref",
+        "actor_login",
+        "author",
+        "committer",
+        "verification",
+        "tree_sha",
+    }
+    expected_keys = common_keys | (
+        {"main_binding"} if record_type == "github-verified-commit" else {"pull_request"}
+    )
+    record = _exact_mapping(raw_record, expected_keys)
+    if record is None:
+        return None
+    commit_sha = _provenance_sha(record.get("commit_sha"))
+    tree_sha = _provenance_sha(record.get("tree_sha"))
+    author = _exact_mapping(record.get("author"), {"name", "email", "login"})
+    committer = _exact_mapping(record.get("committer"), {"name", "email", "login"})
+    verification = _exact_mapping(record.get("verification"), {"verified", "reason"})
+    if (
+        commit_sha is None
+        or tree_sha is None
+        or _nonempty_string(record.get("repository")) != repository
+        or _nonempty_string(record.get("actor_login")) != actor_login
+        or author is None
+        or committer is None
+        or verification is None
+        or not all(_nonempty_string(value) for value in author.values())
+        or not all(_nonempty_string(value) for value in committer.values())
+        or author.get("login") != actor_login
+        or type(verification.get("verified")) is not bool
+        or _nonempty_string(verification.get("reason")) is None
+    ):
+        return None
+    if record_type == "github-verified-commit":
+        main_binding = _exact_mapping(
+            record.get("main_binding"),
+            {"contained", "main_tip_sha", "status", "base_sha", "merge_base_sha"},
+        )
+        if (
+            record.get("ref") != policy_ref
+            or committer.get("login") not in {actor_login, committer_policy.get("login")}
+            or main_binding is None
+            or not _validate_main_binding(main_binding, commit_sha)
+        ):
+            return None
+    else:
+        pull = _exact_mapping(
+            record.get("pull_request"),
+            {
+                "number",
+                "state",
+                "merged",
+                "base_repository",
+                "base_ref",
+                "head_repository",
+                "head_ref",
+                "head_sha",
+                "user_login",
+            },
+        )
+        if (
+            actions_event != "pull_request"
+            or record.get("ref") != current_ref
+            or commit_sha != current_head
+            or pull is None
+            or type(pull.get("number")) is not int
+            or pull.get("number", 0) < 1
+            or pull.get("state") != "open"
+            or pull.get("merged") is not False
+            or pull.get("base_repository") != repository
+            or pull.get("base_ref") != policy_ref.removeprefix("refs/heads/")
+            or pull.get("head_sha") != commit_sha
+            or pull.get("user_login") != actor_login
+            or not _nonempty_string(pull.get("head_repository"))
+            or not _nonempty_string(pull.get("head_ref"))
+        ):
+            return None
+    return commit_sha, record
+
+
 def _validate_github_provenance(
     repo: Path,
     path: Path,
@@ -638,17 +737,34 @@ def _validate_github_provenance(
         committer_policy,
         check_policy,
     ) = policy_context
+    context = document.get("context")
+    actions_event = context.get("event_name") if isinstance(context, dict) else None
     records: dict[str, dict[str, Any]] = {}
     for raw_record in document["records"]:
-        validated = _validate_provenance_record(
-            raw_record,
-            repository=repository,
-            policy_ref=policy_ref,
-            actor_login=actor_login,
-            actor_overrides=actor_overrides,
-            committer_policy=committer_policy,
-            check_policy=check_policy,
-        )
+        is_github_commit_record = isinstance(raw_record, dict) and raw_record.get(
+            "record_type"
+        ) in {"github-verified-commit", "pull-request-head"}
+        if is_github_commit_record:
+            validated = _validate_github_commit_record(
+                raw_record,
+                repository=repository,
+                policy_ref=policy_ref,
+                actor_login=actor_login,
+                committer_policy=committer_policy,
+                current_ref=current_ref,
+                current_head=current_head,
+                actions_event=actions_event,
+            )
+        else:
+            validated = _validate_provenance_record(
+                raw_record,
+                repository=repository,
+                policy_ref=policy_ref,
+                actor_login=actor_login,
+                actor_overrides=actor_overrides,
+                committer_policy=committer_policy,
+                check_policy=check_policy,
+            )
         if validated is None or validated[0] in records:
             return [_provenance_finding("github-provenance-invalid")], {}
         records[validated[0]] = validated[1]
@@ -772,21 +888,20 @@ def _commit_findings(
         record_author = github_record.get("author")
         record_committer = github_record.get("committer")
         pull_request = github_record.get("pull_request")
+        record_type = github_record.get("record_type")
+        expected_tree = github_record.get("tree_sha")
+        if record_type not in {"github-verified-commit", "pull-request-head"}:
+            expected_tree = (
+                pull_request.get("merge_tree_sha") if isinstance(pull_request, dict) else None
+            )
         platform_valid = (
             isinstance(record_author, dict)
             and isinstance(record_committer, dict)
-            and isinstance(pull_request, dict)
             and author == (record_author.get("name"), record_author.get("email"))
             and committer == (record_committer.get("name"), record_committer.get("email"))
-            and tree_sha == pull_request.get("merge_tree_sha")
+            and tree_sha == expected_tree
         )
-    automation_valid = bool(
-        approved_name
-        and approved_email
-        and author == (approved_name, approved_email)
-        and committer == (approved_name, approved_email)
-    )
-    if author is not None and committer is not None and not automation_valid and not platform_valid:
+    if author is not None and committer is not None and not platform_valid:
         findings.append(
             {
                 "rule": "history-identity-mismatch",
@@ -1190,6 +1305,31 @@ def _identity_findings(
     }
 
 
+def _scanner_timeout_finding(scope: str) -> dict[str, Any]:
+    return {
+        "rule": "secret-scanner-timeout",
+        "scope": scope,
+        "severity": "block",
+        "diagnostics_redacted": True,
+    }
+
+
+def _run_gitleaks_command(
+    command: list[str], *, timeout: int
+) -> tuple[subprocess.CompletedProcess[str] | None, dict[str, Any] | None]:
+    try:
+        result = subprocess.run(  # noqa: S603 - executable resolved by shutil.which.
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return None, _scanner_timeout_finding(command[1])
+    return result, None
+
+
 def _run_secret_scanner(repo: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     executable = shutil.which("gitleaks")
     if not executable:
@@ -1197,23 +1337,28 @@ def _run_secret_scanner(repo: Path) -> tuple[list[dict[str, Any]], dict[str, Any
             [{"rule": "pinned-secret-scanner-unavailable", "scope": "source", "severity": "block"}],
             {"tool": "gitleaks", "available": False, "version": None, "scope": "working-tree"},
         )
-    version = subprocess.run(  # noqa: S603 - executable resolved by shutil.which.
-        [executable, "version"], check=False, capture_output=True, text=True, timeout=10
-    )
+    findings: list[dict[str, Any]] = []
+    timed_out = False
+    version, version_timeout = _run_gitleaks_command([executable, "version"], timeout=10)
+    if version is not None:
+        version_text = version.stdout.strip() or version.stderr.strip()
+    else:
+        version_text = None
+        timed_out = True
+        if version_timeout is not None:
+            findings.append({**version_timeout, "scope": "scanner-version"})
     scans = {
         "working-tree": [executable, "dir", str(repo), "--redact", "--no-banner"],
         "git-history": [executable, "git", str(repo), "--redact", "--no-banner"],
     }
-    findings = []
     exit_codes: dict[str, int] = {}
     for scope, command in scans.items():
-        scan = subprocess.run(  # noqa: S603 - executable resolved by shutil.which.
-            command,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
+        scan, timeout_finding = _run_gitleaks_command(command, timeout=120)
+        if scan is None:
+            timed_out = True
+            if timeout_finding is not None:
+                findings.append({**timeout_finding, "scope": scope})
+            continue
         exit_codes[scope] = scan.returncode
         if scan.returncode != 0:
             findings.append(
@@ -1227,9 +1372,12 @@ def _run_secret_scanner(repo: Path) -> tuple[list[dict[str, Any]], dict[str, Any
     return findings, {
         "tool": "gitleaks",
         "available": True,
-        "version": version.stdout.strip() or version.stderr.strip(),
+        "version": version_text,
         "scope": "working-tree-and-git-history",
         "exit_codes": exit_codes,
+        "status": "blocked" if findings else "pass",
+        "timed_out": timed_out,
+        "diagnostics_redacted": True,
     }
 
 
@@ -1314,6 +1462,27 @@ _CAPABILITY_PUBLICATION = "held_out_model_capability"
 _QUALIFICATION_PUBLICATION = "post_hoc_runtime_scorer_qualification"
 _POST_HOC_SELECTION = "post_hoc_exploratory"
 _UNRESOLVED_EVIDENCE = frozenset({"", "n/a", "none", "unknown", "unresolved"})
+_SWEBENCH_VERIFIED_TASK_COUNT = 500
+# Approved protocol 59f9d524: amd64 task images and the pinned Hugging Face dataset commit.
+_SWEBENCH_VERIFIED_TASK_PLATFORM = "linux/amd64"
+_SWEBENCH_VERIFIED_DATASET_ID = "SWE-bench/SWE-bench_Verified"
+_SWEBENCH_VERIFIED_DATASET_REVISION = "78f471bf655a3137b2e8a75af1501690ec009ec3"
+_PRIVATE_PAYLOAD_FIELDS = frozenset(
+    {
+        "container_id",
+        "device_identifier",
+        "endpoint",
+        "instance_id",
+        "model_instance_id",
+        "prompt",
+        "raw_response",
+        "reasoning",
+        "response",
+        "run_id",
+        "workspace",
+        "workspace_path",
+    }
+)
 _QUALIFICATION_AGGREGATE_FIELDS = frozenset(
     {
         "planned",
@@ -1523,6 +1692,351 @@ def _valid_suite_family_results(
     return _valid_core_family_results(values, families, aggregate)
 
 
+def _swebench_publication_failures(manifest: dict[str, Any]) -> list[str]:
+    summary = _evidence_mapping(manifest.get("benchmark_summary"))
+    benchmark_payload = _evidence_mapping(manifest.get("benchmark_result"))
+    try:
+        benchmark = BenchmarkResult.model_validate(benchmark_payload)
+    except ValueError:
+        benchmark = None
+    aggregate = _evidence_mapping(manifest.get("aggregate"))
+    provenance = _evidence_mapping(manifest.get("aggregate_provenance"))
+    readiness = _evidence_mapping(manifest.get("swebench_readiness"))
+    readiness_metadata = _evidence_mapping(readiness.get("metadata"))
+    readiness_blockers = readiness.get("blockers")
+    benchmark_provenance = _evidence_mapping(benchmark_payload.get("provenance"))
+    benchmark_artifacts = _evidence_mapping(benchmark_provenance.get("artifacts"))
+    approval = _evidence_mapping(manifest.get("approval_evidence"))
+    attempts = _evidence_mapping(manifest.get("attempt_policy"))
+    locality = _evidence_mapping(manifest.get("locality_evidence"))
+    model = _evidence_mapping(manifest.get("model_instance_evidence"))
+    native_model = _evidence_mapping(model.get("native_identity"))
+    count = summary.get("task_count")
+    completed = summary.get("completed_count")
+    resolved = summary.get("resolved_count")
+    unresolved = summary.get("unresolved_count")
+    model_failures = summary.get("model_failure_count")
+    infrastructure_errors = summary.get("infrastructure_error_count")
+    errors = summary.get("error_count")
+    rate = summary.get("resolution_rate")
+    exact_counts = all(
+        type(value) is int and value >= 0
+        for value in (
+            count,
+            completed,
+            resolved,
+            unresolved,
+            model_failures,
+            infrastructure_errors,
+            errors,
+        )
+    )
+    count_value = cast(int, count) if exact_counts else 0
+    completed_value = cast(int, completed) if exact_counts else 0
+    resolved_value = cast(int, resolved) if exact_counts else 0
+    unresolved_value = cast(int, unresolved) if exact_counts else 0
+    model_failures_value = cast(int, model_failures) if exact_counts else 0
+    infrastructure_errors_value = cast(int, infrastructure_errors) if exact_counts else 0
+    errors_value = cast(int, errors) if exact_counts else 0
+    accounting = (
+        exact_counts
+        and completed_value == resolved_value + unresolved_value
+        and errors_value == model_failures_value + infrastructure_errors_value
+        and completed_value + errors_value == count_value
+    )
+    expected_rate = resolved_value / count_value if exact_counts and count_value > 0 else None
+    control_image_digest = summary.get("control_image_digest")
+    control_image_hash = (
+        control_image_digest[7:]
+        if isinstance(control_image_digest, str) and control_image_digest.startswith("sha256:")
+        else None
+    )
+    checks: list[tuple[str, bool]] = [
+        ("suite", manifest.get("suite") == "swebench-verified"),
+        ("status", manifest.get("status") == "completed"),
+        ("runner", manifest.get("runner") == "swebench-local-sandbox-v1"),
+        ("evidence_class", manifest.get("evidence_class") == "local_measurement"),
+        ("model_is_splash", manifest.get("model_is_splash") is True),
+        ("held_out", manifest.get("held_out") is True),
+        ("selection_status", manifest.get("selection_status") == "held_out_verified"),
+        ("non_capability", manifest.get("non_capability") is False),
+        ("capability_claim_allowed", manifest.get("capability_claim_allowed") is True),
+        ("capability_evidence", manifest.get("capability_evidence") is True),
+        ("publication_eligible", manifest.get("publication_eligible") is True),
+        ("locality_evidence.status", locality.get("status") == "verified_local"),
+        ("locality_evidence.endpoint_loopback", locality.get("endpoint_loopback") is True),
+        (
+            "locality_evidence.local_instance_evidence",
+            locality.get("local_instance_evidence") is True,
+        ),
+        ("model_instance_evidence.selection", model.get("selection") == "exact_loaded_record"),
+        (
+            "model_instance_evidence.splash_attribution",
+            model.get("splash_attribution") == "confirmed",
+        ),
+        (
+            "model_instance_evidence.native_identity.loaded_instance_id_match",
+            native_model.get("loaded_instance_id_match") is True,
+        ),
+        # A ready SWE-bench report is returned only after the adapter probe has
+        # verified the strict every-turn local and served-instance contract.
+        ("swebench_readiness.status", readiness.get("status") == "ready"),
+        (
+            "swebench_readiness.blockers",
+            isinstance(readiness_blockers, list) and not readiness_blockers,
+        ),
+        (
+            "swebench_readiness.metadata.schema_version",
+            _is_exact_int(readiness_metadata.get("schema_version"), 1),
+        ),
+        (
+            "swebench_readiness.metadata.protocol_fingerprint",
+            _is_sha256(readiness_metadata.get("protocol_fingerprint"))
+            and readiness_metadata.get("protocol_fingerprint")
+            == summary.get("protocol_fingerprint"),
+        ),
+        (
+            "swebench_readiness.metadata.manifest_sha256",
+            _is_sha256(readiness_metadata.get("manifest_sha256"))
+            and readiness_metadata.get("manifest_sha256") == summary.get("manifest_sha256"),
+        ),
+        (
+            "swebench_readiness.metadata.runner_config_sha256",
+            _is_sha256(readiness_metadata.get("runner_config_sha256"))
+            and readiness_metadata.get("runner_config_sha256")
+            == summary.get("runner_config_sha256"),
+        ),
+        (
+            "swebench_readiness.metadata.image_bindings_schema_version",
+            _is_exact_int(readiness_metadata.get("image_bindings_schema_version"), 1),
+        ),
+        (
+            "swebench_readiness.metadata.image_bindings_task_count",
+            _is_exact_int(
+                readiness_metadata.get("image_bindings_task_count"),
+                _SWEBENCH_VERIFIED_TASK_COUNT,
+            ),
+        ),
+        (
+            "swebench_readiness.metadata.image_bindings_sha256",
+            _is_sha256(readiness_metadata.get("image_bindings_sha256"))
+            and readiness_metadata.get("image_bindings_sha256")
+            == summary.get("image_bindings_sha256"),
+        ),
+        (
+            "swebench_readiness.metadata.control_image_digest",
+            control_image_hash is not None
+            and readiness_metadata.get("control_image_digest") == control_image_digest,
+        ),
+        (
+            "swebench_readiness.metadata.platform",
+            readiness_metadata.get("platform") == _SWEBENCH_VERIFIED_TASK_PLATFORM,
+        ),
+        ("swebench_readiness.metadata.mode", readiness_metadata.get("mode") == "verified"),
+        (
+            "swebench_readiness.metadata.task_count",
+            _is_exact_int(readiness_metadata.get("task_count"), _SWEBENCH_VERIFIED_TASK_COUNT),
+        ),
+        (
+            "swebench_readiness.metadata.non_capability",
+            readiness_metadata.get("non_capability") is False,
+        ),
+        (
+            "swebench_readiness.metadata.full_run_requires_approval",
+            readiness_metadata.get("full_run_requires_approval") is True,
+        ),
+        (
+            "benchmark_result.provenance.artifacts.image_bindings",
+            _is_sha256(benchmark_artifacts.get("image_bindings"))
+            and benchmark_artifacts.get("image_bindings") == summary.get("image_bindings_sha256"),
+        ),
+        (
+            "benchmark_result.provenance.artifacts.control_image",
+            control_image_hash is not None
+            and benchmark_artifacts.get("control_image") == control_image_hash,
+        ),
+        ("approval_evidence.required", approval.get("required") is True),
+        ("approval_evidence.status", approval.get("status") == "verified"),
+        (
+            "approval_evidence.approved_fingerprint",
+            _is_sha256(approval.get("approved_fingerprint"))
+            and approval.get("approved_fingerprint") == summary.get("protocol_fingerprint"),
+        ),
+        ("benchmark_summary.schema_version", summary.get("schema_version") == 1),
+        ("benchmark_summary.status", summary.get("status") == "completed"),
+        (
+            "benchmark_summary.evidence_class",
+            summary.get("evidence_class") == "held_out_capability",
+        ),
+        (
+            "benchmark_summary.task_count",
+            exact_counts and count_value == _SWEBENCH_VERIFIED_TASK_COUNT,
+        ),
+        (
+            "benchmark_summary.completed_count",
+            exact_counts
+            and completed_value + errors_value == _SWEBENCH_VERIFIED_TASK_COUNT
+            and infrastructure_errors_value < _SWEBENCH_VERIFIED_TASK_COUNT,
+        ),
+        ("benchmark_summary.accounting", accounting),
+        (
+            "benchmark_summary.error_count",
+            exact_counts and errors_value == model_failures_value + infrastructure_errors_value,
+        ),
+        (
+            "benchmark_summary.resolution_rate",
+            isinstance(rate, (int, float))
+            and not isinstance(rate, bool)
+            and expected_rate is not None
+            and abs(float(rate) - expected_rate) <= 1e-12,
+        ),
+        (
+            "benchmark_summary.protocol_fingerprint",
+            _is_sha256(summary.get("protocol_fingerprint"))
+            and summary.get("protocol_fingerprint") == manifest.get("protocol_fingerprint"),
+        ),
+        (
+            "benchmark_summary.manifest_sha256",
+            _is_sha256(summary.get("manifest_sha256"))
+            and summary.get("manifest_sha256") == manifest.get("selection_hash"),
+        ),
+        (
+            "benchmark_summary.runner_config_sha256",
+            _is_sha256(summary.get("runner_config_sha256")),
+        ),
+        (
+            "benchmark_summary.image_bindings_sha256",
+            _is_sha256(summary.get("image_bindings_sha256")),
+        ),
+        (
+            "benchmark_summary.control_image_digest",
+            control_image_hash is not None and _is_sha256(control_image_hash),
+        ),
+        (
+            "benchmark_result.schema",
+            benchmark is not None,
+        ),
+        (
+            "benchmark_result.status",
+            benchmark is not None and benchmark.status.value == "complete",
+        ),
+        (
+            "benchmark_result.counts",
+            benchmark is not None
+            and benchmark.counts.requested == _SWEBENCH_VERIFIED_TASK_COUNT
+            and benchmark.counts.succeeded == completed_value
+            and benchmark.counts.errored == errors_value,
+        ),
+        (
+            "benchmark_result.task_outcomes",
+            benchmark is not None
+            and benchmark.task_outcomes is not None
+            and benchmark.task_outcomes.resolved == resolved_value
+            and benchmark.task_outcomes.unresolved == unresolved_value
+            and benchmark.task_outcomes.model_failure == model_failures_value
+            and benchmark.task_outcomes.infrastructure_error == infrastructure_errors_value
+            and benchmark.task_outcomes.total == _SWEBENCH_VERIFIED_TASK_COUNT,
+        ),
+        (
+            "benchmark_result.identity",
+            benchmark is not None
+            and benchmark.identity.name == "SWE-bench Verified"
+            and benchmark.identity.dataset_id == _SWEBENCH_VERIFIED_DATASET_ID
+            and benchmark.identity.dataset_revision == _SWEBENCH_VERIFIED_DATASET_REVISION
+            and benchmark.identity.split == "test"
+            and benchmark.identity.subset == "verified",
+        ),
+        (
+            "benchmark_result.metric",
+            benchmark is not None
+            and benchmark.metric_name == "resolution_rate"
+            and benchmark.metric_unit.value == "proportion"
+            and benchmark.score == rate,
+        ),
+        (
+            "benchmark_result.fingerprint",
+            benchmark is not None
+            and manifest.get("benchmark_result_fingerprint_sha256")
+            == benchmark.fingerprint_sha256(),
+        ),
+        (
+            "aggregate.planned",
+            exact_counts and _is_exact_int(aggregate.get("planned"), _SWEBENCH_VERIFIED_TASK_COUNT),
+        ),
+        (
+            "aggregate.attempted",
+            exact_counts
+            and _is_exact_int(aggregate.get("attempted"), _SWEBENCH_VERIFIED_TASK_COUNT),
+        ),
+        (
+            "aggregate.completed",
+            exact_counts and _is_exact_int(aggregate.get("completed"), completed_value),
+        ),
+        (
+            "aggregate.scorable",
+            exact_counts
+            and _is_exact_int(aggregate.get("scorable"), resolved_value + unresolved_value),
+        ),
+        ("aggregate.resolved", exact_counts and _is_exact_int(aggregate.get("resolved"), resolved)),
+        (
+            "aggregate.unresolved",
+            exact_counts and _is_exact_int(aggregate.get("unresolved"), unresolved),
+        ),
+        ("aggregate.failed", exact_counts and _is_exact_int(aggregate.get("failed"), errors)),
+        (
+            "aggregate.model_failure",
+            exact_counts and _is_exact_int(aggregate.get("model_failure"), model_failures_value),
+        ),
+        (
+            "aggregate.infrastructure_error",
+            exact_counts
+            and _is_exact_int(aggregate.get("infrastructure_error"), infrastructure_errors_value),
+        ),
+        ("aggregate.unattempted", _is_exact_int(aggregate.get("unattempted"), 0)),
+        ("aggregate.metric_name", aggregate.get("metric_name") == "resolved"),
+        ("aggregate.metric_unit", aggregate.get("metric_unit") == "proportion"),
+        (
+            "aggregate.score",
+            isinstance(aggregate.get("score"), (int, float))
+            and not isinstance(aggregate.get("score"), bool)
+            and expected_rate is not None
+            and abs(float(aggregate["score"]) - expected_rate) <= 1e-12,
+        ),
+        ("aggregate_provenance.source", provenance.get("source") == "swebench_sanitized_result_v1"),
+        (
+            "aggregate_provenance.benchmark_result_sha256",
+            benchmark is not None
+            and provenance.get("benchmark_result_sha256") == benchmark.fingerprint_sha256(),
+        ),
+        (
+            "aggregate_provenance.protocol_fingerprint",
+            provenance.get("protocol_fingerprint") == summary.get("protocol_fingerprint"),
+        ),
+        (
+            "aggregate_provenance.manifest_sha256",
+            provenance.get("manifest_sha256") == summary.get("manifest_sha256"),
+        ),
+        (
+            "aggregate_provenance.runner_config_sha256",
+            provenance.get("runner_config_sha256") == summary.get("runner_config_sha256"),
+        ),
+        ("attempt_policy.trajectories_per_task", attempts.get("trajectories_per_task") == 1),
+        (
+            "attempt_policy.internal_turns_are_attempts",
+            attempts.get("internal_turns_are_attempts") is False,
+        ),
+        (
+            "attempt_policy.response_marks_task_attempted",
+            attempts.get("response_marks_task_attempted") is True,
+        ),
+        (
+            "attempt_policy.resume_can_start_second_trajectory",
+            attempts.get("resume_can_start_second_trajectory") is False,
+        ),
+    ]
+    return [field for field, passed in checks if not passed]
+
+
 def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
     """Return every missing fact that prevents a capability-evidence export."""
     aggregate = _evidence_mapping(manifest.get("aggregate"))
@@ -1711,6 +2225,16 @@ def _capability_publication_failures(manifest: dict[str, Any]) -> list[str]:
 
 
 def _capability_publication_blockers(manifest: dict[str, Any]) -> list[dict[str, str]]:
+    if manifest.get("suite") == "swebench-verified":
+        return [
+            {
+                "rule": "capability-publication-evidence-incomplete",
+                "scope": "run",
+                "severity": "block",
+                "field": field,
+            }
+            for field in _swebench_publication_failures(manifest)
+        ]
     is_candidate = (
         manifest.get("suite") in {"pilot", "core"}
         and manifest.get("evidence_class") == "local_measurement"
@@ -1747,8 +2271,61 @@ def _sanitize_public_value(value: Any, run_id: str) -> Any:
     return value
 
 
+def _public_payload_findings(
+    payload: dict[str, Any], policies: dict[str, Any], run_id: str
+) -> list[dict[str, Any]]:
+    """Content-scan the exact serialized export without returning matched text."""
+    serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    findings = [
+        {**finding, "scope": "public-payload"}
+        for finding in _content_rule_findings(serialized, policies, prefix="public-payload-")
+    ]
+
+    def private_fields(value: Any) -> set[str]:
+        if isinstance(value, dict):
+            keys = {
+                key
+                for key in value
+                if isinstance(key, str) and key.casefold() in _PRIVATE_PAYLOAD_FIELDS
+            }
+            for item in value.values():
+                keys.update(private_fields(item))
+            return keys
+        if isinstance(value, list):
+            list_keys: set[str] = set()
+            for item in value:
+                list_keys.update(private_fields(item))
+            return list_keys
+        return set()
+
+    denied_fields = private_fields(payload)
+    if denied_fields:
+        findings.append(
+            {
+                "rule": "public-payload-private-field",
+                "scope": "public-payload",
+                "severity": "block",
+                "matched_text_redacted": True,
+                "match_count": len(denied_fields),
+            }
+        )
+    if run_id and run_id != _PUBLICATION_RUN_LABEL and run_id in serialized:
+        findings.append(
+            {
+                "rule": "public-payload-private-run-identifier",
+                "scope": "public-payload",
+                "severity": "block",
+                "matched_text_redacted": True,
+                "match_count": serialized.count(run_id),
+            }
+        )
+    return findings
+
+
 def _publication_purpose(manifest: dict[str, Any]) -> str | None:
     """Classify only unambiguous local Splash measurement evidence for export."""
+    if manifest.get("suite") == "swebench-verified":
+        return _CAPABILITY_PUBLICATION if not _swebench_publication_failures(manifest) else None
     if (
         manifest.get("suite") not in {"pilot", "core"}
         or manifest.get("evidence_class") != "local_measurement"
@@ -1869,6 +2446,8 @@ def prepare_publication(
     payload = _publication_payload(run_id, manifest, publication_purpose)
     audit = audit_publication(root=repo)
     blockers = list(audit["findings"])
+    payload_findings = _public_payload_findings(payload, {}, run_id)
+    blockers.extend(payload_findings)
     blockers.extend(_capability_publication_blockers(manifest))
     if publication_purpose is None:
         blockers.append(
@@ -1884,7 +2463,7 @@ def prepare_publication(
             "run_id": run_id,
             "allowlisted_fields": sorted(payload),
             "blockers": blockers,
-            "preview": payload,
+            "preview": {} if payload_findings else payload,
             "writes_performed": False,
             "export_writes_performed": False,
             "private_audit_record_written": True,

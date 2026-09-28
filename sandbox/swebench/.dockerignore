@@ -1,0 +1,8 @@
+*
+!Dockerfile
+!control-plane-requirements.lock
+!mini-swe-agent.yaml
+!runner.py
+!scorer_entrypoint.py
+!wheels/
+!wheels/*.whl

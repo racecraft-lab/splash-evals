@@ -126,7 +126,7 @@ test('overview leads readers through the results hub to the measured GPQA result
   await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('198 of 198', { exact: true })).toBeVisible();
   await expect(page.getByText('64.13 tok/s', { exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Explore the result', exact: true }).click();
+  await page.getByRole('link', { name: 'Explore the results', exact: true }).click();
   await expect(page).toHaveURL(/\/splash-evals\/dashboard\/$/);
   await expect(page.getByRole('heading', { name: 'Results', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Explore GPQA Diamond', exact: true }).click();
@@ -136,7 +136,7 @@ test('overview leads readers through the results hub to the measured GPQA result
   ).toBeVisible();
 });
 
-test('results hub distinguishes the measured and pending benchmark states', async ({ page }) => {
+test('results hub shows both measured benchmark results separately', async ({ page }) => {
   await page.goto(routeUrl('/dashboard/'));
   const cards = page.locator('.benchmark-card');
   await expect(cards).toHaveCount(2);
@@ -144,15 +144,16 @@ test('results hub distinguishes the measured and pending benchmark states', asyn
   await expect(cards.nth(0)).toContainText('54.55%');
   await expect(cards.nth(0)).toContainText('198 / 198 completed');
   await expect(cards.nth(1)).toContainText('SWE-bench Verified');
-  await expect(cards.nth(1)).toContainText('Pending');
+  await expect(cards.nth(1)).toContainText('72.00%');
+  await expect(cards.nth(1)).toContainText('360 / 500 resolved · 18 errors counted unresolved');
   await expect(cards.nth(1)).toContainText('12 external references');
-  await expect(cards.nth(1)).toHaveAttribute('data-benchmark-status', 'pending');
+  await expect(cards.nth(1)).toHaveAttribute('data-benchmark-status', 'complete');
   await expect(page.getByText(/must never be combined into one score/i)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Explore GPQA Diamond' })).toHaveAttribute(
     'href',
     '/splash-evals/dashboard/gpqa-diamond/',
   );
-  await expect(page.getByRole('link', { name: 'Review SWE-bench readiness' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Explore SWE-bench Verified' })).toHaveAttribute(
     'href',
     '/splash-evals/dashboard/swe-bench-verified/',
   );
@@ -331,24 +332,29 @@ for (const [path, rowCount] of [
   });
 }
 
-test('SWE-bench detail keeps the local result pending and exposes 12 external references', async ({
+test('SWE-bench detail shows the reviewed local result and exposes 12 external references', async ({
   page,
 }) => {
   await page.goto(routeUrl('/dashboard/swe-bench-verified/'));
-  const summary = page.locator('.evaluation-summary');
-  await expect(summary).toContainText('Pending');
-  await expect(summary).toContainText('No capability percentage is reported');
-  await expect(summary).not.toContainText(/\d+(?:\.\d+)?%/);
+  await expect(
+    page.getByRole('heading', { name: 'Splash scored 72.00% on SWE-bench Verified', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('360 resolved / 500 requested', { exact: false })).toBeVisible();
+  const summary = page.locator('.evaluation-summary').first();
+  await expect(summary).toContainText('72.00%');
+  await expect(summary).toContainText('Reviewed full run');
   await expect(page.getByText('No reviewed runtime measurements are available yet.')).toBeVisible();
 
   const explorer = page.locator('[data-benchmark-explorer]');
   await expect(explorer.getByRole('listitem')).toHaveCount(13);
   await expect(explorer.getByText('Showing 12 external observations', { exact: false })).toBeVisible();
   const local = explorer.locator('.local-reference');
-  await expect(local).toContainText('Pending');
-  await expect(local.locator('.explorer-score-dot')).toHaveCount(0);
+  await expect(local).toContainText('72.00%');
+  await expect(local.locator('.explorer-score-dot')).toHaveCount(1);
   await local.getByRole('button').focus();
-  await expect(explorer.locator('[data-explorer-detail]')).toContainText('Pending is not zero');
+  await expect(explorer.locator('[data-explorer-detail]')).toContainText(
+    'Measured locally here; external protocols are not matched.',
+  );
 
   const evidence = explorer.locator('select[name="benchmark-source"]');
   const family = explorer.locator('select[name="benchmark-family"]');
@@ -381,7 +387,9 @@ for (const [path, recordRows] of [
     const page = await context.newPage();
     await page.goto(routeUrl(path));
     await expect(page.locator('[data-explorer-controls]')).toBeHidden();
-    const record = page.locator('details.comparison-record');
+    const record = page
+      .locator('details.comparison-record')
+      .filter({ hasText: /View the complete \d+-row source record/ });
     await expect(record).not.toHaveAttribute('open', '');
     await record.getByText(new RegExp(`View the complete ${recordRows}-row source record`)).click();
     const comparison = record.locator('[data-benchmark-table]');

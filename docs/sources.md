@@ -62,11 +62,11 @@ See who measured each result, where it was published, and what was different abo
 
 The coding explorer is generated from the source-verified SWE-bench records in `references/frontier/`. Its coverage manifest is `references/benchmarks/swebench-verified-coverage.yaml` and is explicitly limited to **external source coverage**.
 
-The manifest records `local_measurement_status: not_measured` and `comparability_status: not_established`. Each external record keeps the evaluator, harness and revision, benchmark variant, 500-task denominator, numerator when the source permits it, settings, and unknown fields with the reported score. A missing field remains unknown rather than being inferred.
+The manifest records `local_measurement_status: measured` and `comparability_status: not_established`. The local result is `results/public/swe-bench-verified-splash-local-2026-09-28.json`. Each external record keeps the evaluator, harness and revision, benchmark variant, 500-task denominator, numerator when the source permits it, settings, and unknown fields with the reported score. A missing field remains unknown rather than being inferred.
 
-Those records support a 12-observation external explorer. They do not support a Splash score, model ranking, exact gap, or percent-of-frontier claim.
+Those records support a 12-observation external explorer. They do not support a model ranking, exact gap, or percent-of-frontier claim against the local Splash result.
 
-[Review SWE-bench readiness](swe-bench-verified.md#external-reference-explorer) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
+[Review the SWE-bench comparison](swe-bench-verified.md#external-reference-explorer) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
 
 </section>
 

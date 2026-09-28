@@ -54,17 +54,30 @@ jobs:
         run: uv run ruff check .
       - name: Type check
         run: uv run mypy src
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6 source: github.com/actions/setup-node
+        with:
+          node-version: 22
+      - name: Install locked swebench-sdk dependencies
+        run: npm --prefix scripts/swebench-sdk ci --ignore-scripts --no-audit --no-fund
       - name: Unit, scorer, mock transport, reference, and privacy tests
         run: uv run pytest
+      - name: Scan source with pinned Gitleaks
+        run: gitleaks dir . --redact --no-banner --no-color
       - name: Audit public source and complete Git history
         env:
           LOCAL_EVALS_STATE_DIR: ${{ runner.temp }}/splash-evals-state
           PUBLIC_GIT_AUTHOR_NAME: Racecraft Lab Automation
           PUBLIC_GIT_AUTHOR_EMAIL: info@racecraft.co
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           GH_TOKEN: ${{ github.token }}
           GITHUB_PROVENANCE_EVIDENCE: ${{ runner.temp }}/splash-evals-github-provenance.json
         run: |
+          provenance_args=()
+          if test -n "$PR_NUMBER"; then
+            provenance_args=(--pull-request "$PR_NUMBER")
+          fi
           git config --local user.name "$PUBLIC_GIT_AUTHOR_NAME"
           git config --local user.email "$PUBLIC_GIT_AUTHOR_EMAIL"
           if test -n "$PR_HEAD_SHA"; then
@@ -74,7 +87,8 @@ jobs:
             --output "$GITHUB_PROVENANCE_EVIDENCE" \
             --repository "$GITHUB_REPOSITORY" \
             --ref "$GITHUB_REF" \
-            --head-sha "$(git rev-parse --verify HEAD)"
+            --head-sha "$(git rev-parse --verify HEAD)" \
+            "${provenance_args[@]}"
           uv run local-evals privacy audit --scope publication
       - name: Validate historical catalog
         run: uv run local-evals frontier validate --catalog references/frontier

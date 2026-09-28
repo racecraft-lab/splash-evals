@@ -3,7 +3,7 @@ import { benchmarkLifecycleView } from '../../scripts/generate-content.mjs';
 import { codingIntro } from '../../scripts/benchmark-detail.mjs';
 
 export const codingView = benchmarkLifecycleView(records.benchmarks['SWE-bench Verified'].result, {
-  benchmarkName: 'SWE-bench Verified', requiredCompleteCount: 500,
+  benchmarkName: 'SWE-bench Verified', requiredCompleteCount: 500, errorsCountAsUnresolved: true,
 });
 
 type Step = [string, string];
@@ -63,7 +63,7 @@ export const pageIntros: Record<string, Intro> = {
   },
   dashboard: {
     summary: 'Choose a benchmark to see its reviewed evidence, external context, method, runtime, and limits. Each benchmark has its own result and testing conditions.',
-    caption: 'Two benchmarks, two evidence states, no blended score.',
+    caption: 'Two benchmarks, two measured results, no blended score.',
     steps: [['Measured', 'GPQA Diamond · reviewed local result'], [codingView.label, `SWE-bench Verified · ${codingView.detail}`], ['Compare carefully', 'Keep every metric and protocol separate']],
   },
   'dashboard/gpqa-diamond': {

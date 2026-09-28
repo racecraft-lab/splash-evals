@@ -8,9 +8,9 @@ test('benchmark navigation keeps exact active state, keyboard access and mobile 
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/dashboard\/gpqa-diamond\/$/);
   await expect(nav.locator('[aria-current="page"]')).toHaveText('GPQA DiamondMeasured');
-  await nav.getByRole('link', { name: 'SWE-bench Verified Pending' }).click();
+  await nav.getByRole('link', { name: 'SWE-bench Verified Measured' }).click();
   await expect(page).toHaveURL(/\/dashboard\/swe-bench-verified\/$/);
-  await expect(nav.locator('[aria-current="page"]')).toHaveText('SWE-bench VerifiedPending');
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('SWE-bench VerifiedMeasured');
   for (const width of [1280, 783, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -26,7 +26,7 @@ test('benchmark navigation works without JavaScript', async ({ browser, baseURL 
   const page = await context.newPage();
   await page.goto('/splash-evals/dashboard/');
   const nav = page.getByRole('navigation', { name: 'Benchmark results', exact: true });
-  await nav.getByRole('link', { name: 'SWE-bench Verified Pending' }).click();
+  await nav.getByRole('link', { name: 'SWE-bench Verified Measured' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'SWE-bench Verified', exact: true })).toBeVisible();
   await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
   await context.close();
