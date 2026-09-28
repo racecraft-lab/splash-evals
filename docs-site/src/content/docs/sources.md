@@ -10,11 +10,16 @@ next: false
 
 <div class="document-sheet">
 
-See who measured each result, where it was published, and what was different about the test. The catalog now covers science reasoning and coding, but the local evidence status is different for each benchmark.
+Here is who measured each score, where it was published, and how its test differed from ours. The catalog covers both tests: expert science questions and real coding fixes.
 
-<section class="reader-section cool" aria-label="Sources behind the numbers">
+<section class="reader-section cool" aria-label="Sources behind the numbers" data-step>
+<span class="testpoint" data-testpoint aria-hidden="true">01</span>
+
+<p class="kicker">The science test</p>
 
 ## GPQA Diamond sources
+
+Four kinds of source feed the science-test page:
 
 <div class="source-map">
   <article class="source-card measured">
@@ -66,9 +71,14 @@ See who measured each result, where it was published, and what was different abo
 
 </section>
 
-<section class="reader-section warm" aria-label="SWE-bench Verified sources">
+<section class="reader-section warm" aria-label="SWE-bench Verified sources" data-step>
+<span class="testpoint" data-testpoint aria-hidden="true">02</span>
+
+<p class="kicker">The coding test</p>
 
 ## SWE-bench Verified sources
+
+In plain terms: 12 published coding scores, each saved with its source and settings. Anything a source did not say stays marked as unknown.
 
 The coding explorer is generated from the source-verified SWE-bench records in `references/frontier/`. Its coverage manifest is `references/benchmarks/swebench-verified-coverage.yaml` and is explicitly limited to **external source coverage**.
 
@@ -76,11 +86,14 @@ The manifest records `local_measurement_status: measured` and `comparability_sta
 
 Those records support a 12-observation external explorer. They do not support a model ranking, exact gap, or percent-of-frontier claim against the local Splash result.
 
-[Review the SWE-bench comparison](/splash-evals/dashboard/swe-bench-verified/#external-reference-explorer) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
+[Review the SWE-bench comparison](/splash-evals/dashboard/swe-bench-verified/#benchmark-comparison) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
 
 </section>
 
-<section class="reader-section warm" aria-label="How evidence records work">
+<section class="reader-section warm" aria-label="How evidence records work" data-step>
+<span class="testpoint" data-testpoint aria-hidden="true">03</span>
+
+<p class="kicker">How records work</p>
 
 ## How the evidence catalog works
 
@@ -94,7 +107,10 @@ Those records support a 12-observation external explorer. They do not support a 
 
 </section>
 
-<section class="reader-section cool" aria-label="How reported numbers were checked">
+<section class="reader-section cool" aria-label="How reported numbers were checked" data-step>
+<span class="testpoint" data-testpoint aria-hidden="true">04</span>
+
+<p class="kicker">Checking</p>
 
 ## How the numbers were checked
 

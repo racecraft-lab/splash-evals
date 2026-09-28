@@ -1,41 +1,39 @@
 # Reader-first design contract
 
-The site answers, in order: what this project is, what actually ran, what we learned, and what remains unknown. Overview, Results, How we tested, Run it yourself, and Sources are the five reader-facing destinations. Technical records are supporting repository evidence, not separate reading paths.
+The site answers, in order: what we are trying to learn, why it matters, what we tested, what we found, and what it means. Overview, Results, What it means, How we tested, and Sources are the reader-facing destinations in the header. Run it yourself is for builders and lives in the footer. Technical records are supporting repository evidence, not separate reading paths.
 
-## Brand and color rhythm
+## Voice
 
-Use the existing Racecraft SVG wordmark in the header and a smaller version in the footer. Do not replace it with generated lettering. Retain Space Grotesk, Geist, the warm-neutral light palette, navy/charcoal dark palette, and blue links. Red is a restrained structural accent, not a success/failure signal.
+Main-path pages (Overview, Results, What it means, and each result's opening) are written for non-technical readers: friendly "we", short sentences, and everyday words, at about a grade 8-9 reading level. Technical detail stays one click away in the same page (disclosures, tables, the method page). Every number keeps its source and unit; plain phrasings ("about 7 in 10", "just over half") sit next to the exact figure, never instead of it.
 
-The lab-bench texture follows [Racecraft's source CSS](https://github.com/racecraft-lab/racecraft/blob/main/website/src/styles/global.css): a 40px grid plus 4px dots. Light uses the source black marks at 5%/3% opacity. Dark uses the brand's blue-gray #7cb3dd at 7%/4%; the geometry stays the same. This dark adaptation is a design choice, not a claimed source token.
+## Brand and color
 
-Sections progress from warm paper to a low-chroma blue-tinted process section and back to a warm-neutral definitions section. Dark mode uses corresponding navy, blue-gray, and warm charcoal surfaces. Spacing and headings carry the hierarchy; large saturated bands, strong boundary lines, and decorative card grids are avoided.
+Use the existing Racecraft SVG wordmark in the header and a smaller version in the footer. Do not replace it with generated lettering. Fonts are Space Grotesk (display), Geist (body), and Fira Code (labels, readouts, and code). Colors come from the [Racecraft color system](https://github.com/racecraft-lab/racecraft/blob/main/docs/brand/color-system.md): warm neutrals (#f1f0ec base), red #dc143c, and blue #3c89c6; dark mode uses #0a0a0a and #1f2937 surfaces. Small red text uses darker tints for contrast (#b8102f on light, #ff6b84 on dark). Red is a structural accent, not a success or failure signal.
 
-The texture is the desk beneath the content, never the reading surface. All reading copy, including the hero, report sections, reference documents, and footer, sits on opaque surfaces. Every page has one continuous main reading sheet, with restrained cool/warm sections inside it at meaningful topic changes. Short pages need only one inset section; longer reports use several. Do not split every paragraph into a separate tile.
+## The lab bench
 
-This applies [NN/g's common-region guidance](https://www.nngroup.com/articles/common-region/): backgrounds can group related content, but too many high-contrast bands create clutter or false endings. The exact surface colors are project design choices, not universal color-psychology claims.
+Every page reads as an experiment on an electronics lab bench.
 
-Text must meet [WCAG 2.2 contrast minimums](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), including where the texture is visible. Validate both themes, keyboard focus, reduced motion, and 320px reflow. Color must never be the only carrier of result status.
+- **Bench mat:** the page background is Racecraft's texture (a 40px grid plus 4px dots, per [Racecraft's source CSS](https://github.com/racecraft-lab/racecraft/blob/main/website/src/styles/global.css)). Dark mode uses blue-gray #7cb3dd at 7%/4%, a design choice rather than a source token.
+- **Sheet:** each page is one sheet of engineering paper (a fine blue grid) taped to the mat, lifted by a light-from-above shadow stack. The footer and the benchmark tabs sit on the same bench with the same lift and no tape.
+- **Notepad pages:** reading text never sits on a texture. Every block of copy is a solid notepad page in the sheet's own paper color, with a blue notebook margin rule (never red, so it cannot read as a second signal trace), so the grid shows only around the pages.
+- **Signal trace:** each reader section is a numbered test point on a vertical trace. The trace fills to the reading line as you scroll and the current test point lights up. The trace is an overlay beside the content, never a wrapper, so the page stays plain server-rendered HTML.
+- **Instruments:** result readouts use Fira Code numbers; the scope screens on result cards are decorative and identical on every card, so they never imply a comparison.
+
+These are skeuomorphic accents, kept light. All diagram copy is real HTML; no generated image is used as UI.
 
 ## Evidence presentation
 
-Page openings pair an editorial headline with a compact page-specific explanation. Process pages use a numbered path; Results shows the measured 54.55% GPQA Diamond result, runtime performance, source-labeled directional frontier context, and unsupported-claim boundary. These are static explanatory graphics, not simulated live instruments. The homepage concept's redundant icon column was omitted to keep the diagram readable at the narrower documentation width. All diagram copy is real accessible HTML, with no generated image used as UI. The compact Splash/Evals typographic lockup is secondary to the official Racecraft SVG; the SVG remains unchanged.
+The Results pages follow [model-card reporting practice](https://huggingface.co/docs/hub/model-cards) and [HELM's multi-scenario reporting principles](https://crfm.stanford.edu/2022/11/17/helm.html), without claiming certification or an overall model score. Each benchmark keeps its own metric; percentages are never combined, and the site never ranks one test's result against the other's. Capability and runtime stay separate. Unknown values are text, never zero-length bars.
 
-The Results board follows [model-card reporting practice](https://huggingface.co/docs/hub/model-cards) and [HELM's multi-scenario reporting principles](https://crfm.stanford.edu/2022/11/17/helm.html), without claiming official certification or an overall model score. Capability and runtime performance stay separate. Historical scores share a benchmark and metric family but remain directional until their full protocols align. Unknown values are text, never zero-length bars.
+Published cloud-model scores are directional context. Do not rank models, show comparative bars, or state an exact gap. Source-number verification means accurate transcription, not independent reproduction. Retired pages are deleted, not redirected.
 
-`results/public/gpqa-diamond-splash-local-2026-09-20.json` is the reviewed presentation record. It contains aggregates and provenance hashes only. Its validator rejects missing values, raw/private field names, and local absolute paths.
+The explorers progressively enhance the source-labeled tables rather than creating a second data model. They use one fixed 0–100 scale whose labels sit on the track at every width, keep the local row pinned, and provide the whole table when JavaScript is unavailable. The Operations boundary uses semantic HTML as both diagram and full text equivalent.
 
-Do not turn one benchmark into broad capability coverage. Do not rank models, show comparative bars, or infer equivalence or exact gaps from publisher-reported context. Retired reader URLs redirect to the closest retained section. Source-number verification means accurate transcription, not independent reproduction or comparable testing.
+## Motion
 
-The Results explorer progressively enhances the source-labeled comparison table rather than creating a second data model. It uses one fixed 0–100 position scale, preserves editorial/source order, keeps evidence labels visible, and provides the entire table when JavaScript is unavailable. Filters reveal observations; they never calculate a rank or gap. The Operations boundary uses semantic HTML as both diagram and complete text equivalent: its ordered request path, local trust boundary, remote guard, and private/public evidence destinations remain readable in source order at every width.
-
-## Section hierarchy and feedback
-
-The September 2026 refinement follows [NN/g's scanning research](https://www.nngroup.com/articles/layer-cake-pattern-scanning/): recognizable headings and meaningful groups let readers find a section before reading it. A short crimson heading rule provides orientation without adding another label or decoration-heavy card grid. Process steps have a connected numbered rail; definitions use semantic term/description rows; evidence tables use stronger headers, quiet row contrast, and generous cell spacing. Technical disclosures have a full-width control and a directional indicator. The opaque reading sheet and section palette remain shared across all pages.
-
-Three preview-only section concepts guided the implementation: a cool process timeline, warm editorial definitions, and dark evidence/disclosure treatments. Fidelity checks compare heading hierarchy, brand typography, opaque surfaces, content spacing, connector geometry, and table/disclosure structure. Intentional differences: keep the site's full evidence caveats and table columns instead of abbreviated concept copy; use the established responsive documentation width; avoid decorative arrows on every link. Generated UI images are not shipped.
-
-Following [Carbon's motion guidance](https://carbondesignsystem.com/elements/motion/overview/), feedback is limited to links and disclosure indicators: short 150ms transitions, persistent underlines, and visible keyboard outlines. Static content does not lift or pretend to be clickable. No scroll reveals, looping motion, count-ups, or hover-only evidence. [Reduced-motion preferences](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) disable the new transitions. Disclosures and standalone navigation links target at least 44px height; inline prose links retain natural line spacing, consistent with the [WCAG target-size exception for inline links](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html). These are implementation choices, not a claim of full WCAG certification.
+Motion is subtle and always optional: the scroll-linked trace, a slow pulse on the delegation wires, a moving glow on the scope screens, and a breathing ring on the active test point. Nothing flickers, and every number is readable without animation. Under [reduced-motion preferences](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) all loops stop and the trace shows statically. Links and disclosures use short transitions and visible keyboard outlines; disclosures and standalone navigation links are at least 44px tall.
 
 ## Verification boundary
 
-Automated route, search, keyboard-disclosure, theme, contrast, and reflow checks plus browser inspection qualify the implementation. They are not a novice usability study. A follow-up study should ask real first-time readers to explain the project's purpose, identify what ran, describe what it proves, and find why historical comparison is unavailable.
+Automated route, search, keyboard-disclosure, theme, contrast ([WCAG 2.2 minimums](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)), paper-not-texture, and 320px reflow checks plus browser inspection qualify the implementation. They are not a usability study. A follow-up study should ask first-time readers to explain the project's purpose, what ran, what it shows, and why it is not a ranking.

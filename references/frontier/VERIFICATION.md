@@ -2,7 +2,7 @@
 
 The recorded numbers were checked against their cited sources in a second transcription pass. **That check is about copying accuracy, not fair comparability or independent reproduction of a provider's result.**
 
-The local run is not eligible for a direct comparison with these records. [Why the comparison is not available](../../docs/historical-frontier-comparison.md).
+The local run is not eligible for a direct comparison with these records. [Why the comparison is not available](../../docs/methodology.md#what-makes-a-fair-comparison).
 
 <section class="reader-section cool" aria-label="Source transcription checks">
 

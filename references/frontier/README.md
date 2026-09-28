@@ -2,7 +2,7 @@
 
 A catalog record is one reported number for a specific model, test, and condition. Multiple records can describe the same model. Missing information means “unknown,” never a score of zero.
 
-These records do not establish how Splash compares. [Read the comparison explanation](../../docs/historical-frontier-comparison.md) or [browse the source list](../../docs/sources.md).
+These records do not establish how Splash compares. [Read the comparison explanation](../../docs/methodology.md#what-makes-a-fair-comparison) or [browse the source list](../../docs/sources.md).
 
 Each YAML file is a factual record for one model, benchmark, metric, and condition. These
 records are read-only historical evidence; they are not provider configurations and do not

@@ -1,0 +1,1107 @@
+/* Lab bench system: every page is a sheet of engineering paper taped to the bench mat.
+ *
+ * - The body background (editorial.css) is the bench mat.
+ * - .lab-bench is the sheet: its own fine grid, a light-from-above shadow stack, and two
+ *   strips of tape. The footer sits on the same bench with the same paper and lift.
+ * - Reader sections are numbered test points on a signal trace (NotebookTrace).
+ * - Colors come from the Racecraft palette (global.css); shadows are neutral.
+ */
+
+/* Surfaces on the sheet: cards are white (light) or #1f2937 (dark), never navy. */
+:root {
+  --reader-paper: #ffffff;
+  --reader-cool: #f4f3f0;
+  --reader-warm: #f4f3f0;
+  --reader-line: #e0ded9;
+  --sheet-gutter: 2.75rem;
+  --testpoint-size: 2rem;
+  --notepad-pad: 1.25rem;
+}
+:root[data-theme='dark'] {
+  --reader-paper: #1f2937;
+  --reader-cool: #111827;
+  --reader-warm: #111827;
+  --reader-line: #374151;
+}
+@media (min-width: 48rem) {
+  :root {
+    --sheet-gutter: 6rem;
+    --testpoint-size: 3.5rem;
+    --notepad-pad: 2.25rem;
+  }
+}
+
+/* Starlight's first panel now holds only what sits on the bench above the sheet. */
+.content-panel:has(> .sl-container:empty) {
+  display: none;
+}
+:root:not([data-has-hero]) .content-panel:first-child > .sl-container {
+  background: transparent;
+}
+
+/* The benchmark tabs sit on the bench above the sheet, on their own solid strip. */
+.benchmark-nav {
+  background: var(--color-pantone-lighter);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06), 0 6px 14px -8px rgba(17, 24, 39, 0.18);
+}
+:root[data-theme='dark'] .benchmark-nav {
+  background: var(--color-neutral-900);
+}
+
+/* The sheet. */
+.lab-bench {
+  position: relative;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  background-color: var(--color-pantone-lighter);
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 12rem),
+    linear-gradient(to right, rgba(60, 137, 198, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(60, 137, 198, 0.1) 1px, transparent 1px),
+    linear-gradient(to right, rgba(60, 137, 198, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(60, 137, 198, 0.045) 1px, transparent 1px);
+  background-size: 100% 100%, 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 1px rgba(17, 24, 39, 0.06),
+    0 3px 6px -2px rgba(17, 24, 39, 0.08),
+    0 16px 32px -8px rgba(17, 24, 39, 0.14),
+    0 40px 72px -24px rgba(17, 24, 39, 0.2);
+}
+.content-panel .sl-container > .lab-bench {
+  margin-top: 1.25rem;
+}
+:root[data-theme='dark'] .lab-bench {
+  border-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--color-neutral-900);
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 12rem),
+    linear-gradient(to right, rgba(90, 166, 219, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(90, 166, 219, 0.09) 1px, transparent 1px),
+    linear-gradient(to right, rgba(90, 166, 219, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(90, 166, 219, 0.04) 1px, transparent 1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 1px rgba(0, 0, 0, 0.5),
+    0 4px 8px -2px rgba(0, 0, 0, 0.5),
+    0 18px 36px -8px rgba(0, 0, 0, 0.6),
+    0 44px 80px -24px rgba(0, 0, 0, 0.75);
+}
+.lab-sheet {
+  padding: 2rem 1rem 1.5rem;
+}
+@media (min-width: 48rem) {
+  .lab-sheet {
+    padding: 4.5rem 3.5rem 3rem;
+  }
+}
+
+/* Tape strips at the top corners, slightly crooked, with torn ends. The outer span casts
+   the shadow; the inner span carries the torn shape (clip-path would clip its own shadow). */
+.tape {
+  position: absolute;
+  top: -0.8rem;
+  z-index: 1;
+  width: 5.5rem;
+  height: 1.6rem;
+  filter: drop-shadow(0 1px 1.5px rgba(17, 24, 39, 0.22));
+  pointer-events: none;
+}
+.tape > span {
+  display: block;
+  height: 100%;
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 45%),
+    rgba(224, 222, 217, 0.88);
+  clip-path: polygon(0 8%, 4% 0, 8% 10%, 12% 0, 88% 0, 92% 12%, 96% 0, 100% 10%, 100% 92%, 96% 100%, 92% 88%, 88% 100%, 12% 100%, 8% 90%, 4% 100%, 0 90%);
+}
+.tape-left {
+  left: 1.5rem;
+  transform: rotate(-4deg);
+}
+.tape-right {
+  right: 1.5rem;
+  transform: rotate(3deg);
+}
+:root[data-theme='dark'] .tape {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+:root[data-theme='dark'] .tape > span {
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 45%),
+    rgba(107, 114, 128, 0.42);
+}
+@media (min-width: 48rem) {
+  .tape {
+    top: -1rem;
+    width: 7.5rem;
+    height: 2rem;
+  }
+  .tape-left {
+    left: 3rem;
+  }
+  .tape-right {
+    right: 3rem;
+  }
+}
+
+/* The footer sits on the same bench with the same paper and lift, but no grid or tape:
+   its text needs a plain surface. */
+.reader-footer {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  background: var(--color-pantone-lighter);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 1px rgba(17, 24, 39, 0.06),
+    0 3px 6px -2px rgba(17, 24, 39, 0.08),
+    0 16px 32px -8px rgba(17, 24, 39, 0.14);
+}
+:root[data-theme='dark'] .reader-footer {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--color-neutral-900);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 1px rgba(0, 0, 0, 0.5),
+    0 4px 8px -2px rgba(0, 0, 0, 0.5),
+    0 18px 36px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* Page header: part of the sheet, not a separate panel. */
+.lab-sheet .page-intro,
+:root[data-has-hero] .lab-sheet .page-intro.hero {
+  margin: 0 0 clamp(2.5rem, 6vw, 4.5rem);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  background-image: none;
+}
+.lab-sheet .page-intro h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* Cards on the sheet: white (light) or #1f2937 (dark), rounded, lightly raised. */
+.intro-visual,
+.frontier-explorer,
+.benchmark-card,
+.source-card,
+.sl-markdown-content details,
+.evaluation-summary > div,
+.performance-summary > div,
+.verification-summary > div,
+.relationship-flow li,
+.local-boundary,
+.architecture-flow {
+  border: 1px solid var(--reader-line);
+  border-radius: 0.75rem;
+  background: var(--reader-paper);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05), 0 1px 3px rgba(17, 24, 39, 0.06);
+}
+:root[data-theme='dark'] :is(
+    .intro-visual,
+    .frontier-explorer,
+    .benchmark-card,
+    .source-card,
+    .sl-markdown-content details,
+    .evaluation-summary > div,
+    .performance-summary > div,
+    .verification-summary > div,
+    .relationship-flow li,
+    .local-boundary,
+    .architecture-flow
+  ) {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.evaluation-summary > .primary-metric,
+.performance-summary > .primary-metric {
+  border-top: 3px solid var(--reader-rule);
+}
+.explorer-filter select {
+  border-color: var(--color-neutral-500);
+}
+:root[data-theme='dark'] .explorer-filter select {
+  border-color: var(--color-neutral-400);
+}
+
+/* Notepad pages: reading text never sits on the grid. Each block of text is a solid
+   notepad page in the sheet's own paper color, with a notebook margin rule and a soft
+   shadow, so the grid shows only around the pages. The margin rule is blue so it never
+   reads as a second red line beside the signal trace. */
+.lab-sheet .page-intro .intro-copy,
+.lab-sheet .reader-section,
+.lab-sheet .reader-section.cool,
+.lab-sheet .reader-section.warm,
+.lab-sheet .document-sheet > :is(p, ul, ol) {
+  position: relative;
+  padding: var(--notepad-pad) var(--notepad-pad) var(--notepad-pad) calc(var(--notepad-pad) + 0.5rem);
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  border-left: 3px double rgba(60, 137, 198, 0.55);
+  border-radius: 0.25rem;
+  background: var(--color-pantone-lighter);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06), 0 8px 18px -10px rgba(17, 24, 39, 0.2);
+}
+:root[data-theme='dark'] :is(
+    .lab-sheet .page-intro .intro-copy,
+    .lab-sheet .reader-section,
+    .lab-sheet .document-sheet > :is(p, ul, ol)
+  ) {
+  border-color: rgba(255, 255, 255, 0.08);
+  border-left-color: rgba(90, 166, 219, 0.55);
+  background: var(--color-neutral-900);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 20px -10px rgba(0, 0, 0, 0.7);
+}
+.lab-sheet .reader-section {
+  margin-block: 0 clamp(2.5rem, 6vw, 4.5rem) !important;
+}
+.lab-sheet .document-sheet > :is(p, ul, ol) {
+  max-width: none;
+  margin-block: 0 clamp(2rem, 5vw, 3rem);
+}
+.lab-sheet .page-intro {
+  align-items: stretch;
+}
+.lab-sheet .page-intro .intro-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.lab-sheet .document-sheet {
+  padding: 0;
+  background: transparent;
+}
+.lab-sheet .document-sheet:has(> [data-step]) {
+  padding-left: var(--sheet-gutter);
+}
+.lab-sheet .document-sheet > .reader-section:last-child {
+  margin-bottom: 0 !important;
+}
+.document-sheet h2::after {
+  content: none;
+}
+.lab-sheet .sl-markdown-content h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* The signal trace overlay (NotebookTrace) runs down the gutter to the last test point. */
+.trace-host {
+  position: relative;
+}
+.notebook-trace {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: var(--testpoint-size);
+  pointer-events: none;
+}
+.notebook-trace-line,
+.notebook-trace-fill {
+  position: absolute;
+  top: 0;
+  left: calc(var(--testpoint-size) / 2 - 1px);
+  width: 2px;
+  transform-origin: top;
+}
+.notebook-trace-line {
+  background: rgba(220, 20, 60, 0.25);
+}
+.notebook-trace-fill {
+  background: var(--color-brand-red);
+  box-shadow: 0 0 6px var(--color-brand-red);
+}
+
+/* The test point is the section's first child; the heading after it starts the page. */
+.lab-sheet .reader-section > .testpoint + * {
+  margin-top: 0;
+}
+
+/* Test points: numbered nodes on the trace. NotebookTrace sets data-state as you scroll. */
+.testpoint {
+  position: absolute;
+  top: var(--notepad-pad);
+  left: calc(-1 * var(--sheet-gutter) - 3px); /* outside the 3px margin rule */
+  display: grid;
+  place-items: center;
+  width: var(--testpoint-size);
+  height: var(--testpoint-size);
+  margin: 0 !important;
+  border: 3px solid var(--color-brand-red);
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--color-neutral-900);
+  font: 700 0.6875rem/1 var(--font-mono);
+  /* Colors switch instantly: a fade passes through gray-on-gray and fails contrast mid-way. */
+  transition: box-shadow 300ms;
+}
+@media (min-width: 48rem) {
+  .testpoint {
+    border-width: 4px;
+    font-size: 0.875rem;
+  }
+}
+:root[data-theme='dark'] .testpoint {
+  background: var(--color-neutral-900);
+  color: #ffffff;
+}
+.testpoint[data-state='active'] {
+  background: var(--color-neutral-900);
+  color: #ffffff;
+  box-shadow: 0 0 0 6px rgba(220, 20, 60, 0.18);
+}
+.testpoint[data-state='passed'] {
+  background: #fde8ec;
+}
+:root[data-theme='dark'] .testpoint[data-state='passed'] {
+  background: #450a15;
+}
+:root[data-theme='dark'] .testpoint[data-state='active'] {
+  background: #ffffff;
+  color: var(--color-neutral-900);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .testpoint[data-state='active']::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    border: 2px solid rgba(220, 20, 60, 0.45);
+    animation: testpoint-breathe 2.4s ease-in-out infinite;
+  }
+}
+@keyframes testpoint-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .testpoint {
+    transition: none;
+  }
+}
+
+/* Small red labels use darker tints for contrast; #dc143c stays for large type and graphics. */
+.kicker {
+  margin: 0;
+  color: #b8102f;
+  font: 600 0.75rem/1.4 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+:root[data-theme='dark'] .kicker {
+  color: #ff6b84;
+}
+
+/* The journey reads as test points on one trace (desktop). Labels sit below the dots,
+   so the trace only ever runs between dots. */
+@media (min-width: 48rem) {
+  .journey {
+    position: relative;
+  }
+  .journey::before {
+    content: '';
+    position: absolute;
+    top: 1.125rem;
+    left: 1.125rem;
+    /* End at the last dot: one column (of four, 1rem gaps) minus the dot radius. */
+    right: calc((100% - 3rem) / 4 - 1.125rem);
+    height: 2px;
+    background: rgba(220, 20, 60, 0.3);
+  }
+  .journey-step {
+    position: relative;
+  }
+}
+/* Wide delegation wires: a line with an arrowhead and a traveling pulse. */
+.sig-hwire {
+  position: relative;
+  height: 2px;
+  background: #374151;
+  color: #374151;
+}
+[data-theme='dark'] .sig-hwire {
+  background: #9ca3af;
+  color: #9ca3af;
+}
+.sig-hwire::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+.sig-hwire-right::after {
+  right: 0;
+  border-left: 9px solid currentColor;
+}
+.sig-hwire-left::after {
+  left: 0;
+  border-right: 9px solid currentColor;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sig-hwire::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    width: 16px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--pulse);
+    animation: sig-pulse-right 3.2s linear infinite;
+  }
+  .sig-hwire-left::before {
+    animation-name: sig-pulse-left;
+    animation-delay: 1.6s;
+  }
+}
+@keyframes sig-pulse-right {
+  from { left: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  to { left: calc(100% - 16px); opacity: 0; }
+}
+@keyframes sig-pulse-left {
+  from { left: calc(100% - 16px); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  to { left: 0; opacity: 0; }
+}
+/* Phone delegation wires: a line with an arrowhead and a pulse that travels it. */
+.sig-wire {
+  position: relative;
+  width: 2px;
+  min-height: 5rem;
+  margin-left: 0.75rem;
+  background: #374151;
+  flex-shrink: 0;
+}
+[data-theme='dark'] .sig-wire {
+  background: #9ca3af;
+}
+.sig-wire::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+.sig-wire-down::after {
+  bottom: 0;
+  border-top: 9px solid currentColor;
+}
+.sig-wire-up::after {
+  top: 0;
+  border-bottom: 9px solid currentColor;
+}
+.sig-wire {
+  color: #374151;
+}
+[data-theme='dark'] .sig-wire {
+  color: #9ca3af;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sig-wire::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    width: 4px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--pulse);
+    animation: sig-pulse-down 3.2s linear infinite;
+  }
+  .sig-wire-up::before {
+    animation-name: sig-pulse-up;
+    animation-delay: 1.6s;
+  }
+}
+@keyframes sig-pulse-down {
+  from { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  to { top: calc(100% - 14px); opacity: 0; }
+}
+@keyframes sig-pulse-up {
+  from { top: calc(100% - 14px); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  to { top: 0; opacity: 0; }
+}
+
+/* Decorative scope screen; it carries no data. */
+.scope {
+  position: relative;
+  border-radius: 0.5rem;
+  background-color: #0a0a0a;
+  background-image:
+    linear-gradient(to right, rgba(124, 179, 221, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(124, 179, 221, 0.14) 1px, transparent 1px);
+  background-size: 24px 16px;
+  padding: 0.5rem;
+  overflow: hidden;
+}
+.scope-trace {
+  fill: none;
+  stroke: #5aa6db;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.scope-glow {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scope-trace {
+    opacity: 0.4;
+  }
+  .scope-glow {
+    display: inline;
+    fill: none;
+    stroke: #5aa6db;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 18 82;
+    filter: drop-shadow(0 0 3px #5aa6db);
+    animation: scope-sweep 4s linear infinite;
+  }
+}
+@keyframes scope-sweep {
+  from {
+    stroke-dashoffset: 18;
+  }
+  to {
+    stroke-dashoffset: -82;
+  }
+}
+
+/* Explorer scale: share the rows' grid so each label sits on its point of the track.
+   Percentage margins resolve against the track column, and the stable gutter mirrors
+   the list's scrollbar. */
+.explorer-scale {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1.35fr) minmax(10rem, 3fr) 4.3rem 7.4rem;
+  gap: 0.8rem;
+  margin: 0 0 0.45rem;
+  padding: 0 calc(0.4rem + 0.65rem + 1px) 0 calc(0.65rem + 1px);
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+.explorer-scale span,
+.explorer-scale span:not(:first-child) {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.explorer-scale span:nth-child(2) { margin-left: 25%; }
+.explorer-scale span:nth-child(3) { margin-left: 50%; }
+.explorer-scale span:nth-child(4) { margin-left: 75%; }
+.explorer-scale span:nth-child(5) { margin-left: 100%; }
+@media (max-width: 70rem) {
+  .explorer-scale {
+    grid-template-columns: minmax(8rem, 1.2fr) minmax(8rem, 2fr) 4rem;
+  }
+}
+@media (max-width: 49.99rem) {
+  .explorer-scale {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .explorer-scale span,
+  .explorer-scale span:not(:first-child) {
+    grid-column: 1;
+  }
+}
+
+/* On phones the operations diagram needs the full width, but its heading still needs paper:
+   keep the notepad page with a tighter padding instead of removing it. */
+@media (max-width: 49.99rem) {
+  .lab-sheet .sl-markdown-content .reader-section:has(> .system-boundary) {
+    padding: var(--notepad-pad) 0.75rem 0.75rem calc(0.75rem + 0.25rem);
+    background: var(--color-pantone-lighter);
+  }
+  :root[data-theme='dark'] .lab-sheet .sl-markdown-content .reader-section:has(> .system-boundary) {
+    background: var(--color-neutral-900);
+  }
+}
+
+/* Copy blocks inside the notepad pages. */
+.lab-sheet .kicker + * {
+  margin-top: 0.5rem !important;
+}
+.lab-sheet .page-intro h1 .title-accent {
+  color: var(--color-brand-blue-dark);
+}
+:root[data-theme='dark'] .lab-sheet .page-intro h1 .title-accent {
+  color: var(--color-brand-blue-light);
+}
+.lab-sheet .page-intro .intro-copy .kicker {
+  margin-bottom: 1rem;
+}
+
+/* The overview's title is a full question, so its column gets more room. */
+@media (min-width: 50rem) {
+  .lab-sheet .page-intro.home-intro {
+    grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+  }
+}
+.lab-sheet .page-intro.home-intro h1 {
+  font-size: clamp(2.1rem, 3.6vw, 3.3rem);
+}
+
+/* Overview readout: one measured result per row so each percentage has room. */
+.lab-sheet .home-intro .intro-study {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lab-sheet .home-intro .intro-study strong {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+.lab-sheet .home-intro .intro-study .study-subject strong {
+  font-size: clamp(1.35rem, 2vw, 1.6rem);
+}
+
+/* Overview journey: the page's test points in order, as links. */
+.lab-sheet .journey-nav {
+  grid-column: 1 / -1;
+  padding: 1.25rem var(--notepad-pad);
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  border-radius: 0.25rem;
+  background: var(--color-pantone-lighter);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06), 0 8px 18px -10px rgba(17, 24, 39, 0.2);
+}
+:root[data-theme='dark'] .lab-sheet .journey-nav {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--color-neutral-900);
+}
+.journey {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.journey-step {
+  position: relative;
+  margin: 0 !important;
+}
+.journey-step a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  color: var(--color-neutral-700);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+:root[data-theme='dark'] .journey-step a {
+  color: var(--color-neutral-400);
+}
+.journey-step a:hover .journey-dot,
+.journey-step a:focus-visible .journey-dot {
+  background: var(--color-brand-red);
+  color: #ffffff;
+}
+.journey-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 2px solid var(--color-brand-red);
+  border-radius: 9999px;
+  background: var(--color-pantone-lighter);
+  color: var(--color-neutral-900);
+  font: 700 0.6875rem/1 var(--font-mono);
+  transition: background-color 200ms, color 200ms;
+}
+:root[data-theme='dark'] .journey-dot {
+  background: var(--color-neutral-900);
+  color: #ffffff;
+}
+@media (min-width: 48rem) {
+  .journey {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .journey-step a {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  /* Steps are centered in their columns; the trace runs from the first dot's center to
+     the last dot's center: half a column (of four, 1rem gaps) in from each side. */
+  .journey::before {
+    content: '';
+    position: absolute;
+    top: 1.125rem;
+    left: calc((100% - 3rem) / 8);
+    right: calc((100% - 3rem) / 8);
+    height: 2px;
+    background: rgba(220, 20, 60, 0.3);
+  }
+}
+
+/* Labels use a tight line-height so the stepper's padding looks equal above and below. */
+.journey-step a > span:last-child {
+  line-height: 1.2;
+}
+
+/* Cards inside notepad pages: the idea, what's next, and the two result channels. */
+.idea-card,
+.next-card,
+.result-card {
+  margin-top: 1.75rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--reader-line);
+  border-radius: 0.75rem;
+  background: var(--reader-paper);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05), 0 1px 3px rgba(17, 24, 39, 0.06);
+}
+:root[data-theme='dark'] :is(.idea-card, .next-card, .result-card) {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.idea-card h3 {
+  margin-top: 0.5rem;
+}
+.idea-card > p,
+.next-card > p {
+  max-width: 76ch;
+}
+.study-caveat {
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 3px solid var(--color-brand-blue);
+  color: var(--color-neutral-700);
+}
+:root[data-theme='dark'] .study-caveat {
+  color: var(--color-neutral-400);
+}
+
+/* Delegation diagram: HTML at every width so labels stay readable; wires are CSS. */
+.delegation {
+  margin: 1.5rem 0;
+  padding: 0;
+}
+@media (min-width: 64rem) {
+  .delegation {
+    padding: 1.5rem;
+    border: 1px dashed var(--color-pantone-deeper);
+    border-radius: 0.5rem;
+  }
+  :root[data-theme='dark'] .delegation {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+.delegation-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+.delegation .chip {
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-neutral-900);
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+:root[data-theme='dark'] .delegation .chip {
+  border-color: var(--color-neutral-400);
+  background: var(--color-neutral-800);
+}
+.delegation p {
+  margin: 0;
+}
+.chip-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-neutral-600);
+  font: 0.75rem/1.4 var(--font-mono);
+}
+.chip-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+}
+.chip-dot.paid {
+  background: var(--color-brand-blue);
+}
+.chip-dot.local {
+  background: var(--color-brand-red);
+}
+.chip-name {
+  margin-top: 0.25rem !important;
+  color: var(--color-neutral-900);
+  font: 600 1.125rem/1.4 var(--font-display);
+}
+.chip-sub {
+  color: var(--color-neutral-600);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+:root[data-theme='dark'] :is(.chip-tag, .chip-sub) {
+  color: var(--color-neutral-400);
+}
+:root[data-theme='dark'] .chip-name {
+  color: #ffffff;
+}
+/* Starlight's markdown flow margin would push every later grid item down 16px. */
+.sl-markdown-content :is(.delegation-grid, .wires-v, .wire-v, .wires-h, .wire-h, .explorer-detail dl) > * {
+  margin-top: 0;
+}
+.wires-v {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.wire-v {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+/* Stacked diagram: the two wires mirror each other around the center line. */
+.wire-v:first-child {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.wire-v .sig-wire {
+  margin-left: 0;
+}
+.wire-v p,
+.wire-h p {
+  align-self: center;
+  color: var(--color-neutral-700);
+  font: 0.75rem/1.4 var(--font-mono);
+}
+.wire-h p {
+  text-align: center;
+}
+:root[data-theme='dark'] :is(.wire-v p, .wire-h p) {
+  color: var(--color-neutral-400);
+}
+.wires-h {
+  display: none;
+}
+.wire-h {
+  display: grid;
+  gap: 0.375rem;
+}
+@media (min-width: 64rem) {
+  .delegation-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(9rem, 1.1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1rem;
+  }
+  /* Both chips share one height; the wires sit centered between them. */
+  .delegation .chip {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .wires-h {
+    align-self: center;
+  }
+  .wires-v {
+    display: none;
+  }
+  .wires-h {
+    display: grid;
+    gap: 1.5rem;
+  }
+}
+
+/* Result channels: a readout per test, with the same decorative scope on each. */
+.result-cards {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+@media (min-width: 48rem) {
+  .result-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+.result-card {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+}
+.result-card > * {
+  margin: 0;
+}
+.result-channel {
+  color: var(--color-neutral-600);
+  font: 0.6875rem/1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-theme='dark'] .result-channel {
+  color: var(--color-neutral-400);
+}
+.result-card h3 {
+  margin-top: 0.25rem;
+  font-size: 1.25rem;
+}
+.result-card .scope {
+  margin-top: 1rem;
+}
+.result-card .scope svg {
+  display: block;
+  width: 100%;
+  height: 4rem;
+}
+.result-value {
+  margin-top: 1.25rem !important;
+  color: var(--color-neutral-900);
+  font: 600 clamp(2.5rem, 6vw, 3rem)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-theme='dark'] .result-value {
+  color: #ffffff;
+}
+.result-plain {
+  margin-top: 0.25rem !important;
+  color: var(--color-brand-blue-dark);
+  font: 600 1.125rem/1.4 var(--font-display);
+}
+:root[data-theme='dark'] .result-plain {
+  color: var(--color-brand-blue-light);
+}
+.result-card .result-plain + p {
+  margin-top: 0.75rem;
+}
+.result-card p:last-child {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+/* Practical readouts: meter-style facts. */
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+}
+@media (min-width: 80rem) {
+  .readouts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 29.99rem) {
+  .readouts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.readouts > div {
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--reader-line);
+  border-radius: 0.5rem;
+  background: var(--reader-paper);
+}
+.readouts dt {
+  color: var(--color-neutral-600);
+  font: 0.6875rem/1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sl-markdown-content .readouts dd {
+  margin: 0.375rem 0 0;
+}
+/* Starlight indents every markdown dd; the bench's lists align values with their labels. */
+.sl-markdown-content dl dd {
+  padding-inline-start: 0;
+}
+.readouts strong,
+.readouts span {
+  display: block;
+}
+.readouts strong {
+  color: var(--color-neutral-900);
+  font: 600 1.125rem/1.3 var(--font-mono);
+}
+.readouts span {
+  margin-top: 0.25rem;
+  color: var(--color-neutral-600);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+:root[data-theme='dark'] :is(.readouts dt, .readouts span) {
+  color: var(--color-neutral-400);
+}
+:root[data-theme='dark'] .readouts strong {
+  color: #ffffff;
+}
+.context-note {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--color-brand-blue);
+  border-radius: 0.25rem;
+  background: var(--reader-paper);
+}
+
+/* The SWE-bench agent loop sits inside a notepad page: two columns keep words whole. */
+@media (min-width: 50rem) {
+  .lab-sheet .agent-loop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Long values such as provenance hashes wrap instead of widening the page. */
+.evaluation-metadata dd,
+.evaluation-metadata code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Small phones: a slimmer gutter and margins keep the reading column usable at 320px. */
+@media (max-width: 29.99rem) {
+  :root {
+    --sheet-gutter: 2.25rem;
+    --testpoint-size: 1.75rem;
+    --notepad-pad: 1rem;
+  }
+  .lab-sheet {
+    padding-inline: 0.625rem;
+  }
+  .lab-sheet .page-intro .intro-copy,
+  .lab-sheet .reader-section,
+  .lab-sheet .document-sheet > :is(p, ul, ol) {
+    padding-left: calc(var(--notepad-pad) + 0.25rem);
+  }
+  .lab-sheet .sl-markdown-content .reader-section:has(> .system-boundary) {
+    padding-inline: 0.5rem;
+  }
+  /* Long section titles plus the anchor icon fit a 320px screen. */
+  .lab-sheet .sl-markdown-content h2 {
+    font-size: 1.375rem;
+  }
+  .wires-v {
+    gap: 1rem;
+  }
+  .wire-v {
+    gap: 0.375rem;
+  }
+  .wire-v p {
+    min-width: 0;
+    font-size: 0.6875rem;
+  }
+}

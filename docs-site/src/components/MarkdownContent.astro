@@ -1,0 +1,18 @@
+---
+// Every page is a sheet of engineering paper taped to the lab bench. The sheet holds the
+// page header and the content; the signal trace is an overlay beside the content's test points.
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+import SheetHeader from './SheetHeader.astro';
+import NotebookTrace from './NotebookTrace';
+---
+<div class="lab-bench">
+  <span class="tape tape-left" aria-hidden="true"><span></span></span>
+  <span class="tape tape-right" aria-hidden="true"><span></span></span>
+  <div class="lab-sheet">
+    <SheetHeader />
+    <div class="trace-host">
+      <NotebookTrace client:load />
+      <Default><slot /></Default>
+    </div>
+  </div>
+</div>

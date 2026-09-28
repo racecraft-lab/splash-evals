@@ -1,16 +1,34 @@
 # GPQA Diamond result
 
-<div class="finding" role="region" aria-label="Primary GPQA Diamond finding">
+<section class="reader-section cool finding" aria-label="Primary GPQA Diamond finding">
+
+<p class="kicker">The headline</p>
 
 ## Splash scored 54.55% on GPQA Diamond
 
-The local Splash / Qwen3.8 deployment completed **198 of 198** questions with **0 request errors**. This is a reviewed capability result for this exact local condition.
+The local Splash / Qwen3.8 setup finished **198 of 198** questions with **0 request errors** and answered just over half correctly. This is a reviewed result for this exact local setup.
 
-</div>
+</section>
+
+<section class="reader-section cool" aria-label="Why this test matters for a helper">
+
+<p class="kicker">Why this test</p>
+
+## Why it matters for a helper
+
+A helper that reads code and documents for you has to reason carefully, not just match words. GPQA Diamond checks that skill. Experts in biology, chemistry, and physics wrote its 198 multiple-choice questions to be hard to answer with a quick web search.
+
+A result just over half tells us the model can reason through hard material. It does not make it an expert on the hardest problems, and it says nothing about coding. The [coding test](swe-bench-verified.md) covers that.
+
+</section>
 
 <section class="reader-section cool" aria-label="GPQA model card summary">
 
+<p class="kicker">The result</p>
+
 ## Evaluation card
+
+The key facts of the run on one card. Open the details for the exact settings.
 
 <dl class="evaluation-summary">
   <div><dt>System tested</dt><dd><strong>Splash / Qwen3.8</strong><span>Local LM Studio alias: <code>racecraft-splash-local</code></span></dd></div>
@@ -38,9 +56,11 @@ The local Splash / Qwen3.8 deployment completed **198 of 198** questions with **
 
 <section class="reader-section warm" aria-label="GPQA benchmark comparison">
 
+<p class="kicker">Context</p>
+
 ## Benchmark comparison
 
-The explorer below is generated from the reviewed public result and source-verified records in `references/frontier/`. It shows one source-labeled observation per record. Different prompts, reasoning budgets, sampling, answer extraction, trial counts, dataset revisions, or item manifests mean the external values are **directional context**, not a protocol-matched ranking or exact gap.
+How do cloud models do on the same test? The explorer below shows every published score we checked, with its source. Those scores came from different prompts, thinking budgets, settings, and scoring, so they are **directional context**: useful to show scale, not a ranking or an exact gap. Our row stays pinned at the top.
 
 <!-- benchmark-explorer:gpqa-diamond -->
 
@@ -50,9 +70,11 @@ The explorer below is generated from the reviewed public result and source-verif
 
 <section class="reader-section cool" aria-label="GPQA runtime performance">
 
+<p class="kicker">Speed</p>
+
 ## Runtime performance
 
-Performance describes this local run, not model quality.
+How fast the test machine worked through the test. Speed describes this run, not how smart the model is.
 
 <dl class="performance-summary">
   <div><dt>Wall-clock time</dt><dd><strong>2 h 25 m 16 s</strong><span>Complete 198-question run</span></dd></div>
@@ -78,13 +100,17 @@ Time to first token and time per output token were unavailable from this compati
 
 <section class="reader-section warm" aria-label="GPQA run record and limitations">
 
+<p class="kicker">Limits</p>
+
 ## Run record and limitations
 
-- **Public, not private held-out:** this run cannot rule out training-data contamination.
-- **Output cap:** 81 of 198 responses reached the 4,096-token output ceiling.
-- **One benchmark:** this result does not measure coding, tool use, long context, safety, or general reliability.
-- **No protocol-matched frontier delta:** external records stay directional until every material protocol field aligns.
-- **Public evidence boundary:** prompts, responses, reasoning, local paths, and runtime identifiers remain outside Git.
+What this result cannot tell you:
+
+- **Public test:** the questions are public, so the model may have seen some of them during training.
+- **Output cap:** 81 of 198 answers hit the 4,096-token length limit, which may have cut some reasoning short.
+- **One skill:** this test does not measure coding, tool use, long documents, safety, or everyday reliability.
+- **No protocol-matched frontier delta:** we do not report an exact gap to cloud models, because their tests were run differently.
+- **Private evidence stays private:** prompts, answers, reasoning, local paths, and machine details stay out of the public repository.
 
 [Inspect the reviewed public result and provenance hashes](https://github.com/racecraft-lab/splash-evals/blob/main/results/public/gpqa-diamond-splash-local-2026-09-20.json)
 

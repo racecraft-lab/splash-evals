@@ -1,45 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 const ROUTES = [
-  ['/', 'How well does Splash work on a local computer?'],
+  ['/', 'Can a local AI helper stretch your Claude Code and Codex plans?'],
   ['/dashboard/', 'Results'],
   ['/dashboard/gpqa-diamond/', 'GPQA Diamond result'],
   ['/dashboard/swe-bench-verified/', 'SWE-bench Verified'],
+  ['/what-it-means/', 'What it means'],
   ['/methodology/', 'How we tested'],
   ['/operations/', 'Run it yourself'],
   ['/sources/', 'Sources and evidence'],
-];
-
-const RETIRED_ROUTES = [
-  ['/benchmark-tasks/', '/methodology/#gpqa-diamond-method', 'GPQA Diamond method'],
-  [
-    '/local-pilot-results/',
-    '/methodology/#the-evaluated-condition',
-    'The evaluated condition',
-  ],
-  ['/architecture/', '/operations/#local-system-boundary', 'Local system boundary'],
-  ['/privacy/', '/methodology/#privacy-and-public-evidence', 'Privacy and public evidence'],
-  [
-    '/capability-readiness/',
-    '/dashboard/gpqa-diamond/#run-record-and-limitations',
-    'Run record and limitations',
-  ],
-  [
-    '/historical-frontier-comparison/',
-    '/dashboard/gpqa-diamond/#benchmark-comparison',
-    'Benchmark comparison',
-  ],
-  [
-    '/frontier-catalog/',
-    '/sources/#how-the-evidence-catalog-works',
-    'How the evidence catalog works',
-  ],
-  [
-    '/frontier-verification/',
-    '/sources/#how-the-numbers-were-checked',
-    'How the numbers were checked',
-  ],
-  ['/glossary/', '/#key-terms', 'Key terms'],
 ];
 
 const routeUrl = (path) => (path === '/' ? './' : `.${path}`);
@@ -113,8 +82,10 @@ test('overview leads readers through the results hub to the measured GPQA result
   await expect(study).toContainText('Splash');
   await expect(study).toContainText('Qwen3.8-27B');
   await expect(study).toContainText('54.55%');
-  await expect(study).toContainText('20');
-  await expect(study).toContainText('directional');
+  await expect(study).toContainText('72.00%');
+  // Cloud-model scores are framed as directional context, never a ranking.
+  await expect(page.locator('.context-note')).toContainText('directional context');
+  await expect(page.locator('.context-note')).toContainText('not a head-to-head race');
   const relationship = page.locator('.relationship-flow');
   await expect(relationship.getByRole('listitem')).toHaveCount(4);
   await expect(relationship).toContainText('Qwen Team');
@@ -398,29 +369,6 @@ for (const [path, recordRows] of [
   });
 }
 
-test('legacy GPQA dashboard deep links retain a discoverable destination and unchanged values', async ({
-  page,
-}) => {
-  await page.goto(routeUrl('/dashboard/#benchmark-comparison'));
-  const compatibility = page.locator('#benchmark-comparison');
-  await expect(compatibility).toHaveCount(1);
-  await compatibility.locator('xpath=following-sibling::a[1]').click();
-  await expect(page).toHaveURL(/\/dashboard\/gpqa-diamond\/#benchmark-comparison$/);
-  await expect(page.getByText('54.55%', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('198 / 198', { exact: true })).toBeVisible();
-  await expect(page.getByText('64.13 tokens/s', { exact: true })).toBeVisible();
-});
-
-test('legacy GPQA runtime link resolves to the runtime section on the detail page', async ({ page }) => {
-  await page.goto(routeUrl('/dashboard/#runtime-performance'));
-  const compatibility = page.locator('#runtime-performance');
-  await expect(compatibility).toHaveCount(1);
-  await compatibility.locator('xpath=following-sibling::a[1]').click();
-  await expect(page).toHaveURL(/\/dashboard\/gpqa-diamond\/#runtime-performance$/);
-  await expect(page.getByRole('heading', { name: 'Runtime performance', exact: true })).toBeVisible();
-  await expect(page.getByText('64.13 tokens/s', { exact: true })).toBeVisible();
-});
-
 test('benchmark hub cards do not collide at desktop, tablet, or mobile widths', async ({ page }) => {
   await page.goto(routeUrl('/dashboard/'));
   for (const viewport of [
@@ -468,7 +416,7 @@ test('operations explains the local model alias and trust boundary without a mai
   await expect(diagram.locator('.evidence-destination')).toHaveCount(3);
   await diagram.locator('.boundary-disclosure summary').click();
   await expect(diagram).toContainText('Allowlist + review gate');
-  await expect(diagram).toContainText('has no route back to this Mac');
+  await expect(diagram).toContainText('has no route back to the test machine');
   await expect(diagram).toContainText(
     'selected-instance check determines whether execution qualifies as local',
   );
@@ -552,16 +500,7 @@ test('sources present evidence as a concise map instead of duplicated score tabl
   await expect(page.getByRole('link', { name: 'Review the checked-in verification record' })).toBeVisible();
 });
 
-for (const [retired, destination, heading] of RETIRED_ROUTES) {
-  test(`${retired} redirects to retained reader content`, async ({ page }) => {
-    await page.goto(routeUrl(retired));
-    const escapedDestination = destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    await expect(page).toHaveURL(new RegExp(`/splash-evals${escapedDestination}$`));
-    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
-  });
-}
-
-test('light and dark preserve SVG lockups, lab texture, section rhythm, and theme choice', async ({
+test('light and dark preserve SVG lockups, lab texture, section test points, and theme choice', async ({
   page,
 }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
@@ -583,10 +522,20 @@ test('light and dark preserve SVG lockups, lab texture, section rhythm, and them
       'background-size',
       '40px 40px, 40px 40px, 4px 4px',
     );
-    const surfaces = await page
-      .locator('.reader-section')
-      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
-    expect(new Set(surfaces).size).toBe(3);
+    // Section rhythm: each reader section is a numbered test point on its own solid notepad page.
+    const sections = await page.locator('.reader-section').evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        point: node.querySelector(':scope > [data-testpoint]')?.textContent,
+        background: getComputedStyle(node).backgroundColor,
+        image: getComputedStyle(node).backgroundImage,
+      })),
+    );
+    expect(sections.length).toBeGreaterThanOrEqual(3);
+    sections.forEach((section, index) => {
+      expect(section.point).toBe(String(index + 1).padStart(2, '0'));
+      expect(section.background).not.toBe('rgba(0, 0, 0, 0)');
+      expect(section.image).toBe('none');
+    });
     if (process.env.DOCS_SITE_CAPTURE === '1') {
       await page.screenshot({
         path: test.info().outputPath(`home-${theme}.png`),
@@ -744,4 +693,33 @@ test('reduced motion disables link transitions without hiding result content', a
   await page.clock.runFor(32_000);
   await expect(diagram.locator('[data-flow-status]')).toContainText('Sequence complete');
   await expect(diagram.locator('[data-flow-trigger]').nth(3)).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('lab-bench motion stops under reduced motion and the trace follows scroll otherwise', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('./');
+  await expect(page.locator('.scope-glow').first()).toHaveCSS('display', 'none');
+  await expect(page.locator('.scope-trace').first()).toHaveCSS('opacity', '1');
+  const wirePulse = await page
+    .locator('.sig-wire, .sig-hwire')
+    .evaluateAll((wires) => wires.map((wire) => getComputedStyle(wire, '::before').content));
+  expect(wirePulse.every((content) => content === 'none')).toBe(true);
+  const fill = page.locator('.notebook-trace-fill');
+  await expect(fill).toHaveCSS('opacity', '0.6');
+  await expect(page.getByText('72.00%', { exact: true }).first()).toBeVisible();
+
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.reload();
+  await expect(page.locator('.scope-glow').first()).toHaveCSS('animation-name', 'scope-sweep');
+  const points = page.locator('[data-testpoint]');
+  const last = (await points.count()) - 1;
+  await points.nth(last).evaluate((point) => {
+    document.documentElement.style.scrollBehavior = 'auto';
+    window.scrollTo(0, point.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.4);
+  });
+  await expect(points.nth(last)).toHaveAttribute('data-state', 'active');
+  await expect(points.first()).toHaveAttribute('data-state', 'passed');
+  await expect
+    .poll(() => fill.evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).d))
+    .toBeGreaterThan(0.9);
 });

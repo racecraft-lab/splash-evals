@@ -10,103 +10,50 @@ next: false
 
 <div class="document-sheet">
 
-This is the benchmark index. Each result keeps its score, runtime, method, sources, and limitations together so readers can tell measured evidence from work that is still pending.
+<section class="reader-section cool" aria-label="Benchmark result index" data-step>
+<span class="testpoint" data-testpoint aria-hidden="true">01</span>
 
-<section class="reader-section cool" aria-label="Benchmark result index">
+<p class="kicker">The results</p>
 
-## Benchmark results
+## Two tests, two separate results
+
+Pick a test to see its score, how the test worked, how fast it ran, and what the score does and does not tell you.
 
 <div class="benchmark-grid">
   <article class="benchmark-card measured" data-benchmark-status="complete">
     <p class="benchmark-kicker">Measured capability result</p>
     <h3>GPQA Diamond</h3>
     <p class="benchmark-score"><strong>54.55%</strong><span>accuracy · 198 / 198 completed</span></p>
-    <p>A full public science-reasoning benchmark run through EvalScope 1.12.0 and local LM Studio.</p>
+    <p>Expert science questions: 198 hard multiple-choice questions in biology, chemistry, and physics.</p>
     <a class="benchmark-link" href="/splash-evals/dashboard/gpqa-diamond/">Explore GPQA Diamond</a>
   </article>
   <article class="benchmark-card measured" data-benchmark-status="complete">
     <p class="benchmark-kicker">Measured capability result · 12 external references</p>
     <h3>SWE-bench Verified</h3>
     <p class="benchmark-score"><strong>72.00%</strong><span>360 / 500 resolved · 18 errors counted unresolved</span></p>
-    <p>A reviewed full 500-task local result is published separately from the historical reference context.</p>
+    <p>Real coding fixes: 500 bugs from open-source projects, fixed by the model as an agent and checked by the projects' tests.</p>
     <a class="benchmark-link" href="/splash-evals/dashboard/swe-bench-verified/">Explore SWE-bench Verified</a>
   </article>
 </div>
 
 </section>
 
-<section class="reader-section warm" aria-label="How to read benchmark status">
+<section class="reader-section warm" aria-label="How to read benchmark status" data-step>
+<span class="testpoint" data-testpoint aria-hidden="true">02</span>
 
-## Read the status before the score
+<p class="kicker">How to read a result</p>
 
-- **Measured** means a complete, reviewed local aggregate exists in `results/public/`.
-- **Pending** means no benchmark-specific local run has started.
-- **Qualification** means the runner, agent loop, environment, and scorer are being checked. It is never a capability result.
-- **Invalid** means evidence failed a required gate; its score is withheld until review or a clean rerun.
-- **External reference** means a source-verified published observation. It is context, not a local result.
+## Check the label before the score
 
-The two benchmark pages use the same evidence pattern, but their metrics are different. GPQA Diamond measures answer accuracy. SWE-bench Verified measures resolved software-engineering tasks through an agent, repository edits, and tests. Those percentages must never be combined into one score.
+Every result on this site carries a label that says how much it can be trusted:
 
-</section>
+- **Measured:** a complete run that we reviewed and published in `results/public/`.
+- **Pending:** a test we have not started yet.
+- **Qualification:** a practice run that checks our test setup works. It never counts as a score.
+- **Invalid:** a run that failed one of our checks. We hold back its score until it is reviewed or run again cleanly.
+- **External reference:** a score someone else published. We checked it against its source, but it is context, not our result.
 
-<section class="reader-section cool" aria-label="GPQA benchmark comparison compatibility">
-
-## Benchmark comparison (GPQA detail)
-
-This compact comparison remains on the index for compatibility. The GPQA detail page is the canonical view and includes the full source-linked comparison. External values are directional context only; differences in dataset revisions, prompts, sampling, answer extraction, reasoning budgets, and trial counts prevent protocol-matched ranking.
-
-The measured Splash run completed **198 requested, 198 succeeded, 0 errored**, with **43.95 s** average request latency and **64.13 tokens/s** average output throughput.
-
-<details class="comparison-record">
-<summary>View the source-labeled GPQA comparison table</summary>
-
-<p class="table-hint">More columns to the right: scroll this table horizontally on small screens.</p>
-
-<div class="table-scroll" role="region" aria-label="Data table with horizontal scrolling" tabindex="0">
-
-| Model / condition | GPQA Diamond | Evidence status |
-|---|---:|---|
-| **Splash / Qwen3.8 · local LM Studio · medium effort** | **54.6%** | Measured here; 198/198 completed |
-| [GPT-5.6 Sol](https://openai.com/index/gpt-5-6/) | 94.6% | OpenAI-reported, directional |
-| [GPT-5.6 Terra](https://openai.com/index/gpt-5-6/) | 92.9% | OpenAI-reported, directional |
-| [GPT-5.6 Luna](https://openai.com/index/gpt-5-6/) | 92.3% | OpenAI-reported, directional |
-| [GPT-5.5](https://openai.com/index/introducing-gpt-5-5/) | 93.6% | OpenAI-reported, directional |
-| [Claude Sonnet 4 · Anthropic provider](https://www.anthropic.com/news/claude-4) | 70.0% | Without extended thinking; provider-reported, directional |
-| [Claude Sonnet 4 · Epoch independent](https://epoch.ai/models/claude-sonnet-4) | 78% | Direct model scorecard, rounded; directional |
-| [Claude Opus 4 · Anthropic provider](https://www.anthropic.com/news/claude-4) | 74.9% | Without extended thinking; provider-reported, directional |
-| [Claude Opus 4 · Epoch independent](https://epoch.ai/models/claude-opus-4) | 76% | Direct model scorecard, rounded; directional |
-| [Claude Sonnet 4.6 · Epoch independent](https://epoch.ai/models/claude-sonnet-4-6) | 87% | Direct model scorecard, rounded; directional |
-| [Claude Sonnet 4.6 · Anthropic provider](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 89.9% | Adaptive thinking at max effort, 10-trial average; directional |
-| [Claude Opus 4.6 · Epoch independent](https://epoch.ai/models/claude-opus-4-6) | 91% | Direct model scorecard, rounded; directional |
-| [Claude Opus 4.6 · Anthropic provider](https://www-cdn.anthropic.com/bbd8ef16d70b7a1665f14f306ee88b53f686aa75.pdf) | 91.3% | Adaptive-thinking/max-effort comparison condition; directional |
-| [Claude Opus 4.7 · Anthropic provider](https://www-cdn.anthropic.com/037f06850df7fbe871e206dad004c3db5fd50340/Claude%20Opus%204.7%20System%20Card.pdf) | 94.2% | Provider-reported, directional |
-| [Claude Opus 4.7 · Epoch independent](https://epoch.ai/models/claude-opus-4-7) | 90% | Direct model scorecard, rounded; directional |
-| [Claude Opus 4.8 · Epoch independent](https://epoch.ai/models/claude-opus-4-8) | 91% | Direct model scorecard, rounded; directional |
-| [Claude Opus 4.8 · Anthropic provider](https://www-cdn.anthropic.com/0b4915911bb0d19eca5b5ee635c80fef830a37ea.pdf) | 93.6% | 25-trial average; provider-reported, directional |
-| [Claude Opus 4.8 · OpenAI cross-provider](https://openai.com/index/gpt-5-6/) | 92.0% | OpenAI comparison table, directional |
-| [Claude Sonnet 5 · Epoch independent](https://epoch.ai/models/claude-sonnet-5) | 91% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
-| [Claude Opus 5 · Epoch independent](https://epoch.ai/models/claude-opus-5) | 94% | Direct model scorecard, rounded; Anthropic does not publish a GPQA figure |
-| [Claude Opus 5 · OpenAI cross-provider](https://openai.com/index/gpt-6-astra/) | 93.7% | Anthropic's release page does not publish a GPQA figure |
-
-</div>
-
-Repeated model names are separate source observations under different conditions, not a ranking.
-
-</details>
-
-[Read the GPQA benchmark comparison details](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
-
-</section>
-
-<section class="reader-section cool" aria-label="Compatibility links">
-
-## Existing result links
-
-Earlier links still have a clear destination:
-
-- <span id="runtime-performance"></span>[GPQA Diamond runtime performance](/splash-evals/dashboard/gpqa-diamond/#runtime-performance)
-- <span id="benchmark-comparison"></span>[GPQA Diamond benchmark comparison](/splash-evals/dashboard/gpqa-diamond/#benchmark-comparison)
-- <span id="run-record-and-limitations"></span>[GPQA Diamond run record and limitations](/splash-evals/dashboard/gpqa-diamond/#run-record-and-limitations)
+The two tests measure different things. GPQA Diamond counts correct answers. SWE-bench Verified counts bugs fixed by an AI agent that edits code and runs tests. Their percentages must never be combined into one score.
 
 </section>
 

@@ -1,0 +1,75 @@
+---
+// The top of the lab sheet: kicker, page title, summary, the page's readout card, and (on
+// the overview) the journey through the page's test points.
+import { LinkButton } from '@astrojs/starlight/components';
+import { pageIntros } from './page-intros';
+
+const { id, entry } = Astro.locals.starlightRoute;
+const intro = pageIntros[id];
+const home = id === '';
+const actions = entry.data.hero?.actions ?? [];
+const title = entry.data.title;
+// One phrase of the title can carry the blue accent, Racecraft style.
+const at = intro?.accent ? title.indexOf(intro.accent) : -1;
+const [before, accent, after] =
+  at < 0 ? [title, '', ''] : [title.slice(0, at), intro!.accent!, title.slice(at + intro!.accent!.length)];
+---
+{intro ? (
+  <section class:list={['page-intro', { 'home-intro': home, hero: home }]} aria-labelledby="_top">
+    <div class="intro-copy">
+      {intro.kicker && <p class="kicker">{intro.kicker}</p>}
+      <h1 id="_top">{before}{accent && <span class="title-accent">{accent}</span>}{after}</h1>
+      <p class="intro-summary">{intro.summary}</p>
+      {actions.length > 0 && <div class="intro-actions">
+        {actions.map(({ link, text, variant }) => <LinkButton href={link} variant={variant}>{text}</LinkButton>)}
+      </div>}
+    </div>
+    <figure class:list={['intro-visual', `intro-${intro.variant ?? 'flow'}`]}>
+      {intro.variant === 'results' ? (
+        <div class="intro-count">
+          <strong>{intro.result.score}</strong>
+          <span>{intro.result.metric}<br />{intro.result.completion}</span>
+        </div>
+      ) : intro.variant === 'overview' ? (
+        <div class="intro-study">
+          <div class="study-subject">
+            <span>Local model under test</span>
+            <strong>{intro.study.model}</strong>
+            <small>{intro.study.foundation}</small>
+          </div>
+          {intro.study.results.map(([score, label]) => (
+            <div class="study-metric">
+              <span>Measured result</span>
+              <strong>{score}</strong>
+              <small>{label}</small>
+            </div>
+          ))}
+        </div>
+      ) : intro.variant === 'sources' ? (
+        <div class="intro-source-record">
+          <span class="intro-source-label">Measured result</span>
+          <strong>{intro.sourceRecord.score}</strong>
+          <dl>
+            <div><dt>Benchmark</dt><dd>{intro.sourceRecord.benchmark}</dd></div>
+            <div><dt>Measured by</dt><dd>{intro.sourceRecord.measuredBy}</dd></div>
+            <div><dt>Evidence</dt><dd>{intro.sourceRecord.status}</dd></div>
+          </dl>
+        </div>
+      ) : (
+        <ol class="intro-steps">{intro.steps.map(([step, detail]) => <li><strong>{step}</strong><span>{detail}</span></li>)}</ol>
+      )}
+      <figcaption>{intro.caption}</figcaption>
+    </figure>
+    {intro.journey && (
+      <nav aria-label="Journey" class="journey-nav">
+        <ol class="journey">
+          {intro.journey.map(([label, href], index) => (
+            <li class="journey-step">
+              <a href={href}><span class="journey-dot">{String(index + 1).padStart(2, '0')}</span><span>{label}</span></a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
+  </section>
+) : <h1 id="_top">{title}</h1>}

@@ -1,10 +1,14 @@
 # Sources and evidence
 
-See who measured each result, where it was published, and what was different about the test. The catalog now covers science reasoning and coding, but the local evidence status is different for each benchmark.
+Here is who measured each score, where it was published, and how its test differed from ours. The catalog covers both tests: expert science questions and real coding fixes.
 
 <section class="reader-section cool" aria-label="Sources behind the numbers">
 
+<p class="kicker">The science test</p>
+
 ## GPQA Diamond sources
+
+Four kinds of source feed the science-test page:
 
 <div class="source-map">
   <article class="source-card measured">
@@ -58,7 +62,11 @@ See who measured each result, where it was published, and what was different abo
 
 <section class="reader-section warm" aria-label="SWE-bench Verified sources">
 
+<p class="kicker">The coding test</p>
+
 ## SWE-bench Verified sources
+
+In plain terms: 12 published coding scores, each saved with its source and settings. Anything a source did not say stays marked as unknown.
 
 The coding explorer is generated from the source-verified SWE-bench records in `references/frontier/`. Its coverage manifest is `references/benchmarks/swebench-verified-coverage.yaml` and is explicitly limited to **external source coverage**.
 
@@ -66,11 +74,13 @@ The manifest records `local_measurement_status: measured` and `comparability_sta
 
 Those records support a 12-observation external explorer. They do not support a model ranking, exact gap, or percent-of-frontier claim against the local Splash result.
 
-[Review the SWE-bench comparison](swe-bench-verified.md#external-reference-explorer) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
+[Review the SWE-bench comparison](swe-bench-verified.md#benchmark-comparison) · [Browse the evidence records](https://github.com/racecraft-lab/splash-evals/tree/main/references/frontier)
 
 </section>
 
 <section class="reader-section warm" aria-label="How evidence records work">
+
+<p class="kicker">How records work</p>
 
 ## How the evidence catalog works
 
@@ -85,6 +95,8 @@ Those records support a 12-observation external explorer. They do not support a 
 </section>
 
 <section class="reader-section cool" aria-label="How reported numbers were checked">
+
+<p class="kicker">Checking</p>
 
 ## How the numbers were checked
 

@@ -76,13 +76,13 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .intro-study > div { min-width: 0; padding: .9rem; border: 1px solid var(--sl-color-hairline); background: var(--reader-paper); }
 .intro-study .study-subject { grid-column: 1 / -1; border-top: 3px solid var(--reader-rule); }
 .intro-study span, .intro-study small { display: block; }
-.intro-study span { color: var(--sl-color-gray-2); font: 700 .66rem/1.3 'IBM Plex Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+.intro-study span { color: var(--sl-color-gray-2); font: 700 .66rem/1.3 'Fira Code', monospace; letter-spacing: .07em; text-transform: uppercase; }
 .intro-study strong { display: block; margin-top: .4rem; color: var(--sl-color-text-accent); font: 700 clamp(1.8rem, 10cqi, 3.1rem)/1 'Space Grotesk', sans-serif; letter-spacing: -.04em; }
 .intro-study .study-subject strong { color: var(--sl-color-text); }
 .intro-study small { margin-top: .35rem; color: var(--sl-color-gray-2); font-size: .72rem; line-height: 1.4; }
 .intro-study .context strong { color: var(--reader-context); }
 .intro-source-record { display: grid; gap: 1rem; }
-.intro-source-label { grid-column: 1 / -1; width: fit-content; padding: .28rem .55rem; border: 1px solid var(--sl-color-hairline); color: var(--sl-color-text-accent); font: 700 .72rem/1.2 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.intro-source-label { grid-column: 1 / -1; width: fit-content; padding: .28rem .55rem; border: 1px solid var(--sl-color-hairline); color: var(--sl-color-text-accent); font: 700 .72rem/1.2 'Fira Code', monospace; letter-spacing: .08em; text-transform: uppercase; }
 .intro-source-record > strong { font: 700 clamp(3.5rem, 20cqi, 5rem)/1 'Space Grotesk', sans-serif; letter-spacing: -.06em; color: var(--sl-color-text-accent); }
 .intro-source-record dl { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
 .intro-source-record dl div { border-top: 1px solid var(--sl-color-hairline); padding-top: .5rem; }
@@ -119,10 +119,10 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .reader-columns > * + * { border-left: 1px solid var(--sl-color-hairline); padding-left: 1.6rem; }
 .relationship-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-block: 1.75rem; padding: 0; list-style: none; counter-reset: relationship; }
 .relationship-flow li { position: relative; min-width: 0; margin: 0; padding: 1rem; border: 1px solid var(--reader-line); border-top: 3px solid var(--reader-rule); background: var(--reader-paper); counter-increment: relationship; }
-.relationship-flow li::before { content: counter(relationship, decimal-leading-zero); color: var(--sl-color-text-accent); font: 700 .68rem/1.3 'IBM Plex Mono', monospace; letter-spacing: .08em; }
+.relationship-flow li::before { content: counter(relationship, decimal-leading-zero); color: var(--sl-color-text-accent); font: 700 .68rem/1.3 'Fira Code', monospace; letter-spacing: .08em; }
 .relationship-flow li:not(:last-child)::after { content: '→'; position: absolute; z-index: 1; top: 50%; left: calc(100% + .25rem); width: .5rem; color: var(--sl-color-text-accent); font-weight: 700; transform: translateY(-50%); }
 .relationship-flow span, .relationship-flow strong { display: block; }
-.relationship-flow span { margin-top: .35rem; color: var(--sl-color-gray-2); font: 700 .66rem/1.3 'IBM Plex Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+.relationship-flow span { margin-top: .35rem; color: var(--sl-color-gray-2); font: 700 .66rem/1.3 'Fira Code', monospace; letter-spacing: .06em; text-transform: uppercase; }
 .relationship-flow strong { margin-top: .45rem; font: 650 1rem/1.3 'Space Grotesk', sans-serif; }
 .relationship-flow p { margin: .55rem 0 0; color: var(--sl-color-gray-2); font-size: .8rem; line-height: 1.55; }
 .process { grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; counter-reset: steps; padding-left: 0; }
@@ -138,7 +138,7 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .evaluation-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-block: 1.5rem; }
 .evaluation-summary > div { min-width: 0; margin: 0; padding: 1rem; border: 1px solid var(--reader-line); border-top: 3px solid var(--reader-line); background: var(--reader-paper); }
 .evaluation-summary > .primary-metric { border-top-color: var(--reader-rule); }
-.evaluation-summary dt { color: var(--sl-color-gray-2); font: 700 .68rem/1.3 'IBM Plex Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+.evaluation-summary dt { color: var(--sl-color-gray-2); font: 700 .68rem/1.3 'Fira Code', monospace; letter-spacing: .07em; text-transform: uppercase; }
 .evaluation-summary dd { margin: .55rem 0 0; }
 .evaluation-summary strong, .evaluation-summary span { display: block; }
 .evaluation-summary strong { font: 650 1.08rem/1.25 'Space Grotesk', sans-serif; overflow-wrap: anywhere; }
@@ -242,7 +242,7 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .performance-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin-block: 1.5rem; }
 .performance-summary > div { min-width: 0; margin: 0; padding: 1rem; border: 1px solid var(--reader-line); border-top: 3px solid var(--reader-line); background: var(--reader-paper); }
 .performance-summary > .primary-metric { border-top-color: var(--reader-rule); }
-.performance-summary dt { color: var(--sl-color-gray-2); font: 700 .68rem/1.3 'IBM Plex Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+.performance-summary dt { color: var(--sl-color-gray-2); font: 700 .68rem/1.3 'Fira Code', monospace; letter-spacing: .07em; text-transform: uppercase; }
 .performance-summary dd { margin: .55rem 0 0; }
 .performance-summary strong, .performance-summary span { display: block; }
 .performance-summary strong { font: 650 1.35rem/1.2 'Space Grotesk', sans-serif; }
@@ -258,7 +258,7 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .benchmark-card.pending { border-top-color: var(--sl-color-gray-2); }
 .benchmark-card :is(h3, p) { margin-top: 0; }
 .benchmark-card h3 { margin-bottom: .65rem; font-size: clamp(1.35rem, 3vw, 1.8rem); }
-.benchmark-kicker { color: var(--sl-color-text-accent); font: 700 .68rem/1.35 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.benchmark-kicker { color: var(--sl-color-text-accent); font: 700 .68rem/1.35 'Fira Code', monospace; letter-spacing: .08em; text-transform: uppercase; }
 .benchmark-card.pending .benchmark-kicker { color: var(--sl-color-gray-2); }
 .benchmark-score { display: grid; gap: .25rem; margin-bottom: 1rem; }
 .benchmark-score strong { font: 700 clamp(1.8rem, 5vw, 2.8rem)/1 'Space Grotesk', sans-serif; }
@@ -266,7 +266,7 @@ body { background-image: var(--lab-texture-image); background-size: var(--lab-te
 .benchmark-link { margin-top: auto; min-height: 2.75rem; display: inline-flex; align-items: center; width: fit-content; font-weight: 650; }
 .agent-loop { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-block: 1.5rem; padding: 1px; background: var(--reader-line); list-style: none; }
 .agent-loop li { display: grid; grid-template-columns: auto 1fr; gap: .75rem; margin: 0; padding: 1rem; background: var(--reader-paper); }
-.agent-loop li > span { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--reader-line); border-radius: 50%; color: var(--sl-color-text-accent); font: 700 .8rem/1 'IBM Plex Mono', monospace; }
+.agent-loop li > span { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--reader-line); border-radius: 50%; color: var(--sl-color-text-accent); font: 700 .8rem/1 'Fira Code', monospace; }
 .agent-loop :is(strong, p) { display: block; margin: 0; }
 .agent-loop p { margin-top: .45rem; color: var(--sl-color-gray-2); font-size: .83rem; line-height: 1.5; }
 .finding.pending { border-top-color: var(--sl-color-gray-2); }
