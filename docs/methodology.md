@@ -1,6 +1,6 @@
 # How we tested
 
-This page separates what was measured, how it was measured, and what each benchmark can support. GPQA Diamond has a completed local result. SWE-bench Verified remains a planned evaluation with qualification still pending.
+This page separates what was measured, how it was measured, and what each benchmark can support. GPQA Diamond and SWE-bench Verified each have a completed, reviewed local result. Their metrics differ and are never combined.
 
 <section class="reader-section cool" aria-label="Benchmark and sample">
 
@@ -22,7 +22,24 @@ SWE-bench Verified evaluates repository-level issue resolution, not one-turn que
 
 The measured condition must record the exact task manifest and denominator, harness and agent-scaffold revisions, repository image and dependency state, tool access, model and runtime identity, time and token budgets, retries, test policy, scorer revision, and failure treatment. A change to any of those fields creates a different condition.
 
-No local SWE-bench percentage is published. Before a full run, the grading container and host-isolation boundary must be verified, and a qualification run must prove that the agent/edit/test/scorer loop works without executing model-generated code directly on the Mac host.
+Before the full run, the grading container and host-isolation boundary were verified, and a qualification run on disjoint tasks proved that the agent, edit, test, and scorer loop works without executing model-generated code on the Mac host. The full run then used all **500 Verified tasks** with one attempt per task.
+
+| Setting | Value |
+|---|---|
+| Agent | mini-SWE-agent 2.4.6, bash-only tools, Docker task containers |
+| Grader | Official SWE-bench 5.0.2 harness in a separate grader container |
+| Dataset | `SWE-bench/SWE-bench_Verified`, revision `78f471bf655a3137b2e8a75af1501690ec009ec3`, test split |
+| Reasoning | `on` (the approved variant; `xhigh` is unsupported) |
+| Sampling | Temperature 1.0, top-p 0.95, up to 65,536 output tokens per request |
+| Context window | 131,072 tokens |
+| Step limit / command timeout | 100 steps (upstream 250) / 120 s (upstream 60 s) |
+| Task images | `linux/amd64` under Rosetta emulation on Apple silicon |
+| Network | Agent containers offline; 12 graders reach only allowlisted hosts |
+| Metric | Resolved tasks divided by all 500 tasks |
+
+Model failures and infrastructure errors stay in the denominator and count as unresolved, following the upstream convention. The result record lists every deviation from the upstream setup, including five host-fault re-runs approved by the operator.
+
+[Read the SWE-bench result and limitations](swe-bench-verified.md)
 
 </section>
 

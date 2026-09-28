@@ -126,6 +126,101 @@ def test_core_run_cli_forwards_expanded_and_dry_run_authorization(monkeypatch) -
     assert '"runner": "evalscope-1.12"' in result.stdout
 
 
+def test_swebench_run_cli_forwards_explicit_approval_marker(monkeypatch) -> None:
+    observed = {}
+
+    def execute(suite, config, *, dry_run, allow_expanded, swebench_approval_marker):
+        observed.update(
+            suite=suite,
+            config=config,
+            dry_run=dry_run,
+            allow_expanded=allow_expanded,
+            swebench_approval_marker=swebench_approval_marker,
+        )
+        return {"status": "dry_run"}
+
+    monkeypatch.setattr(cli, "execute_run", execute)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "run",
+            "--suite",
+            "swebench-verified",
+            "--config",
+            "lmstudio-as-found",
+            "--dry-run",
+            "--allow-expanded",
+            "--swebench-approval-marker",
+            "racecraft-swebench-verified-full-v1",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert observed["swebench_approval_marker"] == "racecraft-swebench-verified-full-v1"
+
+
+def test_swebench_plan_cli_forwards_explicit_approval_marker(monkeypatch) -> None:
+    observed = {}
+
+    def build(suite, config, *, allow_expanded, swebench_approval_marker):
+        observed.update(
+            suite=suite,
+            config=config,
+            allow_expanded=allow_expanded,
+            swebench_approval_marker=swebench_approval_marker,
+        )
+        return {"status": "planned"}
+
+    monkeypatch.setattr(cli, "build_execution_plan", build)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "plan",
+            "--suite",
+            "swebench-verified",
+            "--config",
+            "lmstudio-as-found",
+            "--allow-expanded",
+            "--swebench-approval-marker",
+            "racecraft-swebench-verified-full-v1",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert observed["swebench_approval_marker"] == "racecraft-swebench-verified-full-v1"
+
+
+def test_swebench_resume_cli_forwards_fresh_approval_marker(monkeypatch) -> None:
+    observed = {}
+
+    def resume_run(run_id, *, dry_run, swebench_approval_marker):
+        observed.update(
+            run_id=run_id,
+            dry_run=dry_run,
+            swebench_approval_marker=swebench_approval_marker,
+        )
+        return {"status": "dry_run"}
+
+    monkeypatch.setattr(cli, "resume_run", resume_run)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "resume",
+            "--run",
+            "synthetic-swebench-run",
+            "--dry-run",
+            "--swebench-approval-marker",
+            "racecraft-swebench-verified-full-v1",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert observed["swebench_approval_marker"] == "racecraft-swebench-verified-full-v1"
+
+
 def test_frontier_validate_default_reports_missing_coverage_without_failing(
     monkeypatch,
 ) -> None:

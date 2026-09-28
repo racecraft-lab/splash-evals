@@ -43,6 +43,7 @@ exclude = [
   "/CLAUDE.md",
   "/docs-site",
   "/docs/github-feature-audit.md",
+  "/scripts/swebench-sdk/node_modules",
   "/tests",
 ]
 
@@ -53,6 +54,16 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.format]
+# Byte-pinned: hashed into the SWE-bench adapter revision or copied into attested images.
+# Reformatting would break the provenance of the published run.
+exclude = [
+  "sandbox/swebench/egress/egress_proxy.py",
+  "sandbox/swebench/runner.py",
+  "sandbox/swebench/scorer_entrypoint.py",
+  "src/local_evals/swebench_sdk.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "S"]
@@ -68,3 +79,8 @@ packages = ["local_evals"]
 [[tool.mypy.overrides]]
 module = ["evalscope.*"]
 ignore_missing_imports = true
+
+# Byte-pinned into the SWE-bench adapter revision; see [tool.ruff.format].
+[[tool.mypy.overrides]]
+module = ["local_evals.swebench_sdk"]
+disable_error_code = ["arg-type"]

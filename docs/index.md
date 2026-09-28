@@ -10,14 +10,14 @@ Splash is not the model itself. It is the software that runs the model quickly o
   <li><span>Model</span><strong>Qwen3.8-27B</strong><p>The <a href="https://github.com/QwenLM/Qwen3.8">Qwen Team</a> develops the underlying 27-billion-parameter open model.</p></li>
   <li><span>Engine + package</span><strong>Inco AI · Splash</strong><p><a href="https://inco.ai/blog/splash/">Inco AI</a> builds the open-source Splash engine and its model-specific package: 4-bit Qwen weights plus a DFlash 2 draft.</p></li>
   <li><span>Local host</span><strong>LM Studio</strong><p>LM Studio integrates Splash as a runtime, loads that package on this Mac, and exposes the local API used for the test.</p></li>
-  <li><span>Independent test</span><strong>Racecraft Lab</strong><p>Racecraft Lab, the technical innovation lab of Racecraft Systems, sends GPQA questions through EvalScope and publishes the reviewed result.</p></li>
+  <li><span>Independent test</span><strong>Racecraft Lab</strong><p>Racecraft Lab, the technical innovation lab of Racecraft Systems, sends benchmark tasks through pinned evaluation harnesses and publishes the reviewed results.</p></li>
 </ol>
 
 We ran the complete **198-question GPQA Diamond** benchmark against this exact local setup. It scored **54.55% accuracy** (**54.6% rounded**), and all 198 requests completed. That is the first reviewed result in a growing benchmark portfolio.
 
-The next target, **SWE-bench Verified**, asks a different question: can the local system resolve real repository issues through an agent, edit, and test loop? Its external reference coverage is published, but the local qualification and full result are still pending. No coding score is claimed.
+The second benchmark, **SWE-bench Verified**, asks a different question: can the local system resolve real repository issues through an agent, edit, and test loop? On the full 500-task set, Splash resolved **360 tasks (72.0%)** with mini-SWE-agent 2.4.6 and the official SWE-bench 5.0.2 grader. That score applies to this agent configuration and its disclosed deviations from the upstream setup.
 
-[Explore the result](dashboard.md) · [See exactly how we tested](methodology.md)
+[Explore the results](dashboard.md) · [See exactly how we tested](methodology.md)
 
 </section>
 
@@ -70,7 +70,7 @@ So this site labels every external number by source and condition and presents i
 <dl class="project-definitions" id="key-terms">
 <div><dt>Splash / Qwen3.8</dt><dd>Short for the Qwen3.8-27B model served through Inco AI's Splash runtime in LM Studio. The result applies to this exact setup, not every Qwen model or runtime configuration.</dd></div>
 <div><dt>GPQA Diamond</dt><dd>A difficult multiple-choice benchmark written by domain experts in biology, chemistry, and physics.</dd></div>
-<div><dt>SWE-bench Verified</dt><dd>A repository-level coding benchmark where an agent must inspect code, edit files, run tests, and resolve real issues. The local result is not yet measured.</dd></div>
+<div><dt>SWE-bench Verified</dt><dd>A repository-level coding benchmark where an agent must inspect code, edit files, run tests, and resolve real issues. The local result is 360 of 500 tasks resolved.</dd></div>
 <div><dt>Directional comparison</dt><dd>Useful context from a published score whose full testing conditions do not match or are not completely disclosed.</dd></div>
 </dl>
 

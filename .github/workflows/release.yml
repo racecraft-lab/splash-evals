@@ -63,6 +63,12 @@ jobs:
           enable-cache: false
       - name: Sync locked development environment
         run: uv sync --frozen --extra dev
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6 source: github.com/actions/setup-node
+        with:
+          node-version: 22
+      - name: Install locked swebench-sdk dependencies
+        run: npm --prefix scripts/swebench-sdk ci --ignore-scripts --no-audit --no-fund
       - name: Test source and publication controls
         env:
           LOCAL_EVALS_STATE_DIR: ${{ runner.temp }}/splash-evals-state
@@ -141,7 +147,8 @@ jobs:
         run: |
           printf '%s\n' \
             'Draft only; maintainer review is required before publication.' \
-            'Artifacts contain project code/docs, a wheel, sdist, CycloneDX SBOM, checksums, and provenance; they never contain raw prompts/responses, model weights, or private state.' \
+            'Artifacts contain project code/docs, a wheel, sdist, CycloneDX SBOM, and checksums; GitHub creates separate provenance attestations for these artifacts.' \
+            'The reviewed artifact payload excludes raw prompts/responses, model weights, and private state.' \
             'The published local pilot is small and synthetic. Its post-hoc, order-reversed comparison is exploratory, does not prove improvement/equivalence, and supports no direct historical frontier delta.' \
             'The earlier candidate locality remains attribution-provisional.' \
             'From a clean checkout, reproduce with: uv sync --frozen --extra dev; LOCAL_EVALS_TEST_MODE=mock-only uv run pytest; uv run local-evals frontier validate --catalog references/frontier; uv run local-evals privacy audit --scope publication; uv build; uv export --format cyclonedx1.5 --no-dev --output-file dist/sbom.cdx.json; uv run python scripts/inspect_release.py dist.' \

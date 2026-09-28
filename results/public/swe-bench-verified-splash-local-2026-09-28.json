@@ -1,0 +1,80 @@
+{
+  "counts": {
+    "errored": 18,
+    "requested": 500,
+    "succeeded": 482
+  },
+  "evaluator": {
+    "developer": null,
+    "evidence_class": "measured_here",
+    "model_label": "Splash / Qwen3.8",
+    "name": "SWE-bench official grader",
+    "version": "5.0.2"
+  },
+  "identity": {
+    "adapter": "mini-swe-agent-bash-docker",
+    "dataset_id": "SWE-bench/SWE-bench_Verified",
+    "dataset_provider": "princeton-nlp",
+    "dataset_revision": "78f471bf655a3137b2e8a75af1501690ec009ec3",
+    "evaluation_version": "5.0.2",
+    "name": "SWE-bench Verified",
+    "split": "test",
+    "subset": "verified",
+    "variant": "verified-500"
+  },
+  "limitations": [
+    "Results apply only to Splash/Qwen3.8 served by local LM Studio under the frozen protocol, task images, and grader image listed in provenance.",
+    "Scoring follows the upstream SWE-bench convention: resolved tasks divided by all 500 tasks. Model failures (16) and infrastructure errors (2) count as unresolved.",
+    "Both infrastructure errors are model-side context exhaustion: the conversation filled the 131,072-token context window and LM Studio refused the next request. The pinned transport reports this as a generic failure, so the harness recorded an infrastructure error.",
+    "The first pass resolved 357 of 500 tasks (71.4%, first_pass_result). Five tasks whose attempts were cut off by host faults (one GPU hang, one memory lockup, and three model unloads) were re-run once at the end with operator approval under the same protocol (rerun_ledger). Three resolved, giving 360 of 500 (72.0%). This is a deviation from the one-attempt protocol for those five tasks only.",
+    "Thirteen tasks never reached the model because the model was unloaded between tasks. The harness recorded no inference for them and ran them on resume. The run now stops before any task when the frozen model is not being served.",
+    "Harness accounting changed during the run, before any result was reviewed: infrastructure errors now count as unresolved (upstream convention) instead of withholding the result, and a cut-off inference stops the run. The protocol fingerprint did not change.",
+    "After two host lockups, the Splash engine's memory budget was capped at 48 GiB by a local edit to LM Studio's Splash launcher. The cap limits cache memory only. Model weights, the 131,072-token context, and the served model fingerprint are unchanged.",
+    "The approved reasoning variant is on, because xhigh is unsupported. Do not represent it as xhigh.",
+    "Deviations from the upstream mini-SWE-agent SWE-bench configuration: step limit 100 (upstream 250), command timeout 120 s (upstream 60 s), and no cost limit.",
+    "Task containers use linux/amd64 images under Rosetta emulation on Apple silicon. Harness qualification ran under QEMU before the switch to Rosetta. All 500 gold patches resolve in this environment.",
+    "Agent containers are always offline. Graders are offline except for 12 tasks whose graders reach only their listed hosts through a hostname-checking gateway; upstream grades with open network. Each grading run is limited to 3,600 s.",
+    "Four psf/requests tasks depend on live httpbin.org during grading.",
+    "After the run, the grader egress probe was hardened (an explicit TLS 1.2 minimum and one duplicate check removed) and the gateway image was rebuilt. The run used the earlier gateway image and sources listed in provenance (run_egress_gateway_image, run_egress_gateway_sources). The probe verifies gateway isolation and does not affect grades.",
+    "External SWE-bench Verified scores use different agents, scaffolds, step limits, and settings. They are context only and do not support a ranking or a score difference.",
+    "Private tasks, trajectories, patches, grader output, and checkpoints remain outside Git."
+  ],
+  "metric_name": "resolution_rate",
+  "metric_unit": "proportion",
+  "provenance": {
+    "artifacts": {
+      "control_image": "7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee",
+      "final_result": "059af70d126c4eb3558bf8821e60659b5a64ee129c903017d63b9eab604e0766",
+      "first_pass_result": "05ef4ce6f3bc7da0d79dd00ef3a893a8e0edf200dd5bcabb51fd28e4a583dbd0",
+      "image_bindings": "0ee0dac095d1ea165ce138f7b9266c6552742b50d6e30ac0d8f4ca14c0fa018e",
+      "manifest": "ff10857aca817eb5ed1d3d4b81e4273a2a1af6e1e88719ed0e845c23d4180262",
+      "protocol_fingerprint": "59f9d524fd9e40c786cd282e95d2a87b4f4ab7051e8bcb273eda3b6c02cfb724",
+      "rerun_ledger": "9d5f88f35f78ce2072d6fc3f1fff827452ef4bb15d1f78297cc7e885df298e9b",
+      "run_egress_gateway_image": "b270251f836abdbc9b8af79b43f32f41c453583bcd063fa69cdc266450ebaea4",
+      "run_egress_gateway_sources": "82c777e42599b3c35899759ae08f98f3abc690f08424bb85cccac8c4557bcd0d",
+      "runner_config": "8618dedab40170903410b3cec3711fce1dd69807051f42c4aa44c2e0527a7270"
+    },
+    "source": "private local SWE-bench execution; aggregate reviewed for publication"
+  },
+  "reference_observations": [],
+  "result_id": "swe-bench-verified-splash-local-2026-09-28",
+  "runtime": null,
+  "schema_version": 1,
+  "score": 0.72,
+  "status": "complete",
+  "task_outcomes": {
+    "infrastructure_error": 2,
+    "model_failure": 16,
+    "resolved": 360,
+    "unresolved": 122
+  },
+  "tested_configuration": {
+    "attempts_per_task": 1,
+    "harness": "mini-swe-agent-bash-docker",
+    "harness_version": "2.4.6",
+    "max_output_tokens": 65536,
+    "reasoning_effort": "on",
+    "temperature": 1.0,
+    "top_p": 0.95
+  }
+}

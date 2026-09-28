@@ -177,6 +177,68 @@ def _dependabot_record(commit_sha: str, tree_sha: str) -> dict[str, Any]:
     return record
 
 
+def _verified_automation_record(commit_sha: str, tree_sha: str) -> dict[str, Any]:
+    return {
+        "record_type": "github-verified-commit",
+        "commit_sha": commit_sha,
+        "repository": REPOSITORY,
+        "ref": "refs/heads/main",
+        "actor_login": "fgabelmannjr",
+        "author": {
+            "name": AUTOMATION_NAME,
+            "email": AUTOMATION_EMAIL,
+            "login": "fgabelmannjr",
+        },
+        "committer": {
+            "name": AUTOMATION_NAME,
+            "email": AUTOMATION_EMAIL,
+            "login": "fgabelmannjr",
+        },
+        "verification": {"verified": True, "reason": "valid"},
+        "tree_sha": tree_sha,
+        "main_binding": {
+            "contained": True,
+            "main_tip_sha": "c" * 40,
+            "status": "ahead",
+            "base_sha": commit_sha,
+            "merge_base_sha": commit_sha,
+        },
+    }
+
+
+def _pr_head_record(commit_sha: str, tree_sha: str, *, ref: str) -> dict[str, Any]:
+    return {
+        "record_type": "pull-request-head",
+        "commit_sha": commit_sha,
+        "repository": REPOSITORY,
+        "ref": ref,
+        "actor_login": "fgabelmannjr",
+        "author": {
+            "name": AUTOMATION_NAME,
+            "email": AUTOMATION_EMAIL,
+            "login": "fgabelmannjr",
+        },
+        "committer": {
+            "name": AUTOMATION_NAME,
+            "email": AUTOMATION_EMAIL,
+            "login": "fgabelmannjr",
+        },
+        "verification": {"verified": False, "reason": "unsigned"},
+        "tree_sha": tree_sha,
+        "pull_request": {
+            "number": 8,
+            "state": "open",
+            "merged": False,
+            "base_repository": REPOSITORY,
+            "base_ref": "main",
+            "head_repository": REPOSITORY,
+            "head_ref": "feature",
+            "head_sha": commit_sha,
+            "user_login": "fgabelmannjr",
+        },
+    }
+
+
 def _evidence(head_sha: str, records: list[dict[str, Any]], *, ref: str = "refs/heads/main"):
     return {
         "schema_version": 1,
@@ -228,12 +290,20 @@ def test_complete_valid_squash_evidence_allows_platform_identity(
 ) -> None:
     run_git = _init_repo(tmp_path)
     commit_sha, tree_sha = _platform_commit(run_git, "Platform commit with proof")
-    evidence = _write_evidence(tmp_path, _evidence(commit_sha, [_record(commit_sha, tree_sha)]))
+    base_sha = run_git("rev-parse", f"{commit_sha}^").stdout.strip()
+    base_tree = run_git("show", "-s", "--format=%T", base_sha).stdout.strip()
+    evidence = _write_evidence(
+        tmp_path,
+        _evidence(
+            commit_sha,
+            [_record(commit_sha, tree_sha), _verified_automation_record(base_sha, base_tree)],
+        ),
+    )
 
     findings, summary = _identity_audit(monkeypatch, tmp_path, _policies(), evidence)
 
     assert findings == []
-    assert summary["github_provenance_records"] == 1
+    assert summary["github_provenance_records"] == 2
 
 
 def test_legacy_policy_without_actor_overrides_uses_default_actor() -> None:
@@ -339,7 +409,12 @@ def test_evidence_context_is_schema_validated_and_bound_to_actions(
 ) -> None:
     run_git = _init_repo(tmp_path)
     commit_sha, tree_sha = _platform_commit(run_git, "Platform commit with Actions context")
-    document = _evidence(commit_sha, [_record(commit_sha, tree_sha)])
+    base_sha = run_git("rev-parse", f"{commit_sha}^").stdout.strip()
+    base_tree = run_git("show", "-s", "--format=%T", base_sha).stdout.strip()
+    document = _evidence(
+        commit_sha,
+        [_record(commit_sha, tree_sha), _verified_automation_record(base_sha, base_tree)],
+    )
     document["context"] = {
         "run_id": 123,
         "run_attempt": 2,
@@ -599,12 +674,43 @@ def test_previous_merged_ancestor_is_valid_in_pr_context(
     run_git("add", "record.md")
     run_git("commit", "-m", "Automation PR head")
     head_sha = run_git("rev-parse", "HEAD").stdout.strip()
+    head_tree = run_git("show", "-s", "--format=%T", head_sha).stdout.strip()
+    base_sha = run_git("rev-parse", f"{commit_sha}^").stdout.strip()
+    base_tree = run_git("show", "-s", "--format=%T", base_sha).stdout.strip()
+    ref = "refs/pull/8/head"
+    actions_context = {
+        "run_id": 123,
+        "run_attempt": 1,
+        "event_name": "pull_request",
+        "workflow_ref": "racecraft-lab/splash-evals/.github/workflows/ci.yml@refs/pull/8/merge",
+    }
+    document = _evidence(
+        head_sha,
+        [
+            _pr_head_record(head_sha, head_tree, ref=ref),
+            _record(commit_sha, tree_sha),
+            _verified_automation_record(base_sha, base_tree),
+        ],
+        ref=ref,
+    )
+    document["context"] = actions_context
     evidence = _write_evidence(
-        tmp_path, _evidence(head_sha, [_record(commit_sha, tree_sha)], ref="refs/pull/8/head")
+        tmp_path,
+        document,
     )
 
     findings, _ = _identity_audit(
-        monkeypatch, tmp_path, _policies(), evidence, ref="refs/pull/8/head"
+        monkeypatch,
+        tmp_path,
+        _policies(),
+        evidence,
+        ref=ref,
+        context={
+            "GITHUB_RUN_ID": "123",
+            "GITHUB_RUN_ATTEMPT": "1",
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_WORKFLOW_REF": actions_context["workflow_ref"],
+        },
     )
 
     assert findings == []
@@ -626,6 +732,189 @@ def test_new_platform_pr_head_without_merged_provenance_fails(
     )
 
     assert any(finding["rule"] == "github-squash-provenance-required" for finding in findings)
+
+
+def test_automation_named_commit_without_github_evidence_fails_closed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _init_repo(tmp_path)
+    _set_identity(monkeypatch)
+
+    findings, _ = publication._identity_findings(tmp_path, _policies())
+
+    assert any(finding["rule"] == "github-squash-provenance-required" for finding in findings)
+
+
+def test_collector_requires_github_verification_for_automation_identity(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    commit_sha = "a" * 40
+    verified_record = {"record_type": "github-verified-commit", "commit_sha": commit_sha}
+    monkeypatch.setattr(
+        collector,
+        "_policy",
+        lambda repo: (
+            {"name": AUTOMATION_NAME, "email": AUTOMATION_EMAIL},
+            COMMITTER_POLICY,
+            CHECK,
+            REPOSITORY,
+            "refs/heads/main",
+            "fgabelmannjr",
+            {},
+        ),
+    )
+    monkeypatch.setattr(
+        collector,
+        "_run_git",
+        lambda repo, args: commit_sha + "\n",
+    )
+    monkeypatch.setattr(
+        collector,
+        "_local_identity",
+        lambda repo, sha: (AUTOMATION_NAME, AUTOMATION_EMAIL, AUTOMATION_NAME, AUTOMATION_EMAIL),
+    )
+    monkeypatch.setattr(
+        collector,
+        "_verified_commit_record",
+        lambda *args, **kwargs: verified_record,
+    )
+    monkeypatch.setattr(collector, "_actions_context", lambda: None)
+
+    document = collector.collect(
+        tmp_path,
+        repository=REPOSITORY,
+        ref="refs/heads/main",
+        head_sha=commit_sha,
+        request=lambda endpoint: {},
+    )
+
+    assert document["records"] == [verified_record]
+
+
+def test_collector_represents_unmerged_pr_head_without_main_containment(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    commit_sha = "a" * 40
+    pr_record = {"record_type": "pull-request-head", "commit_sha": commit_sha}
+    monkeypatch.setattr(
+        collector,
+        "_policy",
+        lambda repo: (
+            {"name": AUTOMATION_NAME, "email": AUTOMATION_EMAIL},
+            COMMITTER_POLICY,
+            CHECK,
+            REPOSITORY,
+            "refs/heads/main",
+            "fgabelmannjr",
+            {},
+        ),
+    )
+    monkeypatch.setattr(collector, "_run_git", lambda repo, args: commit_sha + "\n")
+    monkeypatch.setattr(
+        collector,
+        "_local_identity",
+        lambda repo, sha: (AUTHOR["name"], AUTHOR["email"], AUTHOR["name"], AUTHOR["email"]),
+    )
+    monkeypatch.setattr(
+        collector,
+        "_pull_request_head_record",
+        lambda *args, **kwargs: pr_record,
+    )
+    monkeypatch.setattr(collector, "_actions_context", lambda: None)
+
+    document = collector.collect(
+        tmp_path,
+        repository=REPOSITORY,
+        ref="refs/pull/7/merge",
+        head_sha=commit_sha,
+        pull_request_number=7,
+        request=lambda endpoint: {},
+    )
+
+    assert document["records"] == [pr_record]
+
+
+def test_verified_automation_record_is_bound_to_github_identity_and_main() -> None:
+    commit_sha = "a" * 40
+    tree_sha = "b" * 40
+    main_tip = "c" * 40
+    responses = {
+        f"repos/{REPOSITORY}/commits/{commit_sha}": {
+            "sha": commit_sha,
+            "commit": {
+                "author": {"name": AUTOMATION_NAME, "email": AUTOMATION_EMAIL},
+                "committer": {"name": AUTOMATION_NAME, "email": AUTOMATION_EMAIL},
+                "tree": {"sha": tree_sha},
+                "verification": {"verified": True, "reason": "valid"},
+            },
+            "author": {"login": "fgabelmannjr"},
+            "committer": {"login": "fgabelmannjr"},
+        },
+        f"repos/{REPOSITORY}/branches/main": {"commit": {"sha": main_tip}},
+        f"repos/{REPOSITORY}/compare/{commit_sha}...{main_tip}": {
+            "status": "ahead",
+            "base_commit": {"sha": commit_sha},
+            "merge_base_commit": {"sha": commit_sha},
+        },
+    }
+
+    record = collector._verified_commit_record(
+        REPOSITORY,
+        commit_sha,
+        (AUTOMATION_NAME, AUTOMATION_EMAIL, AUTOMATION_NAME, AUTOMATION_EMAIL),
+        actor_login="fgabelmannjr",
+        committer_policy=COMMITTER_POLICY,
+        request=responses.__getitem__,
+    )
+
+    assert record["record_type"] == "github-verified-commit"
+    assert record["verification"] == {"verified": True, "reason": "valid"}
+    assert record["main_binding"]["contained"] is True
+
+
+def test_pr_head_record_uses_github_pr_binding_without_main_containment() -> None:
+    commit_sha = "a" * 40
+    tree_sha = "b" * 40
+    local_identity = (AUTHOR["name"], AUTHOR["email"], AUTHOR["name"], AUTHOR["email"])
+    responses = {
+        f"repos/{REPOSITORY}/commits/{commit_sha}": {
+            "sha": commit_sha,
+            "commit": {
+                "author": {"name": AUTHOR["name"], "email": AUTHOR["email"]},
+                "committer": {"name": AUTHOR["name"], "email": AUTHOR["email"]},
+                "tree": {"sha": tree_sha},
+                "verification": {"verified": False, "reason": "unsigned"},
+            },
+            "author": {"login": "fgabelmannjr"},
+            "committer": {"login": "fgabelmannjr"},
+        },
+        f"repos/{REPOSITORY}/pulls/7": {
+            "number": 7,
+            "state": "open",
+            "merged": False,
+            "base": {"ref": "main", "repo": {"full_name": REPOSITORY}},
+            "head": {
+                "sha": commit_sha,
+                "ref": "feature",
+                "repo": {"full_name": REPOSITORY},
+            },
+            "user": {"login": "fgabelmannjr"},
+        },
+    }
+
+    record = collector._pull_request_head_record(
+        REPOSITORY,
+        "refs/pull/7/merge",
+        commit_sha,
+        7,
+        local_identity,
+        actor_login="fgabelmannjr",
+        request=responses.__getitem__,
+    )
+
+    assert record["record_type"] == "pull-request-head"
+    assert record["pull_request"]["head_sha"] == commit_sha
+    assert "main_binding" not in record
 
 
 def test_collector_rejects_multiple_associated_pull_requests(tmp_path: Path) -> None:

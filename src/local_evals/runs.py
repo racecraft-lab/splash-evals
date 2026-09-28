@@ -20,12 +20,13 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import httpx
 import yaml
 
+from .benchmark_results import BenchmarkResult, BenchmarkStatus, MetricUnit
 from .benchmarks import execute_evalscope_core, inspect_core_readiness
 from .lmstudio import LMStudioError, model_keys_equivalent
 from .lmstudio import discover as discover_lmstudio
@@ -90,6 +91,8 @@ _CORE_EVIDENCE_LIMITATION = (
     "EvalScope's OpenAI-compatible response reports only the configured model alias; "
     "served response-instance identity and effective reasoning settings are not read back."
 )
+_SWEBENCH_SUITES = {"swebench-qualification", "swebench-verified"}
+_SWEBENCH_FULL_APPROVAL = "racecraft-swebench-verified-full-v1"
 
 
 @dataclass(frozen=True)
@@ -128,6 +131,23 @@ class ModelAttribution:
     locality_evidence: dict[str, Any]
     model_instance_evidence: dict[str, Any]
     blockers: tuple[str, ...]
+
+
+def _swebench_api() -> Any:
+    """Load the isolated runner only when a SWE-bench suite is requested."""
+
+    try:
+        from . import swebench
+    except ImportError as error:
+        raise RunError("SWE-bench runner module is not installed") from error
+    return swebench
+
+
+def _swebench_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    value = profile.get("swebench")
+    if not isinstance(value, dict):
+        raise RunError("SWE-bench profile contract is missing")
+    return value
 
 
 def _sha256_text(value: str) -> str:
@@ -895,11 +915,29 @@ def _suite_plan_metadata(
     metadata: dict[str, Any] = {
         "runner": "builtin-local",
         "core_readiness": None,
+        "swebench_readiness": None,
         "sample_count": len(tasks),
         "blockers": [],
         "output_directory": get_state_dir(repo, create=False) / "runs",
         "selection_hash": _sha256_json(public_tasks),
     }
+    if suite in _SWEBENCH_SUITES:
+        readiness = _swebench_api().inspect_swebench_readiness(
+            _swebench_profile(profile),
+            repo=repo,
+            state=get_state_dir(repo, create=False),
+            server_origin=_config_openai_base_url(config),
+        )
+        readiness_metadata = readiness.get("metadata", {})
+        metadata.update(
+            runner="swebench-local-sandbox-v1",
+            swebench_readiness=readiness,
+            sample_count=int(readiness_metadata.get("task_count", 0)),
+            blockers=list(readiness.get("blockers", [])),
+            output_directory="external-state://swebench/runs",
+            selection_hash=readiness_metadata.get("manifest_sha256"),
+        )
+        return metadata
     if suite != "core":
         return metadata
     readiness = inspect_core_readiness(
@@ -1157,6 +1195,90 @@ def _core_plan_updates(
     }
 
 
+def _swebench_plan_updates(
+    plan: dict[str, Any],
+    profile: dict[str, Any],
+    config: dict[str, Any],
+    metadata: dict[str, Any],
+    approval_marker: str | None,
+) -> dict[str, Any]:
+    readiness = metadata["swebench_readiness"]
+    readiness_metadata = readiness.get("metadata", {})
+    suite = str(plan["suite"])
+    mode = _swebench_profile(profile).get("mode")
+    task_count = int(metadata["sample_count"])
+    protocol_fingerprint = readiness_metadata.get("protocol_fingerprint")
+    manifest_sha256 = readiness_metadata.get("manifest_sha256")
+    blockers = [
+        blocker
+        for blocker in plan["blockers"]
+        if not blocker.startswith("No licensed/version-pinned executable task manifest")
+    ]
+    blockers.extend(metadata["blockers"])
+    approval_required = suite == "swebench-verified"
+    approval = _swebench_profile(profile).get("protocol_approval")
+    frozen_approval = isinstance(approval, dict) and (
+        approval.get("approved") is True
+        and approval.get("approved_fingerprint") == protocol_fingerprint
+        and _is_sha256(protocol_fingerprint)
+    )
+    explicit_approval = approval_marker == profile.get("approval_marker") == _SWEBENCH_FULL_APPROVAL
+    if approval_required and not (frozen_approval and explicit_approval):
+        blockers.append("full_run_budget_approval_missing")
+    if mode == "qualification" and not 1 <= task_count <= 10:
+        blockers.append("SWE-bench qualification requires between 1 and 10 frozen tasks.")
+    if mode not in {"qualification", "verified"}:
+        blockers.append("SWE-bench mode is invalid.")
+    ready = readiness.get("status") == "ready" and not blockers
+    held_out = suite == "swebench-verified" and ready
+    selection_status = "held_out_verified" if held_out else "qualification" if ready else "blocked"
+    experiment_id = _sha256_json(
+        {
+            "config": config,
+            "model": plan["model_id"],
+            "locality": plan["locality_evidence"],
+            "model_instance": plan["model_instance_evidence"],
+            "protocol_fingerprint": protocol_fingerprint,
+            "manifest_sha256": manifest_sha256,
+            "approval_verified": approval_required and frozen_approval and explicit_approval,
+        }
+    )[:20]
+    return {
+        "experiment_id": experiment_id,
+        "runner": metadata["runner"],
+        "swebench_readiness": readiness,
+        "sample_count": task_count,
+        "request_count": task_count,
+        "estimated_max_generated_tokens": task_count
+        * int(_swebench_profile(profile).get("parameters", {}).get("max_output_tokens", 0)),
+        "blockers": sorted(set(blockers)),
+        "output_directory": _planned_output_directory(metadata["output_directory"], experiment_id),
+        "held_out": held_out,
+        "selection_status": selection_status,
+        "selection_evidence": {
+            "manifest_sha256": manifest_sha256,
+            "protocol_fingerprint": protocol_fingerprint,
+            "manifest_source": "external" if ready else None,
+            "frozen_before_tuning": held_out,
+        },
+        "selection_hash": manifest_sha256,
+        "protocol_fingerprint": protocol_fingerprint,
+        "approval_evidence": {
+            "required": approval_required,
+            "status": "verified"
+            if approval_required and frozen_approval and explicit_approval
+            else ("not_required" if not approval_required else "missing"),
+            "approved_fingerprint": approval.get("approved_fingerprint")
+            if isinstance(approval, dict)
+            else None,
+        },
+        "primary_objective_status_if_run": (
+            "answered_with_stated_scope" if held_out else "pilot_only" if ready else "blocked"
+        ),
+        "limitations": list(profile.get("limitations", [])),
+    }
+
+
 def build_execution_plan(
     suite: str,
     config_name: str,
@@ -1164,8 +1286,9 @@ def build_execution_plan(
     allow_expanded: bool = False,
     root: Path | None = None,
     resolve_live_model: bool = True,
+    swebench_approval_marker: str | None = None,
 ) -> dict[str, Any]:
-    """Build the public plan, adding private-manifest readiness only for core."""
+    """Build a public plan and inspect private readiness for external runners."""
     plan = build_plan(
         suite,
         config_name,
@@ -1173,13 +1296,18 @@ def build_execution_plan(
         root=root,
         resolve_live_model=resolve_live_model,
     )
-    if suite != "core":
+    if suite not in {"core", *_SWEBENCH_SUITES}:
         return plan
     repo = root or project_root()
     profile = load_suite(suite, repo)
     config = load_config(config_name, repo)
     metadata = _suite_plan_metadata(suite, profile, config, repo, [])
-    plan.update(_core_plan_updates(plan, profile, config, metadata))
+    if suite == "core":
+        plan.update(_core_plan_updates(plan, profile, config, metadata))
+    else:
+        plan.update(
+            _swebench_plan_updates(plan, profile, config, metadata, swebench_approval_marker)
+        )
     return plan
 
 
@@ -1772,6 +1900,272 @@ def _execute_core_run(
     }
 
 
+def _validated_swebench_result(plan: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
+    summary = result.get("benchmark_summary")
+    benchmark_payload = result.get("benchmark_result")
+    if not isinstance(summary, dict) or not isinstance(benchmark_payload, dict):
+        raise RunError("SWE-bench runner did not return sanitized benchmark evidence")
+    try:
+        benchmark = BenchmarkResult.model_validate(benchmark_payload)
+    except ValueError as error:
+        raise RunError("SWE-bench benchmark result is invalid") from error
+    suite = plan.get("suite")
+    mode = "qualification" if suite == "swebench-qualification" else "verified"
+    count = plan.get("sample_count")
+    summary_status = summary.get("status")
+    completed = summary.get("completed_count")
+    resolved = summary.get("resolved_count")
+    unresolved = summary.get("unresolved_count")
+    model_failures = summary.get("model_failure_count")
+    infrastructure_errors = summary.get("infrastructure_error_count")
+    errors = summary.get("error_count")
+    attempted = summary.get("attempted_count")
+    exact_counts = all(
+        type(value) is int and value >= 0
+        for value in (
+            count,
+            completed,
+            resolved,
+            unresolved,
+            model_failures,
+            infrastructure_errors,
+            errors,
+            attempted,
+        )
+    )
+    count_value = cast(int, count) if exact_counts else 0
+    completed_value = cast(int, completed) if exact_counts else 0
+    resolved_value = cast(int, resolved) if exact_counts else 0
+    unresolved_value = cast(int, unresolved) if exact_counts else 0
+    model_failures_value = cast(int, model_failures) if exact_counts else 0
+    infrastructure_errors_value = cast(int, infrastructure_errors) if exact_counts else 0
+    errors_value = cast(int, errors) if exact_counts else 0
+    attempted_value = cast(int, attempted) if exact_counts else 0
+    accounting = (
+        exact_counts
+        and completed_value == resolved_value + unresolved_value
+        and errors_value == model_failures_value + infrastructure_errors_value
+        and completed_value + errors_value == count_value
+    )
+    attempt_accounting = (
+        exact_counts
+        and completed_value + model_failures_value <= attempted_value
+        and attempted_value <= completed_value + model_failures_value + infrastructure_errors_value
+    )
+    verified_outcome_complete = (
+        mode == "verified"
+        and accounting
+        and attempt_accounting
+        and completed_value + errors_value == count_value
+        and infrastructure_errors_value < count_value
+    )
+    qualification_outcome_complete = (
+        mode == "qualification"
+        and accounting
+        and attempt_accounting
+        and completed_value == count_value
+        and errors_value == 0
+    )
+    expected_summary_status = (
+        "completed" if verified_outcome_complete or qualification_outcome_complete else "partial"
+    )
+    summary_status_is_consistent = summary_status == expected_summary_status or (
+        summary_status == "failed" and completed_value == 0 and errors_value == count_value
+    )
+    expected_benchmark_status = (
+        BenchmarkStatus.QUALIFICATION
+        if mode == "qualification"
+        else BenchmarkStatus.COMPLETE
+        if verified_outcome_complete
+        else BenchmarkStatus.FAILED
+        if completed_value == 0 and errors_value == count_value
+        else BenchmarkStatus.PARTIAL
+    )
+    capability_claim_allowed = (
+        mode == "verified" and summary_status == "completed" and verified_outcome_complete
+    )
+    benchmark_outcomes = benchmark.task_outcomes
+    benchmark_score_is_consistent = (
+        benchmark.score is None
+        if expected_benchmark_status is not BenchmarkStatus.COMPLETE
+        else benchmark.score is not None
+        and math.isclose(
+            benchmark.score,
+            resolved_value / count_value if count_value else math.nan,
+            abs_tol=1e-12,
+        )
+    )
+    benchmark_fields_are_consistent = (
+        benchmark.identity.name == "SWE-bench Verified"
+        and benchmark.identity.variant
+        == ("qualification-disjoint" if mode == "qualification" else "verified-500")
+        and benchmark.identity.subset
+        == ("disjoint-qualification" if mode == "qualification" else "verified")
+        and benchmark.metric_name == "resolution_rate"
+        and benchmark.metric_unit is MetricUnit.PROPORTION
+        and benchmark.status is expected_benchmark_status
+        and benchmark.counts.requested == count_value
+        and benchmark.counts.succeeded == completed_value
+        and benchmark.counts.errored == errors_value
+        and benchmark_outcomes is not None
+        and benchmark_outcomes.resolved == resolved_value
+        and benchmark_outcomes.unresolved == unresolved_value
+        and benchmark_outcomes.model_failure == model_failures_value
+        and benchmark_outcomes.infrastructure_error == infrastructure_errors_value
+        and benchmark_outcomes.total == count_value
+        and benchmark_score_is_consistent
+    )
+    valid = (
+        summary_status_is_consistent
+        and result.get("status") == summary_status
+        and result.get("mode") == mode
+        and result.get("task_count") == count
+        and (
+            (mode == "qualification" and 0 < count_value <= 10)
+            or (mode == "verified" and count_value == 500)
+        )
+        and summary.get("schema_version") == 1
+        and summary.get("task_count") == count
+        and summary.get("protocol_fingerprint") == plan.get("protocol_fingerprint")
+        and summary.get("manifest_sha256") == plan.get("selection_hash")
+        and result.get("protocol_fingerprint") == plan.get("protocol_fingerprint")
+        and result.get("manifest_sha256") == plan.get("selection_hash")
+        and accounting
+        and attempt_accounting
+        and completed_value <= count_value
+        and summary.get("evidence_class")
+        == ("runtime_scorer_qualification" if mode == "qualification" else "held_out_capability")
+        and all(
+            _is_sha256(summary.get(key))
+            for key in ("protocol_fingerprint", "manifest_sha256", "runner_config_sha256")
+        )
+        and benchmark_fields_are_consistent
+        and result.get("benchmark_result_fingerprint_sha256") == benchmark.fingerprint_sha256()
+    )
+    non_capability = mode == "qualification"
+    valid = valid and summary.get("non_capability") is non_capability
+    valid = valid and summary.get("capability_claim_allowed") is capability_claim_allowed
+    rate = summary.get("resolution_rate")
+    if non_capability:
+        valid = valid and rate is None and 0 < count_value <= 10
+    elif isinstance(rate, (int, float)) and not isinstance(rate, bool):
+        valid = valid and count_value > 0
+        valid = valid and math.isclose(float(rate), resolved_value / count_value, abs_tol=1e-12)
+    else:
+        valid = False
+    if not valid:
+        raise RunError("SWE-bench sanitized result failed the orchestration contract")
+    return {
+        "summary": dict(summary),
+        "result": benchmark.model_dump(mode="json"),
+        "result_fingerprint_sha256": benchmark.fingerprint_sha256(),
+    }
+
+
+def _swebench_run_manifest(plan: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
+    validated = _validated_swebench_result(plan, result)
+    summary = validated["summary"]
+    benchmark = validated["result"]
+    run_id = result.get("run_id")
+    if not isinstance(run_id, str) or run_id != Path(run_id).name:
+        raise RunError("SWE-bench runner returned an unsafe run ID")
+    count = int(summary["task_count"])
+    completed = int(summary["completed_count"])
+    resolved = int(summary["resolved_count"])
+    unresolved = int(summary["unresolved_count"])
+    model_failures = int(summary["model_failure_count"])
+    infrastructure_errors = int(summary["infrastructure_error_count"])
+    errors = int(summary["error_count"])
+    attempted = int(summary["attempted_count"])
+    non_capability = bool(summary["non_capability"])
+    capability_evidence = bool(summary["capability_claim_allowed"])
+    return {
+        **plan,
+        "schema_version": 2,
+        "run_id": run_id,
+        "status": summary["status"],
+        "runner": "swebench-local-sandbox-v1",
+        "benchmark_summary": summary,
+        "benchmark_result": benchmark,
+        "benchmark_result_fingerprint_sha256": validated["result_fingerprint_sha256"],
+        "non_capability": non_capability,
+        "capability_claim_allowed": summary["capability_claim_allowed"],
+        "capability_evidence": capability_evidence,
+        "publication_eligible": capability_evidence,
+        "aggregate": {
+            "planned": count,
+            "attempted": attempted,
+            "completed": completed,
+            "scorable": resolved + unresolved,
+            "resolved": resolved,
+            "unresolved": unresolved,
+            "failed": errors,
+            "model_failure": model_failures,
+            "infrastructure_error": infrastructure_errors,
+            "unattempted": count - attempted,
+            "score": summary["resolution_rate"] if capability_evidence else None,
+            "metric_name": "resolved",
+            "metric_unit": "proportion",
+        },
+        "aggregate_provenance": {
+            "source": "swebench_sanitized_result_v1",
+            "benchmark_result_sha256": validated["result_fingerprint_sha256"],
+            "protocol_fingerprint": summary["protocol_fingerprint"],
+            "manifest_sha256": summary["manifest_sha256"],
+            "runner_config_sha256": summary["runner_config_sha256"],
+        },
+        "attempt_policy": {
+            "trajectories_per_task": 1,
+            "internal_turns_are_attempts": False,
+            "response_marks_task_attempted": True,
+            "resume_can_start_second_trajectory": False,
+        },
+        "primary_objective_status_if_run": (
+            "pilot_only"
+            if non_capability
+            else "answered_with_stated_scope"
+            if capability_evidence
+            else "partially_answered"
+        ),
+        "raw_evidence_publication_eligible": False,
+    }
+
+
+def _persist_swebench_manifest(state: Path, manifest: dict[str, Any]) -> None:
+    run_dir = state / "runs" / str(manifest["run_id"])
+    run_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    _write_json(run_dir / "manifest.json", manifest)
+
+
+def _execute_swebench_run(
+    repo: Path,
+    state: Path,
+    plan: dict[str, Any],
+    config: dict[str, Any],
+    profile: dict[str, Any],
+    approval_marker: str | None,
+) -> dict[str, Any]:
+    result = _swebench_api().execute_swebench(
+        _swebench_profile(profile),
+        repo=repo,
+        state=state,
+        server_origin=_config_openai_base_url(config),
+        approval_marker=approval_marker,
+        # Persist before the first task so a run that raises can still be resumed.
+        on_run_created=lambda run_id: _persist_swebench_manifest(
+            state, {**plan, "run_id": run_id, "status": "blocked"}
+        ),
+    )
+    manifest = _swebench_run_manifest(plan, result)
+    _persist_swebench_manifest(state, manifest)
+    return {
+        "status": manifest["status"],
+        "run_id": manifest["run_id"],
+        "manifest": manifest,
+        "runner": manifest["runner"],
+    }
+
+
 def execute_run(
     suite: str,
     config_name: str,
@@ -1781,9 +2175,16 @@ def execute_run(
     root: Path | None = None,
     operation_override: dict[str, Any] | None = None,
     run_label: str | None = None,
+    swebench_approval_marker: str | None = None,
 ) -> dict[str, Any]:
     repo = root or project_root()
-    plan = build_execution_plan(suite, config_name, allow_expanded=allow_expanded, root=repo)
+    plan = build_execution_plan(
+        suite,
+        config_name,
+        allow_expanded=allow_expanded,
+        root=repo,
+        swebench_approval_marker=swebench_approval_marker,
+    )
     if dry_run:
         return {"status": "dry_run", "plan": plan}
     if plan["blockers"]:
@@ -1793,6 +2194,8 @@ def execute_run(
     profile = load_suite(suite, repo)
     if suite == "core":
         return _execute_core_run(repo, state, plan, config, profile, run_label)
+    if suite in _SWEBENCH_SUITES:
+        return _execute_swebench_run(repo, state, plan, config, profile, swebench_approval_marker)
     tasks = suite_tasks(suite)
     requested_settings, settings = _run_settings(plan, config, profile, operation_override)
     fingerprint = _run_fingerprint(plan, config, requested_settings)
@@ -1913,10 +2316,63 @@ def _refuse_evalscope_operation(manifest: dict[str, Any], error: RunError) -> No
         raise error
 
 
-def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) -> dict[str, Any]:
+def _resume_swebench_run(
+    run_id: str,
+    manifest: dict[str, Any],
+    *,
+    dry_run: bool,
+    repo: Path,
+    approval_marker: str | None,
+) -> dict[str, Any]:
+    suite = str(manifest.get("suite"))
+    profile = load_suite(suite, repo)
+    expected = profile.get("approval_marker")
+    if suite == "swebench-verified" and not (
+        approval_marker == expected == _SWEBENCH_FULL_APPROVAL
+    ):
+        raise ResumeRefused("SWE-bench Verified resume requires the explicit approval marker")
+    if manifest.get("status") == "completed":
+        return {"status": "already_complete", "run_id": run_id}
+    if dry_run:
+        return {
+            "status": "dry_run",
+            "run_id": run_id,
+            "protocol_fingerprint": manifest.get("protocol_fingerprint"),
+            "second_trajectory_allowed": False,
+        }
+    state = get_state_dir(repo)
+    config = load_config(str(manifest["config_id"]), repo)
+    result = _swebench_api().resume_swebench(
+        _swebench_profile(profile),
+        repo=repo,
+        state=state,
+        server_origin=_config_openai_base_url(config),
+        run_id=run_id,
+        approval_marker=approval_marker,
+    )
+    updated = _swebench_run_manifest(manifest, result)
+    _persist_swebench_manifest(state, updated)
+    return {"status": updated["status"], "run_id": updated["run_id"], "manifest": updated}
+
+
+def resume_run(
+    run_id: str,
+    *,
+    dry_run: bool = False,
+    root: Path | None = None,
+    swebench_approval_marker: str | None = None,
+) -> dict[str, Any]:
     repo = root or project_root()
     directory = _run_dir(run_id, repo)
     manifest, attempts = load_run(run_id, repo)
+    if manifest.get("suite") in _SWEBENCH_SUITES:
+        return _resume_swebench_run(
+            run_id,
+            manifest,
+            dry_run=dry_run,
+            repo=repo,
+            approval_marker=swebench_approval_marker,
+        )
     _refuse_evalscope_operation(
         manifest,
         ResumeRefused(
@@ -2064,10 +2520,62 @@ def resume_run(run_id: str, *, dry_run: bool = False, root: Path | None = None) 
     }
 
 
+def _rescore_swebench_run(
+    run_id: str,
+    scorer_version: str,
+    manifest: dict[str, Any],
+    repo: Path,
+) -> dict[str, Any]:
+    if scorer_version != "swebench-grader-pinned":
+        raise RunError("SWE-bench rescore requires the frozen grader")
+    source_result = {
+        "run_id": manifest.get("run_id"),
+        "status": manifest.get("status"),
+        "mode": "qualification"
+        if manifest.get("suite") == "swebench-qualification"
+        else "verified",
+        "task_count": manifest.get("sample_count"),
+        "protocol_fingerprint": manifest.get("protocol_fingerprint"),
+        "manifest_sha256": manifest.get("selection_hash"),
+        "benchmark_summary": manifest.get("benchmark_summary"),
+        "benchmark_result": manifest.get("benchmark_result"),
+        "benchmark_result_fingerprint_sha256": manifest.get("benchmark_result_fingerprint_sha256"),
+    }
+    # Reconstruct the original manifest to retain the same accounting and
+    # publication checks used when the source run was first accepted. Rescoring
+    # writes a separate immutable report and must not rewrite that source record.
+    if _swebench_run_manifest(manifest, source_result) != manifest:
+        raise RunError("stored SWE-bench source manifest failed validation before rescore")
+    profile = load_suite(str(manifest["suite"]), repo)
+    config = load_config(str(manifest["config_id"]), repo)
+    state = get_state_dir(repo)
+    result = _swebench_api().rescore_swebench(
+        _swebench_profile(profile),
+        repo=repo,
+        state=state,
+        server_origin=_config_openai_base_url(config),
+        run_id=run_id,
+    )
+    if (
+        not isinstance(result, dict)
+        or result.get("run_id") != run_id
+        or not _is_sha256(result.get("report_id"))
+        or not _is_sha256(result.get("report_sha256"))
+        or type(result.get("task_count")) is not int
+        or result["task_count"] < 0
+        or not isinstance(result.get("tasks"), list)
+        or len(result["tasks"]) != result["task_count"]
+    ):
+        raise RunError("SWE-bench rescore returned an invalid report")
+    return {**result, "status": "rescored", "scorer_version": scorer_version}
+
+
 def rescore_run(run_id: str, scorer_version: str, *, root: Path | None = None) -> dict[str, Any]:
     repo = root or project_root()
     directory = _run_dir(run_id, repo)
     manifest, attempts = load_run(run_id, repo)
+    if manifest.get("suite") in _SWEBENCH_SUITES:
+        return _rescore_swebench_run(run_id, scorer_version, manifest, repo)
     _refuse_evalscope_operation(
         manifest,
         RunError(

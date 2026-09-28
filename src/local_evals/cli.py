@@ -233,11 +233,15 @@ def plan(
     config: str = typer.Option(..., "--config"),
     allow_expanded: bool = typer.Option(False, "--allow-expanded"),
     dry_run: bool = typer.Option(True, "--dry-run/--execute"),
+    swebench_approval_marker: str | None = typer.Option(None, "--swebench-approval-marker"),
 ) -> None:
     """Resolve samples, repetitions, budgets, blockers, and outputs before execution."""
     del dry_run  # Planning is always read-only; retained for interface consistency.
     try:
-        _emit(build_execution_plan(suite, config, allow_expanded=allow_expanded))
+        options: dict[str, Any] = {"allow_expanded": allow_expanded}
+        if swebench_approval_marker is not None:
+            options["swebench_approval_marker"] = swebench_approval_marker
+        _emit(build_execution_plan(suite, config, **options))
     except (RunError, OSError, ValueError) as error:
         _abort(error)
 
@@ -248,10 +252,17 @@ def run_command(
     config: str = typer.Option(..., "--config"),
     dry_run: bool = typer.Option(False, "--dry-run"),
     allow_expanded: bool = typer.Option(False, "--allow-expanded"),
+    swebench_approval_marker: str | None = typer.Option(None, "--swebench-approval-marker"),
 ) -> None:
-    """Run a fixed local suite; core dispatches to the pinned EvalScope launcher."""
+    """Run a fixed local suite through its pinned local launcher."""
     try:
-        _emit(execute_run(suite, config, dry_run=dry_run, allow_expanded=allow_expanded))
+        options: dict[str, Any] = {
+            "dry_run": dry_run,
+            "allow_expanded": allow_expanded,
+        }
+        if swebench_approval_marker is not None:
+            options["swebench_approval_marker"] = swebench_approval_marker
+        _emit(execute_run(suite, config, **options))
     except (RunError, OSError, ValueError) as error:
         _abort(error)
 
@@ -472,10 +483,14 @@ def view(
 def resume(
     run_id: str = typer.Option(..., "--run"),
     dry_run: bool = typer.Option(False, "--dry-run"),
+    swebench_approval_marker: str | None = typer.Option(None, "--swebench-approval-marker"),
 ) -> None:
     """Resume only unfinished attempts under the exact original fingerprint."""
     try:
-        _emit(resume_run(run_id, dry_run=dry_run))
+        options: dict[str, Any] = {"dry_run": dry_run}
+        if swebench_approval_marker is not None:
+            options["swebench_approval_marker"] = swebench_approval_marker
+        _emit(resume_run(run_id, **options))
     except (RunError, OSError, ValueError) as error:
         _abort(error)
 

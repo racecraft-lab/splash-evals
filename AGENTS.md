@@ -13,7 +13,11 @@ These rules apply to every automated change in this repository.
 4. Keep raw prompts, responses, reasoning, datasets, machine/runtime inventories,
    settings snapshots, credentials, private paths, and audit denylist terms outside Git.
 5. Never execute model-generated code on the host. Fail closed unless the grading
-   container's isolation has been verified.
+   container's isolation has been verified. Sole network exception (operator-approved
+   2026-09-24): SWE-bench grader containers, during eval only, for tasks whose gold
+   evidence needs it, may reach a frozen host allowlist through a dropping gateway.
+   Verify before each such eval that every other destination is unreachable. Task
+   (agent) containers and the host stay offline.
 6. Do not turn null/unknown fields into zero or infer model snapshots, settings, scores,
    uncertainty, or comparability. Every number needs a source locator and unit.
 7. Run the publication gate against staged files and outgoing history before every push,

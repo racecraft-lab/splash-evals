@@ -10,6 +10,17 @@ from typing import Any
 import pytest
 
 import local_evals.publication as publication
+from local_evals.benchmark_results import (
+    BenchmarkCounts,
+    BenchmarkEvaluator,
+    BenchmarkIdentity,
+    BenchmarkProvenance,
+    BenchmarkResult,
+    BenchmarkStatus,
+    EvaluatorClass,
+    MetricUnit,
+    TaskOutcomes,
+)
 from local_evals.publication import prepare_publication
 from local_evals.sandbox import SandboxPolicy
 
@@ -22,6 +33,27 @@ def _policies() -> dict[str, Any]:
             "denied_suffixes": [".zip", ".tar", ".gz", ".ipynb", ".sqlite", ".db"],
         }
     }
+
+
+@pytest.mark.parametrize("timed_command", ["version", "dir"])
+def test_secret_scanner_timeout_is_a_structured_blocker(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, timed_command: str
+) -> None:
+    monkeypatch.setattr(publication.shutil, "which", lambda executable: "/usr/bin/gitleaks")
+
+    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if command[1] == timed_command:
+            raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+        return subprocess.CompletedProcess(command, 0, stdout="8.30.1\n", stderr="")
+
+    monkeypatch.setattr(publication.subprocess, "run", run)
+
+    findings, scanner = publication._run_secret_scanner(tmp_path)
+
+    assert any(finding["rule"] == "secret-scanner-timeout" for finding in findings)
+    assert scanner["status"] == "blocked"
+    assert scanner["timed_out"] is True
+    assert scanner["diagnostics_redacted"] is True
 
 
 def _capability_manifest() -> dict[str, Any]:
@@ -452,8 +484,11 @@ def test_identity_audit_checks_only_commits_reachable_from_head(
 
     findings, summary = publication._identity_findings(tmp_path)
 
-    assert findings == []
-    assert not any(finding["rule"] == "history-identity-mismatch" for finding in findings)
+    assert any(finding["rule"] == "github-squash-provenance-required" for finding in findings)
+    assert not any(
+        finding.get("rule") == "commit-message-email-address" and finding.get("match_count") == 1
+        for finding in findings
+    )
     assert summary["commits_checked"] == 1
 
 
@@ -726,6 +761,39 @@ def test_publish_prepare_exports_allowlisted_aggregate_fields_only(
         assert forbidden not in serialized
 
 
+@pytest.mark.parametrize(
+    ("leaked_value", "expected_rule"),
+    [
+        ("/Users" + "/private-operator/research/result.json", "public-payload-absolute-user-path"),
+        ("private-runtime-instance", "public-payload-private-field"),
+    ],
+)
+def test_publish_prepare_content_scans_the_exact_sanitized_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    leaked_value: str,
+    expected_rule: str,
+) -> None:
+    manifest = _capability_manifest()
+    if expected_rule.endswith("private-field"):
+        manifest["aggregate"]["instance_id"] = leaked_value
+    else:
+        manifest["aggregate"]["public_note"] = leaked_value
+    monkeypatch.setattr(publication, "load_run", lambda run_id, root=None: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_blocked"
+    assert any(blocker.get("rule") == expected_rule for blocker in result["blockers"])
+    assert all(blocker.get("matched_text_redacted") is not False for blocker in result["blockers"])
+    assert leaked_value not in repr(result)
+
+
 def test_coding_sandbox_export_uses_case_insensitive_family_contract(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -795,6 +863,502 @@ def test_incomplete_or_noncapability_core_manifest_is_rejected(mode: str) -> Non
     assert publication._publication_purpose(manifest) is None
     if mode == "incomplete":
         assert "family_results" in publication._capability_publication_failures(manifest)
+
+
+def _swebench_verified_manifest() -> dict[str, Any]:
+    summary = {
+        "schema_version": 1,
+        "status": "completed",
+        "evidence_class": "held_out_capability",
+        "task_count": 500,
+        "completed_count": 500,
+        "resolved_count": 400,
+        "unresolved_count": 100,
+        "model_failure_count": 0,
+        "infrastructure_error_count": 0,
+        "error_count": 0,
+        "resolution_rate": 0.8,
+        "protocol_fingerprint": "a" * 64,
+        "manifest_sha256": "b" * 64,
+        "image_bindings_sha256": "f" * 64,
+        "runner_config_sha256": "c" * 64,
+        "task_image_digest": "d" * 64,
+        "grader_image_digest": "e" * 64,
+        "control_image_digest": "sha256:" + "e" * 64,
+        "non_capability": False,
+        "capability_claim_allowed": True,
+    }
+    benchmark = BenchmarkResult(
+        result_id="synthetic-swebench-run",
+        identity=BenchmarkIdentity(
+            name="SWE-bench Verified",
+            variant="verified-500",
+            adapter="mini-swe-agent-bash-docker",
+            dataset_provider="princeton-nlp",
+            dataset_id="SWE-bench/SWE-bench_Verified",
+            dataset_revision="78f471bf655a3137b2e8a75af1501690ec009ec3",
+            evaluation_version="4.1.0",
+            split="test",
+            subset="verified",
+        ),
+        status=BenchmarkStatus.COMPLETE,
+        counts=BenchmarkCounts(requested=500, succeeded=500, errored=0),
+        task_outcomes=TaskOutcomes(
+            resolved=400, unresolved=100, model_failure=0, infrastructure_error=0
+        ),
+        metric_name="resolution_rate",
+        metric_unit=MetricUnit.PROPORTION,
+        score=0.8,
+        evaluator=BenchmarkEvaluator(
+            name="SWE-bench official grader",
+            version="4.1.0",
+            developer="SWE-bench",
+            model_label="racecraft-splash-local",
+            evidence_class=EvaluatorClass.MEASURED_HERE,
+        ),
+        provenance=BenchmarkProvenance(
+            source="synthetic unit test",
+            artifacts={
+                "protocol_fingerprint": "a" * 64,
+                "manifest": "b" * 64,
+                "image_bindings": "f" * 64,
+                "runner_config": "c" * 64,
+                "control_image": "e" * 64,
+            },
+        ),
+        limitations=("Synthetic unit test.",),
+    )
+    return {
+        "schema_version": 2,
+        "suite": "swebench-verified",
+        "status": "completed",
+        "runner": "swebench-local-sandbox-v1",
+        "evidence_class": "local_measurement",
+        "model_is_splash": True,
+        "locality_evidence": {
+            "status": "verified_local",
+            "endpoint_loopback": True,
+            "local_instance_evidence": True,
+        },
+        "model_instance_evidence": {
+            "selection": "exact_loaded_record",
+            "splash_attribution": "confirmed",
+            "native_identity": {"loaded_instance_id_match": True},
+        },
+        "swebench_readiness": {
+            "status": "ready",
+            "blockers": [],
+            "metadata": {
+                "schema_version": 1,
+                "protocol_fingerprint": "a" * 64,
+                "manifest_sha256": "b" * 64,
+                "image_bindings_sha256": "f" * 64,
+                "runner_config_sha256": "c" * 64,
+                "image_bindings_schema_version": 1,
+                "image_bindings_task_count": 500,
+                "control_image_digest": "sha256:" + "e" * 64,
+                "platform": "linux/amd64",
+                "mode": "verified",
+                "task_count": 500,
+                "non_capability": False,
+                "full_run_requires_approval": True,
+            },
+        },
+        "held_out": True,
+        "selection_status": "held_out_verified",
+        "protocol_fingerprint": "a" * 64,
+        "selection_hash": "b" * 64,
+        "approval_evidence": {
+            "required": True,
+            "status": "verified",
+            "approved_fingerprint": "a" * 64,
+        },
+        "benchmark_summary": summary,
+        "benchmark_result": benchmark.model_dump(mode="json"),
+        "benchmark_result_fingerprint_sha256": benchmark.fingerprint_sha256(),
+        "non_capability": False,
+        "capability_claim_allowed": True,
+        "capability_evidence": True,
+        "publication_eligible": True,
+        "aggregate": {
+            "planned": 500,
+            "attempted": 500,
+            "completed": 500,
+            "scorable": 500,
+            "resolved": 400,
+            "unresolved": 100,
+            "failed": 0,
+            "model_failure": 0,
+            "infrastructure_error": 0,
+            "unattempted": 0,
+            "score": 0.8,
+            "metric_name": "resolved",
+            "metric_unit": "proportion",
+        },
+        "aggregate_provenance": {
+            "source": "swebench_sanitized_result_v1",
+            "benchmark_result_sha256": benchmark.fingerprint_sha256(),
+            "protocol_fingerprint": "a" * 64,
+            "manifest_sha256": "b" * 64,
+            "runner_config_sha256": "c" * 64,
+        },
+        "attempt_policy": {
+            "trajectories_per_task": 1,
+            "internal_turns_are_attempts": False,
+            "response_marks_task_attempted": True,
+            "resume_can_start_second_trajectory": False,
+        },
+        "protocol": {
+            "task_set": "swebench-verified",
+            "scorer_version": "swebench-grader-pinned",
+        },
+        "limitations": [],
+        "primary_objective_status_if_run": "answered_with_stated_scope",
+    }
+
+
+def test_complete_swebench_verified_manifest_is_capability_publication_eligible(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = _swebench_verified_manifest()
+    monkeypatch.setattr(publication, "load_run", lambda *args, **kwargs: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication("synthetic-swebench-run", dry_run=True, root=tmp_path)
+
+    assert result["status"] == "dry_run_ready_for_human_review"
+    assert result["preview"]["publication_purpose"] == "held_out_model_capability"
+    assert result["preview"]["capability_evidence"] is True
+
+
+def test_swebench_model_failure_remains_in_denominator_for_publication_review() -> None:
+    manifest = _swebench_verified_manifest()
+    manifest["benchmark_summary"].update(
+        completed_count=499,
+        unresolved_count=99,
+        model_failure_count=1,
+        error_count=1,
+        resolution_rate=0.8,
+    )
+    benchmark = BenchmarkResult.model_validate(manifest["benchmark_result"]).model_copy(
+        update={
+            "counts": BenchmarkCounts(requested=500, succeeded=499, errored=1),
+            "task_outcomes": TaskOutcomes(
+                resolved=400, unresolved=99, model_failure=1, infrastructure_error=0
+            ),
+            "score": 0.8,
+        }
+    )
+    manifest["benchmark_result"] = benchmark.model_dump(mode="json")
+    manifest["benchmark_result_fingerprint_sha256"] = benchmark.fingerprint_sha256()
+    manifest["aggregate"].update(
+        completed=499,
+        scorable=499,
+        unresolved=99,
+        failed=1,
+        model_failure=1,
+        infrastructure_error=0,
+    )
+    manifest["aggregate_provenance"]["benchmark_result_sha256"] = benchmark.fingerprint_sha256()
+
+    assert publication._swebench_publication_failures(manifest) == []
+
+
+def test_swebench_model_failure_dry_run_reaches_human_review_gate(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = _swebench_verified_manifest()
+    manifest["benchmark_summary"].update(
+        completed_count=499,
+        unresolved_count=99,
+        model_failure_count=1,
+        error_count=1,
+        resolution_rate=0.8,
+    )
+    benchmark = BenchmarkResult.model_validate(manifest["benchmark_result"]).model_copy(
+        update={
+            "counts": BenchmarkCounts(requested=500, succeeded=499, errored=1),
+            "task_outcomes": TaskOutcomes(
+                resolved=400, unresolved=99, model_failure=1, infrastructure_error=0
+            ),
+            "score": 0.8,
+        }
+    )
+    manifest["benchmark_result"] = benchmark.model_dump(mode="json")
+    manifest["benchmark_result_fingerprint_sha256"] = benchmark.fingerprint_sha256()
+    manifest["aggregate"].update(
+        completed=499,
+        scorable=499,
+        unresolved=99,
+        failed=1,
+        model_failure=1,
+        infrastructure_error=0,
+    )
+    manifest["aggregate_provenance"]["benchmark_result_sha256"] = benchmark.fingerprint_sha256()
+    monkeypatch.setattr(publication, "load_run", lambda *args, **kwargs: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication(
+        "synthetic-swebench-model-failure-run", dry_run=True, root=tmp_path
+    )
+
+    assert result["status"] == "dry_run_ready_for_human_review"
+    assert result["writes_performed"] is False
+    assert result["export_writes_performed"] is False
+    assert result["blockers"] == []
+    assert result["preview"]["publication_purpose"] == "held_out_model_capability"
+    assert result["preview"]["capability_evidence"] is True
+    assert result["preview"]["aggregate"]["completed"] == 499
+    assert result["preview"]["aggregate"]["scorable"] == 499
+    assert result["preview"]["aggregate"]["model_failure"] == 1
+
+
+def test_all_swebench_model_failures_are_zero_score_and_reviewable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = _swebench_verified_manifest()
+    manifest["benchmark_summary"].update(
+        completed_count=0,
+        resolved_count=0,
+        unresolved_count=0,
+        model_failure_count=500,
+        error_count=500,
+        resolution_rate=0.0,
+    )
+    benchmark = BenchmarkResult.model_validate(manifest["benchmark_result"]).model_copy(
+        update={
+            "counts": BenchmarkCounts(requested=500, succeeded=0, errored=500),
+            "task_outcomes": TaskOutcomes(
+                resolved=0, unresolved=0, model_failure=500, infrastructure_error=0
+            ),
+            "score": 0.0,
+        }
+    )
+    manifest["benchmark_result"] = benchmark.model_dump(mode="json")
+    manifest["benchmark_result_fingerprint_sha256"] = benchmark.fingerprint_sha256()
+    manifest["aggregate"].update(
+        completed=0,
+        scorable=0,
+        resolved=0,
+        unresolved=0,
+        failed=500,
+        model_failure=500,
+        infrastructure_error=0,
+        score=0.0,
+    )
+    manifest["aggregate_provenance"]["benchmark_result_sha256"] = benchmark.fingerprint_sha256()
+    monkeypatch.setattr(publication, "load_run", lambda *args, **kwargs: (manifest, []))
+    monkeypatch.setattr(
+        publication,
+        "audit_publication",
+        lambda **kwargs: {"status": "pass", "findings": []},
+    )
+
+    result = prepare_publication(
+        "synthetic-swebench-all-model-failures", dry_run=True, root=tmp_path
+    )
+
+    assert result["status"] == "dry_run_ready_for_human_review"
+    assert result["writes_performed"] is False
+    assert result["export_writes_performed"] is False
+    assert result["blockers"] == []
+    assert result["preview"]["publication_purpose"] == "held_out_model_capability"
+    assert result["preview"]["capability_evidence"] is True
+    assert result["preview"]["aggregate"]["completed"] == 0
+    assert result["preview"]["aggregate"]["scorable"] == 0
+    assert result["preview"]["aggregate"]["model_failure"] == 500
+    assert result["preview"]["aggregate"]["score"] == 0.0
+
+
+def test_swebench_partial_run_with_infrastructure_error_remains_withheld() -> None:
+    manifest = _swebench_verified_manifest()
+    manifest.update(
+        status="partial",
+        capability_claim_allowed=False,
+        capability_evidence=False,
+        publication_eligible=False,
+    )
+    manifest["benchmark_summary"].update(
+        status="partial",
+        completed_count=499,
+        unresolved_count=99,
+        model_failure_count=0,
+        infrastructure_error_count=1,
+        error_count=1,
+        resolution_rate=0.8,
+    )
+    benchmark = BenchmarkResult.model_validate(manifest["benchmark_result"]).model_copy(
+        update={
+            "status": BenchmarkStatus.PARTIAL,
+            "counts": BenchmarkCounts(requested=500, succeeded=499, errored=1),
+            "task_outcomes": TaskOutcomes(
+                resolved=400, unresolved=99, model_failure=0, infrastructure_error=1
+            ),
+            "score": None,
+        }
+    )
+    manifest["benchmark_result"] = benchmark.model_dump(mode="json")
+    manifest["benchmark_result_fingerprint_sha256"] = benchmark.fingerprint_sha256()
+    manifest["aggregate"].update(
+        completed=499,
+        scorable=499,
+        failed=1,
+        model_failure=0,
+        infrastructure_error=1,
+        score=None,
+    )
+    manifest["aggregate_provenance"]["benchmark_result_sha256"] = benchmark.fingerprint_sha256()
+
+    failures = publication._swebench_publication_failures(manifest)
+
+    assert "benchmark_result.status" in failures
+    assert publication._publication_purpose(manifest) is None
+
+
+@pytest.mark.parametrize("task_count", [11, 499])
+def test_swebench_verified_publication_requires_exactly_500_tasks(task_count: int) -> None:
+    manifest = _swebench_verified_manifest()
+    resolved = task_count - 1
+    rate = resolved / task_count
+    manifest["benchmark_summary"].update(
+        task_count=task_count,
+        completed_count=task_count,
+        resolved_count=resolved,
+        unresolved_count=1,
+        error_count=0,
+        resolution_rate=rate,
+    )
+    manifest["aggregate"].update(
+        planned=task_count,
+        attempted=task_count,
+        completed=task_count,
+        scorable=task_count,
+        resolved=resolved,
+        unresolved=1,
+        score=rate,
+    )
+    benchmark = BenchmarkResult.model_validate(manifest["benchmark_result"]).model_copy(
+        update={
+            "counts": BenchmarkCounts(requested=task_count, succeeded=task_count, errored=0),
+            "score": rate,
+        }
+    )
+    manifest["benchmark_result"] = benchmark.model_dump(mode="json")
+    fingerprint = benchmark.fingerprint_sha256()
+    manifest["benchmark_result_fingerprint_sha256"] = fingerprint
+    manifest["aggregate_provenance"]["benchmark_result_sha256"] = fingerprint
+
+    failures = publication._swebench_publication_failures(manifest)
+
+    assert "benchmark_summary.task_count" in failures
+    assert publication._publication_purpose(manifest) is None
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    [
+        ("status", "partial"),
+        ("approval", "missing"),
+        ("protocol", "f" * 64),
+        ("attempted", 499),
+        ("scorable", 499),
+        ("provenance", "0" * 64),
+    ],
+)
+def test_swebench_verified_publication_fails_closed_on_evidence_drift(
+    field: str, replacement: Any
+) -> None:
+    manifest = _swebench_verified_manifest()
+    if field == "status":
+        manifest["benchmark_result"]["status"] = replacement
+    elif field == "approval":
+        manifest["approval_evidence"]["status"] = replacement
+    elif field == "protocol":
+        manifest["approval_evidence"]["approved_fingerprint"] = replacement
+    elif field == "attempted":
+        manifest["aggregate"]["attempted"] = replacement
+    elif field == "scorable":
+        manifest["aggregate"]["scorable"] = replacement
+    else:
+        manifest["aggregate_provenance"]["benchmark_result_sha256"] = replacement
+
+    assert publication._publication_purpose(manifest) is None
+    assert publication._swebench_publication_failures(manifest)
+
+
+@pytest.mark.parametrize("score", [0.75, True, None])
+def test_swebench_aggregate_score_is_bound_to_resolved_over_500(score: Any) -> None:
+    manifest = _swebench_verified_manifest()
+    manifest["aggregate"]["score"] = score
+
+    assert "aggregate.score" in publication._swebench_publication_failures(manifest)
+
+
+@pytest.mark.parametrize(
+    ("path", "replacement", "expected_field"),
+    [
+        (("swebench_readiness", "status"), "blocked", "swebench_readiness.status"),
+        (
+            ("swebench_readiness", "metadata", "runner_config_sha256"),
+            "0" * 64,
+            "swebench_readiness.metadata.runner_config_sha256",
+        ),
+        (
+            ("swebench_readiness", "metadata", "image_bindings_sha256"),
+            "0" * 64,
+            "swebench_readiness.metadata.image_bindings_sha256",
+        ),
+        (
+            ("benchmark_result", "provenance", "artifacts", "control_image"),
+            "0" * 64,
+            "benchmark_result.provenance.artifacts.control_image",
+        ),
+        (
+            ("locality_evidence", "endpoint_loopback"),
+            False,
+            "locality_evidence.endpoint_loopback",
+        ),
+        (
+            ("model_instance_evidence", "native_identity", "loaded_instance_id_match"),
+            False,
+            "model_instance_evidence.native_identity.loaded_instance_id_match",
+        ),
+    ],
+)
+def test_swebench_publication_requires_fingerprint_bound_readiness_and_sandbox(
+    path: tuple[str, ...], replacement: Any, expected_field: str
+) -> None:
+    manifest = _swebench_verified_manifest()
+    assert "task_families" not in manifest
+    target: dict[str, Any] = manifest
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = replacement
+
+    assert expected_field in publication._swebench_publication_failures(manifest)
+
+
+def test_swebench_qualification_is_never_publication_eligible() -> None:
+    manifest = _swebench_verified_manifest()
+    manifest.update(
+        suite="swebench-qualification",
+        evidence_class="runtime_scorer_qualification",
+        held_out=False,
+        non_capability=True,
+        capability_claim_allowed=False,
+        capability_evidence=False,
+        publication_eligible=False,
+    )
+
+    assert publication._publication_purpose(manifest) is None
 
 
 @pytest.mark.parametrize(

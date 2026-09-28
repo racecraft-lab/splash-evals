@@ -59,3 +59,22 @@ test('future measured detail reflows with expanded technical evidence', async ({
     }
   }
 });
+
+test('upstream SWE-bench scoring counts errors as unresolved only when the record reconciles', async () => {
+  const record = syntheticRecord('complete');
+  record.counts = { requested: 500, succeeded: 482, errored: 18 };
+  record.task_outcomes = { resolved: 360, unresolved: 122, model_failure: 16, infrastructure_error: 2 };
+  record.score = 0.72;
+  expect(() => benchmarkLifecycleView(record, { requiredCompleteCount: 500 })).toThrow();
+  const view = benchmarkLifecycleView(record, { requiredCompleteCount: 500, errorsCountAsUnresolved: true });
+  expect(view).toMatchObject({ status: 'complete', label: '72.00%', capability: true });
+  expect(view.completion).toBe('360 / 500 resolved · 18 errors counted unresolved');
+  for (const broken of [
+    { ...record, score: 360 / 482 },
+    { ...record, counts: { requested: 500, succeeded: 480, errored: 18 } },
+    { ...record, task_outcomes: { ...record.task_outcomes, model_failure: 15 } },
+    { ...record, task_outcomes: { resolved: 0, unresolved: 0, model_failure: 0, infrastructure_error: 500 }, counts: { requested: 500, succeeded: 0, errored: 500 }, score: 0 },
+  ]) {
+    expect(() => benchmarkLifecycleView(broken, { requiredCompleteCount: 500, errorsCountAsUnresolved: true })).toThrow();
+  }
+});

@@ -6,7 +6,7 @@
 
 ## External reference explorer
 
-These published observations use SWE-bench Verified, but the agents and testing conditions differ. The pinned Splash row shows its current reviewed status. Missing scores are labeled explicitly.
+These published observations use SWE-bench Verified, but the agents and testing conditions differ. The pinned Splash row shows the reviewed local result. The Vals AI rows also use mini-swe-agent, but with different step limits, settings, and environments, so they remain context rather than a ranking. Missing scores are labeled explicitly.
 
 <aside class="method-note" role="note"><strong>Two different source groups:</strong> ten Vals AI observations use mini-swe-agent and are labeled “Vals AI independent.” Two Claude 4 observations use Anthropic's standard scaffold and are labeled “Provider-reported.” Do not rank or subtract across those harness groups.</aside>
 

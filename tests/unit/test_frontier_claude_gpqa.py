@@ -107,8 +107,147 @@ def test_epoch_claude_gpqa_record_is_a_valid_incompatible_reference(
 
 
 def test_requested_epoch_claude_roster_is_exact_and_has_unique_ids() -> None:
-    paths = sorted(CATALOG.glob("anthropic-claude-*-gpqa.yaml"))
-    assert {path.name for path in paths} == set(EXPECTED)
+    catalog_records = {path.name: _load(path.name) for path in sorted(CATALOG.glob("*-gpqa*.yaml"))}
+    epoch_records = {
+        filename: record
+        for filename, record in catalog_records.items()
+        if (
+            (record.get("evaluator") or ("Epoch" if "epoch.ai" in record["source_url"] else None))
+            == "Epoch"
+            and (
+                record.get("evaluator_class")
+                or ("independent" if "epoch.ai" in record["source_url"] else None)
+            )
+            == "independent"
+        )
+    }
+    assert set(epoch_records) == set(EXPECTED)
 
-    records = [_load(path.name) for path in paths]
+    records = list(epoch_records.values())
     assert len({record["reference_id"] for record in records}) == len(records)
+
+
+RESTORED: dict[str, tuple[str, float, str, str, int | None, int | None]] = {
+    "anthropic-claude-sonnet-4-2025-05-gpqa-provider.yaml": (
+        "Claude Sonnet 4",
+        70.0,
+        "Anthropic",
+        "provider_reported",
+        None,
+        None,
+    ),
+    "anthropic-claude-opus-4-2025-05-gpqa-provider.yaml": (
+        "Claude Opus 4",
+        74.9,
+        "Anthropic",
+        "provider_reported",
+        None,
+        None,
+    ),
+    "anthropic-claude-sonnet-4-6-2026-02-gpqa-provider.yaml": (
+        "Claude Sonnet 4.6",
+        89.9,
+        "Anthropic",
+        "provider_reported",
+        198,
+        10,
+    ),
+    "anthropic-claude-opus-4-6-2026-02-gpqa-provider.yaml": (
+        "Claude Opus 4.6",
+        91.3,
+        "Anthropic",
+        "provider_reported",
+        None,
+        None,
+    ),
+    "anthropic-claude-opus-4-7-2026-04-gpqa-provider.yaml": (
+        "Claude Opus 4.7",
+        94.2,
+        "Anthropic",
+        "provider_reported",
+        198,
+        10,
+    ),
+    "anthropic-claude-opus-4-8-2026-05-gpqa-provider.yaml": (
+        "Claude Opus 4.8",
+        93.6,
+        "Anthropic",
+        "provider_reported",
+        198,
+        25,
+    ),
+    "anthropic-claude-opus-4-8-gpqa-cross-provider.yaml": (
+        "Claude Opus 4.8",
+        92.0,
+        "OpenAI",
+        "cross_provider",
+        None,
+        None,
+    ),
+    "anthropic-claude-opus-5-gpqa-cross-provider.yaml": (
+        "Claude Opus 5",
+        93.7,
+        "OpenAI",
+        "cross_provider",
+        None,
+        None,
+    ),
+}
+
+
+@pytest.mark.parametrize("filename", sorted(RESTORED))
+def test_restored_primary_gpqa_records_preserve_variant_and_unknowns(filename: str) -> None:
+    model, score, evaluator, evaluator_class, sample_count, attempts = RESTORED[filename]
+    record = _load(filename)
+
+    assert validate_reference_record(record, source_name=filename)["valid"] is True
+    assert record["provider"] == "Anthropic"
+    assert record["model_display_name"] == model
+    assert record["reported_score"] == score
+    assert record["evaluator"] == evaluator
+    assert record["evaluator_class"] == evaluator_class
+    assert record["retrieved_on"] == "2026-09-22"
+    assert record["benchmark"]["name"] == "GPQA Diamond"
+    assert record["benchmark"]["split"] == "Diamond"
+    assert record["benchmark"]["version"] is None
+    assert record["benchmark"]["dataset_revision"] is None
+    assert record["benchmark"]["sample_count"] == sample_count
+    assert record["protocol"]["attempts_per_task"] == attempts
+    assert record["model_snapshot_id"] is None
+    assert record["source_revision_or_content_hash"].startswith("retrieved 2026-09-22;")
+    assert "sha256:" not in record["source_revision_or_content_hash"]
+    assert record["comparability"] == "incompatible"
+    notes = " ".join(record["comparability_notes"])
+    assert "must not support a direct score difference" in notes
+
+
+def test_restored_gpqa_roster_is_unique_and_cross_provider_is_explicit() -> None:
+    records = [_load(filename) for filename in RESTORED]
+    assert len({record["reference_id"] for record in records}) == len(records)
+    assert {record["evaluator_class"] for record in records} == {
+        "provider_reported",
+        "cross_provider",
+    }
+    assert sum(record["evaluator_class"] == "cross_provider" for record in records) == 2
+
+
+def test_restored_source_specific_protocol_notes_are_explicit() -> None:
+    for filename in (
+        "anthropic-claude-sonnet-4-2025-05-gpqa-provider.yaml",
+        "anthropic-claude-opus-4-2025-05-gpqa-provider.yaml",
+    ):
+        assert _load(filename)["protocol"]["reasoning_mode"] == "off"
+
+    sonnet_notes = " ".join(
+        _load("anthropic-claude-sonnet-4-6-2026-02-gpqa-provider.yaml")["comparability_notes"]
+    )
+    assert "adaptive thinking at max effort" in sonnet_notes
+    assert "default temperature and top-p" in sonnet_notes
+    assert "averaged over 10 trials" in sonnet_notes
+
+    assert "averaged over 10 trials" in " ".join(
+        _load("anthropic-claude-opus-4-7-2026-04-gpqa-provider.yaml")["comparability_notes"]
+    )
+    assert "averaged over 25 trials" in " ".join(
+        _load("anthropic-claude-opus-4-8-2026-05-gpqa-provider.yaml")["comparability_notes"]
+    )

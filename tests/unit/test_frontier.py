@@ -212,6 +212,15 @@ def test_provider_allowlist_accepts_supported_providers(provider: str) -> None:
     assert validate_reference_record(record)["valid"] is True
 
 
+@pytest.mark.parametrize("evaluator_class", ["independent", "provider_reported", "cross_provider"])
+def test_evaluator_class_allowlist_accepts_cross_provider(evaluator_class: str) -> None:
+    record = _reference_record()
+    record["evaluator"] = "OpenAI"
+    record["evaluator_class"] = evaluator_class
+
+    assert validate_reference_record(record)["valid"] is True
+
+
 def test_provider_allowlist_rejects_every_other_value() -> None:
     record = _reference_record()
     record["provider"] = "Synthetic Provider"

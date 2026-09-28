@@ -1,0 +1,35 @@
+schema_version: 1
+mini_swe_agent_version: "2.4.6"
+agent:
+  tools:
+    - bash
+  # Prompts, observation and format-error feedback come unchanged from the pinned
+  # wheel's minisweagent/config/benchmarks/swebench_backticks.yaml.
+  step_limit: 100
+  wall_time_limit_seconds: 600
+  cost_limit: 0
+model:
+  model_name: "racecraft-splash-local"
+  protocol: "lm-studio-openai-compatible-text-bash-v1"
+  reasoning_effort: "on"
+  temperature: 1.0
+  top_p: 0.95
+  max_output_tokens: 65536
+  transport_retries: 0
+  cache: false
+  follow_redirects: false
+environment:
+  environment_class: "racecraft-existing-offline-docker-exec"
+  cwd: "/testbed"
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: "off"
+    TQDM_DISABLE: "1"
+    BASH_ENV: /opt/racecraft/bashrc
+  forward_env: []
+  timeout: 120
+  interpreter:
+    - bash
+    - -c

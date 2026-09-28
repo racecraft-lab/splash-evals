@@ -232,6 +232,148 @@ def _commit_identity(
     return commit_author, commit_committer, merge_tree_sha
 
 
+def _github_commit_record_fields(
+    repository: str,
+    commit_sha: str,
+    local_identity: tuple[str, str, str, str],
+    *,
+    actor_login: str,
+    request: JsonRequest,
+    require_verified_signature: bool,
+) -> tuple[dict[str, str], dict[str, str], dict[str, Any], str]:
+    commit = _mapping(request(f"repos/{repository}/commits/{commit_sha}"))
+    if _sha(commit.get("sha")) != commit_sha:
+        raise CollectionError("GitHub commit SHA mismatch")
+    details = _mapping(commit.get("commit"))
+    author = _mapping(details.get("author"))
+    committer = _mapping(details.get("committer"))
+    author_login = _nonempty(_mapping(commit.get("author")).get("login"))
+    committer_login = _nonempty(_mapping(commit.get("committer")).get("login"))
+    verification = _mapping(details.get("verification"))
+    verified = verification.get("verified")
+    reason = _nonempty(verification.get("reason"))
+    record_author = {
+        "name": _nonempty(author.get("name")),
+        "email": _nonempty(author.get("email")),
+        "login": author_login,
+    }
+    record_committer = {
+        "name": _nonempty(committer.get("name")),
+        "email": _nonempty(committer.get("email")),
+        "login": committer_login,
+    }
+    api_identity = (
+        record_author["name"],
+        record_author["email"],
+        record_committer["name"],
+        record_committer["email"],
+    )
+    if (
+        api_identity != local_identity
+        or author_login != actor_login
+        or (require_verified_signature and (verified is not True or reason != "valid"))
+        or type(verified) is not bool
+    ):
+        raise CollectionError("GitHub commit evidence does not match local history")
+    return (
+        record_author,
+        record_committer,
+        {"verified": verified, "reason": reason},
+        _sha(_mapping(details.get("tree")).get("sha")),
+    )
+
+
+def _verified_commit_record(
+    repository: str,
+    commit_sha: str,
+    local_identity: tuple[str, str, str, str],
+    *,
+    actor_login: str,
+    committer_policy: dict[str, str],
+    request: JsonRequest,
+) -> dict[str, Any]:
+    author, committer, verification, tree_sha = _github_commit_record_fields(
+        repository,
+        commit_sha,
+        local_identity,
+        actor_login=actor_login,
+        request=request,
+        require_verified_signature=False,
+    )
+    if committer["login"] not in {actor_login, committer_policy["login"]}:
+        raise CollectionError("GitHub automation committer is not approved")
+    return {
+        "record_type": "github-verified-commit",
+        "commit_sha": commit_sha,
+        "repository": repository,
+        "ref": "refs/heads/main",
+        "actor_login": actor_login,
+        "author": author,
+        "committer": committer,
+        "verification": verification,
+        "tree_sha": tree_sha,
+        "main_binding": _main_binding(repository, commit_sha, request=request),
+    }
+
+
+def _pull_request_head_record(
+    repository: str,
+    ref: str,
+    commit_sha: str,
+    pull_request_number: int,
+    local_identity: tuple[str, str, str, str],
+    *,
+    actor_login: str,
+    request: JsonRequest,
+) -> dict[str, Any]:
+    author, committer, verification, tree_sha = _github_commit_record_fields(
+        repository,
+        commit_sha,
+        local_identity,
+        actor_login=actor_login,
+        request=request,
+        require_verified_signature=False,
+    )
+    pull = _mapping(request(f"repos/{repository}/pulls/{pull_request_number}"))
+    base = _mapping(pull.get("base"))
+    base_repo = _mapping(base.get("repo"))
+    head = _mapping(pull.get("head"))
+    head_repo = _mapping(head.get("repo"))
+    user = _mapping(pull.get("user"))
+    if (
+        pull.get("number") != pull_request_number
+        or pull.get("state") != "open"
+        or pull.get("merged") is not False
+        or _sha(head.get("sha")) != commit_sha
+        or _nonempty(base_repo.get("full_name")) != repository
+        or _nonempty(base.get("ref")) != "main"
+        or _nonempty(user.get("login")) != actor_login
+    ):
+        raise CollectionError("GitHub pull request head is not approved")
+    return {
+        "record_type": "pull-request-head",
+        "commit_sha": commit_sha,
+        "repository": repository,
+        "ref": ref,
+        "actor_login": actor_login,
+        "author": author,
+        "committer": committer,
+        "verification": verification,
+        "tree_sha": tree_sha,
+        "pull_request": {
+            "number": pull_request_number,
+            "state": "open",
+            "merged": False,
+            "base_repository": repository,
+            "base_ref": "main",
+            "head_repository": _nonempty(head_repo.get("full_name")),
+            "head_ref": _nonempty(head.get("ref")),
+            "head_sha": commit_sha,
+            "user_login": actor_login,
+        },
+    }
+
+
 def _required_check(
     repository: str,
     head_sha: str,
@@ -372,12 +514,61 @@ def _commit_record(
     }
 
 
+def _record_for_commit(
+    repo: Path,
+    commit_sha: str,
+    *,
+    collection: dict[str, Any],
+    request: JsonRequest,
+) -> dict[str, Any]:
+    repository = collection["repository"]
+    actor_login = collection["actor_login"]
+    local_identity = _local_identity(repo, commit_sha)
+    if collection["ref"].startswith("refs/pull/") and commit_sha == collection["head_sha"]:
+        pull_request_number = collection["pull_request_number"]
+        if not isinstance(pull_request_number, int) or pull_request_number < 1:
+            raise CollectionError("pull request number is required for an unmerged head")
+        return _pull_request_head_record(
+            repository,
+            collection["ref"],
+            commit_sha,
+            pull_request_number,
+            local_identity,
+            actor_login=actor_login,
+            request=request,
+        )
+    automation_policy = collection["automation_policy"]
+    if local_identity == (
+        automation_policy["name"],
+        automation_policy["email"],
+        automation_policy["name"],
+        automation_policy["email"],
+    ):
+        return _verified_commit_record(
+            repository,
+            commit_sha,
+            local_identity,
+            actor_login=actor_login,
+            committer_policy=collection["committer_policy"],
+            request=request,
+        )
+    return _commit_record(
+        repository,
+        commit_sha,
+        committer_policy=collection["committer_policy"],
+        check_policy=collection["check_policy"],
+        actor_login=_actor_login_for_commit(actor_login, collection["actor_overrides"], commit_sha),
+        request=request,
+    )
+
+
 def collect(
     repo: Path,
     *,
     repository: str,
     ref: str,
     head_sha: str,
+    pull_request_number: int | None = None,
     request: JsonRequest = _gh_json,
 ) -> dict[str, Any]:
     (
@@ -395,30 +586,21 @@ def collect(
     if local_head != _sha(head_sha):
         raise CollectionError("requested head does not match checked-out Git HEAD")
     commit_lines = _run_git(repo, ["rev-list", "--topo-order", "HEAD"]).splitlines()
-    records: list[dict[str, Any]] = []
-    for commit_sha in commit_lines:
-        commit_sha = _sha(commit_sha)
-        author_name, author_email, committer_name, committer_email = _local_identity(
-            repo, commit_sha
-        )
-        if (
-            author_name == automation_policy["name"]
-            and author_email == automation_policy["email"]
-            and committer_name == automation_policy["name"]
-            and committer_email == automation_policy["email"]
-        ):
-            continue
-        commit_actor_login = _actor_login_for_commit(actor_login, actor_overrides, commit_sha)
-        records.append(
-            _commit_record(
-                repository,
-                commit_sha,
-                committer_policy=committer_policy,
-                check_policy=check_policy,
-                actor_login=commit_actor_login,
-                request=request,
-            )
-        )
+    collection = {
+        "repository": repository,
+        "ref": ref,
+        "head_sha": head_sha,
+        "pull_request_number": pull_request_number,
+        "automation_policy": automation_policy,
+        "committer_policy": committer_policy,
+        "check_policy": check_policy,
+        "actor_login": actor_login,
+        "actor_overrides": actor_overrides,
+    }
+    records = [
+        _record_for_commit(repo, _sha(commit_sha), collection=collection, request=request)
+        for commit_sha in commit_lines
+    ]
     if policy_ref != "refs/heads/main":
         raise CollectionError("publication policy ref is not protected main")
     context = _actions_context()
@@ -455,6 +637,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repository", default=os.environ.get("GITHUB_REPOSITORY", ""))
     parser.add_argument("--ref", default=os.environ.get("GITHUB_REF", ""))
     parser.add_argument("--head-sha", default="")
+    parser.add_argument(
+        "--pull-request",
+        type=int,
+        default=int(os.environ["PR_NUMBER"]) if os.environ.get("PR_NUMBER") else None,
+    )
     args = parser.parse_args(argv)
     repo = Path(__file__).resolve().parents[1]
     try:
@@ -464,6 +651,7 @@ def main(argv: list[str] | None = None) -> int:
             repository=args.repository,
             ref=args.ref,
             head_sha=head_sha,
+            pull_request_number=args.pull_request,
         )
         _write_output(repo, args.output, document)
     except (CollectionError, OSError, ValueError):

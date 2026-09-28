@@ -64,9 +64,11 @@ const BENCHMARKS = {
     benchmarkName: 'SWE-bench Verified',
     label: 'SWE-bench Verified',
     metric: 'Resolved tasks',
-    localResult: null,
+    localResult: 'results/public/swe-bench-verified-splash-local-2026-09-28.json',
     requiredCompleteCount: 500,
-    localSourceUrl: `${BASE}/sources/#swe-bench-verified-sources`,
+    errorsCountAsUnresolved: true,
+    localSourceUrl:
+      'https://github.com/racecraft-lab/splash-evals/blob/main/results/public/swe-bench-verified-splash-local-2026-09-28.json',
   },
 };
 
@@ -99,9 +101,35 @@ function validatedLifecycleCounts(record) {
   return { requested, succeeded, errored, attempted: succeeded + errored };
 }
 
+// Upstream SWE-bench scoring: every task is accounted for, errors count as unresolved,
+// and the score is resolved tasks over all requested tasks.
+function upstreamScoredCompletion(record, counts) {
+  const outcomes = record.task_outcomes;
+  const resolved = validCount(outcomes?.resolved, 'task_outcomes.resolved');
+  const unresolved = validCount(outcomes?.unresolved, 'task_outcomes.unresolved');
+  const modelFailures = validCount(outcomes?.model_failure, 'task_outcomes.model_failure');
+  const infrastructureErrors = validCount(outcomes?.infrastructure_error, 'task_outcomes.infrastructure_error');
+  if (
+    counts.attempted !== counts.requested ||
+    resolved + unresolved !== counts.succeeded ||
+    modelFailures + infrastructureErrors !== counts.errored ||
+    infrastructureErrors >= counts.requested ||
+    record.metric_unit !== 'proportion' ||
+    record.score !== resolved / counts.requested
+  ) {
+    throw new Error('Complete results must account for every task and score resolved tasks over all requested tasks.');
+  }
+  return `${resolved} / ${counts.requested} resolved · ${counts.errored} errors counted unresolved`;
+}
+
 function completeLifecycleView(record, counts, options) {
   if (!Number.isFinite(record.score)) throw new Error('Complete results require a numeric score.');
-  if (counts.requested === 0 || counts.succeeded !== counts.requested || counts.errored !== 0) {
+  const upstreamCompletion =
+    options.errorsCountAsUnresolved && counts.requested > 0 ? upstreamScoredCompletion(record, counts) : null;
+  if (
+    upstreamCompletion === null &&
+    (counts.requested === 0 || counts.succeeded !== counts.requested || counts.errored !== 0)
+  ) {
     throw new Error('Complete results require every requested case to succeed without errors.');
   }
   if (options.requiredCompleteCount && counts.requested !== options.requiredCompleteCount) {
@@ -115,10 +143,10 @@ function completeLifecycleView(record, counts, options) {
     status: 'complete',
     className: 'measured',
     label: `${percentage.toFixed(2)}%`,
-    detail: `${counts.succeeded} / ${counts.requested} completed`,
+    detail: upstreamCompletion ?? `${counts.succeeded} / ${counts.requested} completed`,
     capability: true,
     score: percentage,
-    completion: `${counts.succeeded} / ${counts.requested} completed`,
+    completion: upstreamCompletion ?? `${counts.succeeded} / ${counts.requested} completed`,
   };
 }
 
@@ -168,6 +196,7 @@ async function loadBenchmarkLifecycle(config) {
     view: benchmarkLifecycleView(record, {
       benchmarkName: config.benchmarkName,
       requiredCompleteCount: config.requiredCompleteCount,
+      errorsCountAsUnresolved: config.errorsCountAsUnresolved,
     }),
   };
 }
@@ -256,13 +285,16 @@ async function localObservation(config) {
     model: record.evaluator.model_label,
     score,
     scoreLabel: `${score.toFixed(2)}%`,
-    evidence: `${record.counts.succeeded}/${record.counts.requested} completed · ${record.counts.errored} errors`,
+    evidence: config.errorsCountAsUnresolved
+      ? view.completion
+      : `${record.counts.succeeded}/${record.counts.requested} completed · ${record.counts.errored} errors`,
     sourceClass: 'measured',
     sourceLabel: 'Measured here',
     family: 'local',
     sourceUrl: config.localSourceUrl,
     local: true,
     completion: view.completion,
+    lifecycle: view,
   };
 }
 

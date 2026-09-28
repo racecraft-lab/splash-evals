@@ -1,0 +1,73 @@
+schema_version: 1
+suite: swebench-verified
+evidence_class: local_measurement
+expanded: true
+runner: swebench-local-sandbox-v1
+approval_marker: racecraft-swebench-verified-full-v1
+limitations:
+  - Full SWE-bench Verified execution is blocked until its private manifest and protocol are frozen and explicitly approved.
+  - Private tasks, patches, repository checkouts, grader output, and checkpoints remain outside Git.
+  - No cloud inference, fallback judge, or public CI execution is permitted.
+  - "This profile uses the separately approved reasoning: on variant because xhigh is unsupported; do not represent it as xhigh."
+  - "Deviations from upstream mini-SWE-agent SWE-bench config: step_limit 100 (upstream 250); command timeout 120 s under amd64 emulation (upstream 60 s); no cost limit."
+  - "Grading network: graders are offline except the 12 tasks in grader_egress, whose graders reach only their listed hosts through a hostname-checking gateway (other traffic is silently dropped). Upstream grades with open network. Task (agent) containers are always offline. PyPI is reachable only for pylint-dev__pylint-4661; elsewhere eval-time pip reinstalls fail offline."
+  - "Four psf/requests tasks depend on live httpbin.org, which upstream reports sheds load about 05:00-15:35 UTC daily (swe-bench-tasks#11)."
+swebench:
+  schema_version: 1
+  mode: verified
+  manifest_path: swebench/verified/manifest.json
+  manifest_sha256: ff10857aca817eb5ed1d3d4b81e4273a2a1af6e1e88719ed0e845c23d4180262
+  mini_swe_agent_version: 2.4.6
+  mini_swe_agent_wheel_sha256: a35463c553ac825c7773b03cfa69cd44958e3af20155dcc5711fdf9e4c67cd54
+  swebench_version: 5.0.2
+  swebench_wheel_sha256: b7f0416a1e686eca22c2f749b5f816685a202835032f6683080e2b53545bbb62
+  runner_config_sha256: 8618dedab40170903410b3cec3711fce1dd69807051f42c4aa44c2e0527a7270
+  model: racecraft-splash-local
+  model_runtime:
+    adapter_revision_sha256: e4049bce62fbd92a2990af031168ba5999d71192567d00daf2900ba21f06dbcb
+    served_model_fingerprint: dea3084a7d67b3808fc26e4166cc51f4e85be87bad0b2040b91ec0c3a7c6eee0
+    runtime_identity_sha256: af72b713c608fdaae34b65d4c841dbf72581810d9ce36804d98ddda1eaa97111
+  image_bindings_path: swebench/verified/image-bindings.json
+  image_bindings_sha256: 0ee0dac095d1ea165ce138f7b9266c6552742b50d6e30ac0d8f4ca14c0fa018e
+  image_bindings_task_count: 500
+  image_bindings_ordered_instance_ids_sha256: 33e18be7a9bd9f674790b63ed4d0b3fb17c176994802e3062b7d5a430a4e7d16
+  control_image_reference: local/swebench-control@sha256:7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee
+  control_image_digest: sha256:7a2b58b04d7f73068eeda6c4e1835c911e47e9e696e84829eccb954545cd32ee
+  platform: linux/amd64
+  task_count: 500
+  parameters:
+    reasoning_effort: 'on'
+    temperature: 1.0
+    top_p: 0.95
+    max_output_tokens: 65536
+  resource_limits:
+    timeout_seconds: 3600
+    memory_bytes: 17179869184
+    cpus: "4.0"
+    pids_limit: 512
+    nofile_limit: 1024
+    tmpfs_bytes: 268435456
+    max_output_bytes: 10485760
+    max_turns: 100
+    max_requests: 100
+    max_task_output_tokens: 262144
+  grader_egress:
+    gateway_image_id: sha256:ee889045c3cda86f58be8270d3ebdb67bac2cb8e32f933e41263f1fd1dec7e10
+    gateway_sources_sha256: 211c83a4533a7070cf480b94438c3eb3dabb5885d22bde530b5c5e95b3baf5a8
+    network: swebench-egress-out
+    tasks:
+      matplotlib__matplotlib-20488: [matplotlib.org]
+      psf__requests-1724: [httpbin.org]
+      psf__requests-1766: [httpbin.org]
+      psf__requests-1921: [httpbin.org]
+      psf__requests-2317: [httpbin.org, www.google.co.uk, www.google.com]
+      psf__requests-2931: []
+      psf__requests-5414: []
+      pylint-dev__pylint-4661: [files.pythonhosted.org, pypi.org]
+      sphinx-doc__sphinx-10435: [www.google.com, www.python.org]
+      sphinx-doc__sphinx-7985: [www.google.com, www.sphinx-doc.org, www.w3.org]
+      sphinx-doc__sphinx-8269: [www.google.com, www.sphinx-doc.org, www.w3.org]
+      sphinx-doc__sphinx-8475: [www.google.com, www.sphinx-doc.org, www.w3.org]
+  protocol_approval:
+    approved: true
+    approved_fingerprint: 59f9d524fd9e40c786cd282e95d2a87b4f4ab7051e8bcb273eda3b6c02cfb724
