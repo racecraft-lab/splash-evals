@@ -57,6 +57,7 @@ publication:
     - .toml
     - .txt
     - .ts
+    - .tsx
     - .yaml
     - .yml
   denied_suffixes:

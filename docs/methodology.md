@@ -1,10 +1,14 @@
 # How we tested
 
-This page separates what was measured, how it was measured, and what each benchmark can support. GPQA Diamond and SWE-bench Verified each have a completed, reviewed local result. Their metrics differ and are never combined.
+This page explains how we ran each test and why we are careful about comparisons. Both tests have a complete, reviewed result. They measure different things, so their scores are never combined.
 
 <section class="reader-section cool" aria-label="Benchmark and sample">
 
+<p class="kicker">The science test</p>
+
 ## GPQA Diamond method
+
+In plain terms: we asked the model 198 hard science questions, one at a time, and checked each final answer letter against the answer key.
 
 GPQA Diamond is the most difficult subset of Graduate-Level Google-Proof Q&A, a multiple-choice science benchmark written and validated by domain experts. EvalScope 1.12.0 resolved its built-in `gpqa_diamond` adapter to the `default` subset of the `train` split.
 
@@ -16,13 +20,17 @@ The benchmark is public and widely studied. It is useful for comparison, but it 
 
 <section class="reader-section cool" aria-label="SWE-bench Verified method">
 
+<p class="kicker">The coding test</p>
+
 ## SWE-bench Verified method
+
+In plain terms: for each of 500 real bugs, the model worked as an agent inside a sealed-off copy of the project. It read the code, made changes, and ran tests. Then a separate grader checked whether the project's own tests passed.
 
 SWE-bench Verified evaluates repository-level issue resolution, not one-turn question answering. Each task requires an isolated repository environment and an agent that can inspect code, plan a fix, edit files, run relevant tests, and submit a final repository state for benchmark scoring.
 
 The measured condition must record the exact task manifest and denominator, harness and agent-scaffold revisions, repository image and dependency state, tool access, model and runtime identity, time and token budgets, retries, test policy, scorer revision, and failure treatment. A change to any of those fields creates a different condition.
 
-Before the full run, the grading container and host-isolation boundary were verified, and a qualification run on disjoint tasks proved that the agent, edit, test, and scorer loop works without executing model-generated code on the Mac host. The full run then used all **500 Verified tasks** with one attempt per task.
+Before the full run, the grading container and host-isolation boundary were verified, and a qualification run on disjoint tasks proved that the agent, edit, test, and scorer loop works without running model-generated code directly on the test machine. The full run then used all **500 Verified tasks** with one attempt per task.
 
 | Setting | Value |
 |---|---|
@@ -45,13 +53,17 @@ Model failures and infrastructure errors stay in the denominator and count as un
 
 <section class="reader-section warm" aria-label="Evaluated condition">
 
+<p class="kicker">The exact setup</p>
+
 ## The evaluated condition
+
+These are the exact settings for the science test. Change any one of them and it becomes a different test.
 
 | Setting | Value |
 |---|---|
 | Public model label | Splash / Qwen3.8 |
 | API model alias | `racecraft-splash-local` |
-| Runtime | LM Studio on this Mac, OpenAI-compatible local endpoint |
+| Runtime | LM Studio on the local test machine, OpenAI-compatible local endpoint |
 | Eval runner | EvalScope 1.12.0, native backend |
 | Reasoning effort | `medium` |
 | Batch / concurrency | 1 |
@@ -69,7 +81,11 @@ All requests completed, so no transport failures had to be scored or excluded. A
 
 <section class="reader-section warm" aria-label="How to read the comparison">
 
+<p class="kicker">Fair comparisons</p>
+
 ## What makes a fair comparison?
+
+Two scores on the same test are only comparable if the test was run the same way. That is why we show cloud-model scores as context, not as a race.
 
 Two scores are directly comparable only when the important conditions align: benchmark and dataset revision, exact item set, prompt, tools, attempts, reasoning budget, answer extraction, scorer, denominator, and failure treatment. For coding benchmarks, the agent scaffold, repository image, edit/test loop, and execution budget also have to align.
 
@@ -79,11 +95,15 @@ The current frontier-model sources do not disclose every one of those fields. Th
 
 <section class="reader-section cool" aria-label="Privacy and public evidence">
 
+<p class="kicker">Privacy</p>
+
 ## Privacy and public evidence
+
+We publish the results and the method, but not the raw test material or anything private about the machine.
 
 The public repository contains source code, configuration templates, factual references, and a reviewed aggregate result. It excludes raw benchmark prompts, model responses, reasoning traces, credentials, private runtime identifiers, local filesystem paths, and detailed execution logs.
 
-That boundary protects private local state and restricted evidence, but it also limits independent review: readers can inspect the method and aggregate, but cannot regrade the run from this site. Public GitHub Actions builds static documentation with mock or synthetic data and has no connection to this Mac or LM Studio.
+That boundary protects private local state and restricted evidence, but it also limits independent review: readers can inspect the method and aggregate, but cannot regrade the run from this site. Public GitHub Actions builds static documentation with mock or synthetic data and has no connection to the test machine or LM Studio.
 
 [Review the benchmark index](dashboard.md) · [Inspect the sources](sources.md)
 

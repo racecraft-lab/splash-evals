@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 import local_evals.publication as publication
+
+POLICIES = Path(__file__).resolve().parents[2] / "configs" / "policies.yaml"
 
 
 def test_publication_scan_checks_sensitive_content_in_dot_in_files(tmp_path: Path) -> None:
@@ -26,3 +30,21 @@ def test_publication_scan_checks_sensitive_content_in_dot_in_files(tmp_path: Pat
     assert "uninspectable-or-denied-type" not in rules
     assert email not in repr(findings)
     assert private_path not in repr(findings)
+
+
+def test_repository_policy_content_scans_tsx_like_ts(tmp_path: Path) -> None:
+    policies = yaml.safe_load(POLICIES.read_text(encoding="utf-8"))
+    email = "synthetic.operator" + "@example.invalid"
+    private_path = "/" + "Users/synthetic-operator/private-project/result.json"
+    for suffix in (".ts", ".tsx"):
+        candidate = tmp_path / f"Component{suffix}"
+        candidate.write_text(f"// {email}\nconst at = '{private_path}';\n", encoding="utf-8")
+
+        findings = publication._scan_file(candidate, tmp_path, policies)
+
+        rules = {finding["rule"] for finding in findings}
+        assert "email-address" in rules
+        assert "absolute-user-path" in rules
+        assert "uninspectable-or-denied-type" not in rules
+        assert email not in repr(findings)
+        assert private_path not in repr(findings)

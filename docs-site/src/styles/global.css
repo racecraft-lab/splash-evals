@@ -1,0 +1,135 @@
+/* Tailwind v4 + shadcn/ui tokens for Splash Evals.
+ *
+ * Tokens are ported from the Racecraft website (racecraft-lab/racecraft,
+ * website/src/styles/global.css) so both sites share one brand.
+ *
+ * Starlight rules (https://starlight.astro.build/guides/css-and-tailwind/):
+ * - Never import Tailwind's Preflight; it would reset Starlight's typography.
+ * - Dark mode follows Starlight's data-theme attribute, not shadcn's .dark class.
+ * - Fonts and colors are pinned to Racecraft values so no framework default leaks in.
+ */
+
+@layer base, starlight, theme, components, utilities;
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tw-animate-css';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, monospace;
+
+  --radius-sm: 0.225rem;
+  --radius-md: 0.425rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 1.025rem;
+  --radius-2xl: 1rem;
+
+  --color-brand-red: #dc143c;
+  --color-brand-blue: #3c89c6;
+  --color-brand-blue-dark: #2a6a99;
+  --color-brand-blue-light: #5aa6db;
+
+  --color-pantone-base: #f1f0ec;
+  --color-pantone-lighter: #f7f6f4;
+  --color-pantone-light: #f4f3f0;
+  --color-pantone-medium: #eeecea;
+  --color-pantone-dark: #e8e7e3;
+  --color-pantone-deeper: #e0ded9;
+
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+
+  /* Starlight accent and gray scales pinned to Racecraft blue and warm neutrals. */
+  --color-accent-200: #d6e4f0;
+  --color-accent-600: #3c89c6;
+  --color-accent-900: #2a6a99;
+  --color-accent-950: #13283a;
+  --color-gray-100: #f7f6f4;
+  --color-gray-200: #eeecea;
+  --color-gray-300: #e0ded9;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  --lab-texture-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    radial-gradient(circle, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  --lab-texture-size: 40px 40px, 40px 40px, 4px 4px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* Starlight defaults to dark, so :root carries dark values and light overrides it. */
+:root,
+:root[data-theme='dark'] {
+  --radius: 0.775rem;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: #1f2937;
+  --card-foreground: #ffffff;
+  --popover: #1f2937;
+  --popover-foreground: #ffffff;
+  --primary: #3c89c6;
+  --primary-foreground: #ffffff;
+  --secondary: #374151;
+  --secondary-foreground: #ffffff;
+  --muted: oklch(0.372 0.013 260);
+  --muted-foreground: oklch(0.716 0.02 264);
+  --destructive: #dc143c;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #6b7280;
+}
+
+:root[data-theme='light'] {
+  --background: #f1f0ec;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #3c89c6;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f3f0;
+  --secondary-foreground: #3c89c6;
+  --muted: #f7f7f7;
+  --muted-foreground: #6b7280;
+  --destructive: #dc143c;
+  --border: #e8e7e3;
+  --input: #ffffff;
+  --ring: #3c89c6;
+}
+
+/* Outside any layer so it beats Expressive Code's unlayered copy-button styles. */
+.expressive-code .copy button:focus {
+  outline: 2px solid var(--color-brand-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

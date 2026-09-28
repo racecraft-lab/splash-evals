@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parse as parseYaml } from 'yaml';
 import { wrapWideTables } from './table-content.mjs';
-import { renderCodingOutcome, renderCodingRuntime } from './benchmark-detail.mjs';
+import { renderCodingCard, renderCodingOutcome, renderCodingRuntime } from './benchmark-detail.mjs';
 
 const SCRIPT_PATH = 'docs-site/scripts/generate-content.mjs';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -46,6 +46,7 @@ const PAGES = [
   ['docs/dashboard.md', 'dashboard.md'],
   ['docs/gpqa-diamond.md', 'dashboard/gpqa-diamond.md'],
   ['docs/swe-bench-verified.md', 'dashboard/swe-bench-verified.md'],
+  ['docs/what-it-means.md', 'what-it-means.md'],
   ['docs/methodology.md', 'methodology.md'],
   ['docs/operations.md', 'operations.md'],
   ['docs/sources.md', 'sources.md'],
@@ -323,14 +324,14 @@ async function renderBenchmarkCards() {
     <p class="benchmark-kicker">Measured capability result</p>
     <h3>GPQA Diamond</h3>
     <p class="benchmark-score"><strong>${escapeHtml(gpqa.scoreLabel)}</strong><span>${escapeHtml(BENCHMARKS['gpqa-diamond'].metric.toLowerCase())} · ${escapeHtml(gpqa.completion)}</span></p>
-    <p>A full public science-reasoning benchmark run through EvalScope 1.12.0 and local LM Studio.</p>
+    <p>Expert science questions: 198 hard multiple-choice questions in biology, chemistry, and physics.</p>
     <a class="benchmark-link" href="${BASE}/dashboard/gpqa-diamond/">Explore GPQA Diamond</a>
   </article>
   <article class="benchmark-card ${escapeHtml(swe.lifecycle.className)}" data-benchmark-status="${escapeHtml(swe.lifecycle.status)}">
     <p class="benchmark-kicker">${swe.lifecycle.capability ? 'Measured capability result' : 'Coding evaluation'} · ${sweCoverage.source_covered_model_count} external references</p>
     <h3>SWE-bench Verified</h3>
     <p class="benchmark-score"><strong>${escapeHtml(swe.scoreLabel)}</strong><span>${escapeHtml(swe.completion)}</span></p>
-    <p>${swe.lifecycle.capability ? 'A reviewed full 500-task local result is published separately from the historical reference context.' : 'The benchmark plan and external source coverage are published. No Splash coding score is claimed.'}</p>
+    <p>${swe.lifecycle.capability ? 'Real coding fixes: 500 bugs from open-source projects, fixed by the model as an agent and checked by the projects\' tests.' : 'The benchmark plan and external source coverage are published. No Splash coding score is claimed.'}</p>
     <a class="benchmark-link" href="${BASE}/dashboard/swe-bench-verified/">${swe.lifecycle.capability ? 'Explore SWE-bench Verified' : 'Review SWE-bench readiness'}</a>
   </article>
 </div>`;
@@ -422,6 +423,7 @@ async function expandBenchmarkExplorers(sourcePath, text) {
     const { record, view } = await loadBenchmarkLifecycle(BENCHMARKS['swe-bench-verified']);
     expanded = expanded
       .replace('<!-- benchmark-outcome:swe-bench-verified -->', renderCodingOutcome(record, view))
+      .replace('<!-- benchmark-card:swe-bench-verified -->', renderCodingCard(record, view))
       .replace('<!-- benchmark-runtime:swe-bench-verified -->', renderCodingRuntime(record, view));
   }
   if (/benchmark-explorer:/.test(expanded)) {
@@ -445,6 +447,16 @@ function rewriteLink(sourcePath, target) {
   return `${route}${fragment}`;
 }
 
+// Each reader section is a numbered test point on the lab sheet's signal trace.
+function addTestPoints(body) {
+  let count = 0;
+  return body.replace(/<section class="reader-section([^"]*)"([^>]*)>/g, (_match, classes, rest) => {
+    count += 1;
+    const number = String(count).padStart(2, '0');
+    return `<section class="reader-section${classes}"${rest} data-step>\n<span class="testpoint" data-testpoint aria-hidden="true">${number}</span>`;
+  });
+}
+
 function renderPage(sourcePath, text) {
   const heading = text.match(/^#\s+(.+)$/m);
   if (!heading) throw new Error(`Missing level-one heading in ${sourcePath}`);
@@ -460,23 +472,15 @@ function renderPage(sourcePath, text) {
   const frontmatter =
     sourcePath === 'docs/index.md'
       ? `title: ${JSON.stringify(title)}
-description: "How close can local Splash come to current and previous-generation frontier models? Explore comparison coverage, methods, and measurement gaps."
+description: "Can a free AI model on your own Mac take routine work off a paid Claude Code or Codex plan? Step one: we tested Qwen3.8 through Splash on two standard benchmarks."
 template: splash
 tableOfContents: false
 prev: false
 next: false
 hero:
-  title: How well does Splash work on a local computer?
-  tagline: How close can local AI come to the frontier? Explore the evidence and the gaps still to measure.
-  actions:
-    - text: See what we found
-      link: /splash-evals/dashboard/
-      variant: primary
-    - text: How the tests work
-      link: /splash-evals/methodology/
-      variant: secondary`
+  title: Can a local AI helper stretch your Claude Code and Codex plans?`
       : `title: ${JSON.stringify(title)}\ntemplate: splash\ntableOfContents: false\nprev: false\nnext: false`;
-  const pageBody = `<div class="document-sheet">\n\n${body}\n\n</div>`;
+  const pageBody = `<div class="document-sheet">\n\n${addTestPoints(body)}\n\n</div>`;
   return `---\n${frontmatter}\n---\n\n<!-- ${notice} -->\n\n${pageBody}\n`;
 }
 

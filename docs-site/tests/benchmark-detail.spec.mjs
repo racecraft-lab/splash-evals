@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { benchmarkLifecycleView } from '../scripts/generate-content.mjs';
-import { codingIntro, renderCodingOutcome, renderCodingRuntime } from '../scripts/benchmark-detail.mjs';
+import { codingIntro, renderCodingCard, renderCodingOutcome, renderCodingRuntime } from '../scripts/benchmark-detail.mjs';
 
 function syntheticRecord(status) {
   return {
@@ -25,7 +25,7 @@ for (const status of ['pending', 'qualification', 'invalid', 'partial', 'failed'
     if (status === 'partial') record.counts.succeeded = 2;
     if (status === 'failed') record.counts.errored = 500;
     const view = benchmarkLifecycleView(record, { requiredCompleteCount: 500 });
-    const outcome = renderCodingOutcome(record, view);
+    const outcome = renderCodingOutcome(record, view) + renderCodingCard(record, view);
     const runtime = renderCodingRuntime(record, view);
     const intro = codingIntro(view);
     expect(intro.result.score).toBe(view.label);
@@ -45,10 +45,10 @@ test('future measured detail reflows with expanded technical evidence', async ({
   await page.goto('/splash-evals/dashboard/swe-bench-verified/');
   const record = syntheticRecord('complete');
   const view = benchmarkLifecycleView(record, { requiredCompleteCount: 500 });
-  const content = `${renderCodingOutcome(record, view)}${renderCodingRuntime(record, view)}`
+  const content = `${renderCodingOutcome(record, view)}${renderCodingCard(record, view)}${renderCodingRuntime(record, view)}`
     .replace(/^## (.+)$/gm, '<h2>$1</h2>');
   await page.locator('.document-sheet').evaluate((element, markup) => { element.innerHTML = markup; }, content);
-  await page.getByText('Tested settings and provenance', { exact: true }).click();
+  await page.getByText('View run configuration and evidence boundary', { exact: true }).click();
   for (const width of [1280, 929, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

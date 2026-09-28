@@ -1,6 +1,6 @@
 # Run it yourself
 
-This repository is a local evaluation workbench, not a hosted model service. The public website cannot send requests to a model. Each benchmark has its own runner contract and evidence gate.
+This page is for builders who want to reproduce our tests on their own Mac. It is technical by design. This repository is a local evaluation workbench, not a hosted model service: the public website cannot send requests to a model. Each benchmark has its own runner contract and evidence gate.
 
 <section class="reader-section cool" aria-label="Local system boundary">
 
@@ -41,7 +41,7 @@ This repository is a local evaluation workbench, not a hosted model service. The
         </button></li>
         <li data-flow-step><button type="button" class="flow-trigger" data-flow-trigger data-step-label="The request crosses loopback" aria-expanded="true" aria-controls="flow-detail-2">
           <svg class="flow-icon" viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="7" width="26" height="11" rx="3"/><rect x="7" y="23" width="26" height="11" rx="3"/><path d="M12 12h2m-2 16h2m10-16h4m-4 16h4"/><path class="icon-action" pathLength="1" d="M20 18v5M17 20l3 3 3-3"/></svg>
-          <span class="flow-node-copy"><span class="flow-role">02 · Send locally</span><strong>LM Studio</strong><span class="flow-node-note">Loopback API</span><span class="flow-node-context">JSON request · this Mac</span></span>
+          <span class="flow-node-copy"><span class="flow-role">02 · Send locally</span><strong>LM Studio</strong><span class="flow-node-note">Loopback API</span><span class="flow-node-context">JSON request · same machine</span></span>
         </button></li>
         <li data-flow-step><button type="button" class="flow-trigger" data-flow-trigger data-step-label="LM Studio invokes Splash" aria-expanded="true" aria-controls="flow-detail-3">
           <svg class="flow-icon" viewBox="0 0 40 40" aria-hidden="true"><rect x="10" y="10" width="20" height="20" rx="3"/><rect class="icon-action" pathLength="1" x="16" y="16" width="8" height="8" rx="1"/><path d="M15 4v6m10-6v6M15 30v6m10-6v6M4 15h6m-6 10h6m20-10h6m-6 10h6"/></svg>
@@ -59,7 +59,7 @@ This repository is a local evaluation workbench, not a hosted model service. The
         <dl class="flow-facts"><div><dt>Benchmark</dt><dd>GPQA Diamond</dd></div><div><dt>Reasoning effort</dt><dd>Medium</dd></div><div><dt>Output limit</dt><dd>4,096 tokens</dd></div></dl>
       </div>
       <div class="flow-detail" id="flow-detail-2" data-flow-detail>
-        <div><p class="flow-kicker">02 / 04 · Send locally</p><h4>The request travels over loopback</h4><p>EvalScope sends the request to LM Studio on this Mac. A separate instance check confirms the selected model is local, too.</p></div>
+        <div><p class="flow-kicker">02 / 04 · Send locally</p><h4>The request travels over loopback</h4><p>EvalScope sends the request to LM Studio on the same machine. A separate instance check confirms the selected model is local, too.</p></div>
         <dl class="flow-facts"><div><dt>Protocol</dt><dd>OpenAI-compatible JSON</dd></div><div><dt>Transport</dt><dd>Local loopback</dd></div><div><dt>Endpoint</dt><dd><code>127.0.0.1:1234</code></dd></div></dl>
       </div>
       <div class="flow-detail" id="flow-detail-3" data-flow-detail>
@@ -78,7 +78,7 @@ This repository is a local evaluation workbench, not a hosted model service. The
     <ol class="agent-loop">
       <li><span>1</span><div><strong>Open</strong><p>Load one frozen issue and its exact repository revision into a fresh task workspace.</p></div></li>
       <li><span>2</span><div><strong>Edit</strong><p>The agent inspects code and makes a bounded repository patch inside the task container.</p></div></li>
-      <li><span>3</span><div><strong>Test</strong><p>The agent may iterate on visible task checks; generated commands never run on the Mac host.</p></div></li>
+      <li><span>3</span><div><strong>Test</strong><p>The agent may iterate on visible task checks; generated commands never run on the host machine.</p></div></li>
       <li><span>4</span><div><strong>Submit</strong><p>The final patch is sealed as the task output. Failed and incomplete tasks stay in the denominator.</p></div></li>
       <li><span>5</span><div><strong>Official grade</strong><p>A separate fresh grader container applies the trusted SWE-bench tests that the agent cannot modify.</p></div></li>
     </ol>
@@ -91,7 +91,7 @@ This repository is a local evaluation workbench, not a hosted model service. The
       <article class="evidence-destination public"><span class="destination-label">Public</span><h4>Public repository</h4><p>Only the approved aggregate and its public evidence are published.</p></article>
     </div>
     <aside class="remote-guard" role="note"><strong>Remote guard.</strong> The selected-instance check determines whether execution qualifies as local. A non-null LM Studio <code>deviceIdentifier</code> blocks that claim.</aside>
-    <aside class="ci-boundary" role="note"><strong>CI boundary:</strong> public GitHub Actions uses hosted runners and static or synthetic inputs. It has no route back to this Mac.</aside>
+    <aside class="ci-boundary" role="note"><strong>CI boundary:</strong> public GitHub Actions uses hosted runners and static or synthetic inputs. It has no route back to the test machine.</aside>
   </details>
   <figcaption id="local-boundary-summary">Illustrated sequence, not live telemetry. Raw run evidence stays private; publication requires review.</figcaption>
 </figure>
@@ -126,7 +126,7 @@ lms ps --json
 lms server start
 ```
 
-For the completed run on this Mac, `qwen3.8-27b-splash` was the installed LM Studio model key and `racecraft-splash-local` was the API-facing alias. Before another run, `lms ls` must show that reviewed key and `lms ps --json` must show the alias with `deviceIdentifier: null`. Do not substitute a similarly named model or linked-device instance.
+For the completed run, `qwen3.8-27b-splash` was the installed LM Studio model key and `racecraft-splash-local` was the API-facing alias. Before another run, `lms ls` must show that reviewed key and `lms ps --json` must show the alias with `deviceIdentifier: null`. Do not substitute a similarly named model or linked-device instance.
 
 Official references: [LM Studio headless service](https://lmstudio.ai/docs/developer/core/headless) and [`lms load`](https://lmstudio.ai/docs/cli/load).
 

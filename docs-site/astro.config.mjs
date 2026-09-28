@@ -1,6 +1,8 @@
 import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
+import react from '@astrojs/react';
+import tailwindcss from '@tailwindcss/vite';
 
 const SITE = 'https://racecraft-lab.github.io';
 const BASE = '/splash-evals';
@@ -9,25 +11,16 @@ export default defineConfig({
   site: SITE,
   base: BASE,
   trailingSlash: 'always',
-  redirects: {
-    '/benchmark-tasks': `${BASE}/methodology/#gpqa-diamond-method`,
-    '/local-pilot-results': `${BASE}/methodology/#the-evaluated-condition`,
-    '/architecture': `${BASE}/operations/#local-system-boundary`,
-    '/privacy': `${BASE}/methodology/#privacy-and-public-evidence`,
-    '/capability-readiness': `${BASE}/dashboard/gpqa-diamond/#run-record-and-limitations`,
-    '/historical-frontier-comparison': `${BASE}/dashboard/gpqa-diamond/#benchmark-comparison`,
-    '/frontier-catalog': `${BASE}/sources/#how-the-evidence-catalog-works`,
-    '/frontier-verification': `${BASE}/sources/#how-the-numbers-were-checked`,
-    '/glossary': `${BASE}/#key-terms`,
-  },
   image: { service: passthroughImageService() },
+  devToolbar: { enabled: false },
+  vite: { plugins: [tailwindcss()] },
   integrations: [
     starlight({
       title: 'Splash Evals',
       description:
-        'Privacy-first local Splash evaluation through LM Studio with dated frontier evidence.',
+        'Can a free AI model on your own Mac take routine work off a paid Claude Code or Codex plan? Step one: testing Qwen3.8 through Splash on two standard benchmarks.',
       plugins: [starlightLinksValidator()],
-      customCss: ['./src/styles/brand.css', './src/styles/editorial.css'],
+      customCss: ['./src/styles/global.css', './src/styles/brand.css', './src/styles/editorial.css', './src/styles/bench.css'],
       logo: {
         light: './src/assets/logo.svg',
         dark: './src/assets/logo-light.svg',
@@ -40,6 +33,7 @@ export default defineConfig({
         Footer: './src/components/Footer.astro',
         Hero: './src/components/PageIntro.astro',
         PageTitle: './src/components/PageIntro.astro',
+        MarkdownContent: './src/components/MarkdownContent.astro',
         ThemeProvider: './src/components/ThemeProvider.astro',
         ThemeSelect: './src/components/ThemeSelect.astro',
       },
@@ -58,9 +52,10 @@ export default defineConfig({
               label: 'Results',
               items: ['dashboard', 'dashboard/gpqa-diamond', 'dashboard/swe-bench-verified'],
             },
+            'what-it-means',
             'methodology',
-            'operations',
             'sources',
+            'operations',
           ],
         },
       ],
@@ -72,5 +67,6 @@ export default defineConfig({
         },
       ],
     }),
+    react(),
   ],
 });
