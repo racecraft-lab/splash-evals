@@ -1,2 +1,4 @@
 mini-swe-agent==2.4.6
 swebench==5.0.2
+certifi>=2026.10.19
+pip==26.2.2
