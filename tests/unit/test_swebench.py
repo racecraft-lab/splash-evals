@@ -4596,11 +4596,12 @@ def test_assets_pin_official_packages_and_bash_only_tools() -> None:
     assert "python" not in config.split("tools:", 1)[1]
     assert "mini-swe-agent==2.4.6" in lock
     assert "swebench==5.0.2" in lock
+    assert "pip==26.2.2" in lock
     assert "a35463c553ac825c7773b03cfa69cd44958e3af20155dcc5711fdf9e4c67cd54" in lock
     assert "b7f0416a1e686eca22c2f749b5f816685a202835032f6683080e2b53545bbb62" in lock
     requirements = re.findall(r"(?m)^([A-Za-z0-9_.-]+)==\S+ \\$", lock)
     requirement_blocks = re.split(r"(?m)(?=^[A-Za-z0-9_.-]+==)", lock)[1:]
-    assert len(requirements) == 107
+    assert len(requirements) == 108
     assert len(requirements) == len(set(requirements))
     assert len(requirement_blocks) == len(requirements)
     assert all("--hash=sha256:" in block for block in requirement_blocks)
@@ -4627,6 +4628,7 @@ def test_assets_pin_official_packages_and_bash_only_tools() -> None:
 def test_runner_smoke_check_is_offline_and_fail_closed() -> None:
     source = Path("sandbox/swebench/runner.py").read_text(encoding="utf-8")
     smoke_body = source.split("def _smoke_check()", 1)[1].split("def main()", 1)[0]
+    assert "_check_ca_trust()" in smoke_body
     assert "importlib.metadata.version(distribution) != expected" in smoke_body
     assert 'importlib.import_module("swebench")' in smoke_body
     assert 'agent.get("tools") != ["bash"]' in smoke_body

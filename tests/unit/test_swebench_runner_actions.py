@@ -81,6 +81,53 @@ def _load_runner_for_identity_tests(monkeypatch):
     return runner
 
 
+@pytest.mark.parametrize("failed_store", [None, "default", "certifi", "pip"])
+@pytest.mark.parametrize("failure", ["empty", "incident", "unreadable"])
+def test_smoke_ca_trust_checks_each_store_and_fails_closed(monkeypatch, failed_store, failure):
+    runner = _load_runner_for_identity_tests(monkeypatch)
+    import ssl
+
+    clean_root = b"synthetic clean CA"
+    incident_root = b"synthetic incident CA"
+    monkeypatch.setattr(
+        runner, "_INCIDENT_ROOT_SHA256", {hashlib.sha256(incident_root).hexdigest()}
+    )
+    real_import = runner.importlib.import_module
+    bundles = {"certifi": "synthetic-certifi.pem", "pip._vendor.certifi": "synthetic-pip.pem"}
+
+    def import_bundle(name):
+        if name in bundles:
+            return SimpleNamespace(where=lambda: bundles[name])
+        return real_import(name)
+
+    monkeypatch.setattr(runner.importlib, "import_module", import_bundle)
+    checked = []
+
+    def context(*, cafile=None):
+        store = {None: "default", "synthetic-certifi.pem": "certifi", "synthetic-pip.pem": "pip"}[
+            cafile
+        ]
+        checked.append(store)
+        roots = [clean_root]
+        if store == failed_store:
+            if failure == "unreadable":
+                raise ssl.SSLError("synthetic unreadable trust store")
+            roots = [] if failure == "empty" else [clean_root, incident_root]
+        return SimpleNamespace(get_ca_certs=lambda *, binary_form: roots if binary_form else None)
+
+    monkeypatch.setattr(runner.ssl, "create_default_context", context)
+    if failed_store is None:
+        runner._check_ca_trust()
+        assert checked == ["default", "certifi", "pip"]
+    else:
+        with pytest.raises(
+            (RuntimeError, ssl.SSLError),
+            match=failed_store if failure != "unreadable" else "unreadable",
+        ):
+            runner._check_ca_trust()
+        assert checked[-1] == failed_store
+
+
 def test_loaded_instance_resolves_selected_instance_id_separately_from_model_key(monkeypatch):
     runner = _load_runner_for_identity_tests(monkeypatch)
     selected_id = "racecraft-splash-local"

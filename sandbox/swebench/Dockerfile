@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64/v8 python:3.11-slim-bookworm@sha256:bbc491ed39611eede47b1058ad4afb9ea957fb3bf4a7f1b442c6a5628ab93bdc
+FROM --platform=linux/arm64/v8 python:3.11.17-slim-bookworm@sha256:8f51ccb8569b75cf967ffe3e1638b9953042bf36142d7032cbb6f0696c9cd2c6
 
 # Every wheel, including transitive dependencies, is staged before this build.
 # The locked hashes and --no-index make missing, substituted, or unpinned

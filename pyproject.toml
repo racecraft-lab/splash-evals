@@ -32,6 +32,9 @@ local-evals = "local_evals.cli:app"
 requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
+[tool.uv]
+constraint-dependencies = ["certifi>=2026.10.19"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/local_evals"]
 

@@ -11,6 +11,7 @@ import importlib.metadata
 import importlib.resources
 import json
 import re
+import ssl
 import sys
 import time
 from pathlib import Path
@@ -30,6 +31,12 @@ _STABLE_JSON_ENCODER = json.JSONEncoder(sort_keys=True, separators=(",", ":"))
 _EXPECTED_DISTRIBUTIONS = {
     "mini-swe-agent": "2.4.6",
     "swebench": "5.0.2",
+    "pip": "26.2.2",
+}
+# Incident root certificate fingerprints: https://emudhra.we-have-a-problem.com/roots.json
+_INCIDENT_ROOT_SHA256 = {
+    "86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b",
+    "d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4",
 }
 
 
@@ -305,7 +312,24 @@ def _write_evidence(filename: str, data: bytes) -> None:
     )
 
 
+def _check_ca_trust() -> None:
+    # pip supplements system trust with its own vendored certifi bundle.
+    # Check each source independently so a clean bundle cannot mask another.
+    for name, cafile in (
+        ("default", None),
+        ("certifi", importlib.import_module("certifi").where()),
+        ("pip", importlib.import_module("pip._vendor.certifi").where()),
+    ):
+        context = ssl.create_default_context(cafile=cafile)
+        roots = context.get_ca_certs(binary_form=True)
+        if not roots:
+            raise RuntimeError(f"{name} CA trust store is empty")
+        if any(hashlib.sha256(root).hexdigest() in _INCIDENT_ROOT_SHA256 for root in roots):
+            raise RuntimeError(f"{name} CA trust store contains an incident root")
+
+
 def _smoke_check() -> int:
+    _check_ca_trust()
     for distribution, expected in _EXPECTED_DISTRIBUTIONS.items():
         if importlib.metadata.version(distribution) != expected:
             raise RuntimeError(f"{distribution} control-plane version mismatch")
