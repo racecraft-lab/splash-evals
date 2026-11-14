@@ -26,7 +26,7 @@
     "@expressive-code/plugin-line-numbers": "0.44.2",
     "@radix-ui/react-slot": "1.3.3",
     "@tailwindcss/vite": "4.3.3",
-    "astro": "7.3.5",
+    "astro": "7.4.7",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.48.0",
