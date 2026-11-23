@@ -41,7 +41,7 @@ jobs:
           tar -xzf "$archive" -C "$bin_dir" gitleaks
           printf '%s\n' "$bin_dir" >> "$GITHUB_PATH"
       - name: Install pinned uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0 source: github.com/astral-sh/setup-uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.2.0 source: github.com/astral-sh/setup-uv
         with:
           version: 0.12.17
           enable-cache: true
@@ -55,7 +55,7 @@ jobs:
       - name: Type check
         run: uv run mypy src
       - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6 source: github.com/actions/setup-node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6 source: github.com/actions/setup-node
         with:
           node-version: 22
       - name: Install locked swebench-sdk dependencies
@@ -106,7 +106,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Review dependency changes
-        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0 source: github.com/actions/dependency-review-action
+        uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.0 source: github.com/actions/dependency-review-action
         with:
           fail-on-severity: high
           comment-summary-in-pr: never
